@@ -65,6 +65,18 @@ const CATEGORY_ICONS = {
   discipline: '↗'
 };
 
+const HABIT_COLORS = ['#d4f34a', '#70d6ff', '#ff9f68', '#c7a6ff', '#ff83a8', '#72dfb2', '#f5cf67'];
+const DEFAULT_HABIT_COLOR = HABIT_COLORS[0];
+
+function normalizeHabitColor(color) {
+  const value = String(color || '').toLowerCase();
+  return HABIT_COLORS.includes(value) ? value : DEFAULT_HABIT_COLOR;
+}
+
+function habitAccent(habit) {
+  return `--habit-accent:${normalizeHabitColor(habit?.color)}`;
+}
+
 const DAY_NAMES = ['Du', 'Se', 'Cho', 'Pay', 'Ju', 'Shan', 'Yak'];
 
 const DEFAULT_STATE = () => ({
@@ -132,6 +144,7 @@ function normalizeHabit(habit) {
     id: String(habit.id ?? uid()),
     title,
     category: normalizeCategory(habit.category),
+    color: normalizeHabitColor(habit.color ?? habit.habitColor),
     targetDays: [3, 5, 6, 7].includes(target) ? target : 5,
     isArchived: Boolean(
       habit.isArchived ?? habit.is_archived ?? habit.archived
@@ -590,6 +603,9 @@ function openHabitModal(habit = null) {
   $('#habitTitle').value = habit?.title || '';
   $('#habitCategory').value = habit?.category || 'focus';
   $('#habitTarget').value = String(habit?.targetDays || 5);
+  const selectedColor = normalizeHabitColor(habit?.color);
+  const colorInput = $(`input[name="habitColor"][value="${selectedColor}"]`);
+  if (colorInput) colorInput.checked = true;
   $('#habitModalTitle').textContent = habit ? 'Odatni tahrirlash' : 'Yangi odat';
   openModal('habitModalBackdrop');
 }
@@ -609,6 +625,7 @@ function addHabit(data) {
     id: uid(),
     title: data.title.trim(),
     category: data.category,
+    color: normalizeHabitColor(data.color),
     targetDays: Number(data.targetDays),
     isArchived: false,
     createdAt: today()
@@ -623,6 +640,7 @@ function updateHabit(id, data) {
   if (!habit) return;
   habit.title = data.title.trim();
   habit.category = data.category;
+  habit.color = normalizeHabitColor(data.color);
   habit.targetDays = Number(data.targetDays);
   saveState();
   renderAll();
@@ -707,12 +725,12 @@ function renderDashboardHabits() {
   const box = $('#dashboardHabits');
   box.innerHTML = habits.map(habit => `
     <div class="habit-preview">
-      <span class="habit-glyph">${CATEGORY_ICONS[habit.category] || '◉'}</span>
+      <span class="habit-glyph" style="${habitAccent(habit)}">${CATEGORY_ICONS[habit.category] || '◉'}</span>
       <div class="habit-preview-info">
         <strong>${escapeHTML(habit.title)}</strong>
         <small>${escapeHTML(categoryLabel(habit.category))} · ${streakForHabit(habit.id)} kunlik seriya</small>
       </div>
-      <button class="check-button ${isChecked(habit.id, today()) ? 'checked' : ''}"
+      <button class="check-button ${isChecked(habit.id, today()) ? 'checked' : ''}" style="${habitAccent(habit)}"
         data-toggle-check="${escapeHTML(habit.id)}" data-date="${today()}"
         aria-label="Odat holatini o‘zgartirish">${isChecked(habit.id, today()) ? '✓' : '○'}</button>
     </div>
@@ -766,7 +784,7 @@ function renderHabits() {
     const start = weekStart(today());
     const days = Array.from({ length: 7 }, (_, index) => shiftDate(start, index));
     const dayCells = days.map(date => `
-      <td><button class="habit-cell-check ${isChecked(habit.id, date) ? 'checked' : ''}"
+      <td><button class="habit-cell-check ${isChecked(habit.id, date) ? 'checked' : ''}" style="${habitAccent(habit)}"
         data-toggle-check="${escapeHTML(habit.id)}" data-date="${date}"
         ${date > today() || habit.isArchived ? 'disabled' : ''}
         aria-label="${escapeHTML(habit.title)}">${isChecked(habit.id, date) ? '✓' : ''}</button></td>
@@ -774,7 +792,7 @@ function renderHabits() {
     return `
       <tr>
         <td class="habit-name-cell"><div class="habit-name-wrap">
-          <span class="habit-glyph">${CATEGORY_ICONS[habit.category] || '◉'}</span>
+          <span class="habit-glyph" style="${habitAccent(habit)}">${CATEGORY_ICONS[habit.category] || '◉'}</span>
           <div class="habit-name-text"><strong>${escapeHTML(habit.title)}</strong>
             <small>${escapeHTML(categoryLabel(habit.category))} · haftasiga ${habit.targetDays} kun ${habit.isArchived ? ' · arxiv' : ''}</small>
           </div>
@@ -951,6 +969,29 @@ function renderAnalytics() {
   $('#bestHabitRate').textContent = best && best.n
     ? `${best.rate}% · oxirgi 30 kun`
     : 'Hali yetarli ma’lumot yo‘q';
+
+  const colorStats = $('#habitColorStats');
+  if (colorStats) {
+    colorStats.innerHTML = active.map(habit => {
+      let count = 0;
+      for (let i = 0; i < 30; i++) {
+        if (isChecked(habit.id, shiftDate(today(), -i))) count++;
+      }
+      const percent = Math.round(count / 30 * 100);
+      const accent = normalizeHabitColor(habit.color);
+      return `
+        <div class="habit-stat-item" style="${habitAccent(habit)}">
+          <div class="habit-stat-top">
+            <span class="habit-stat-dot" aria-hidden="true"></span>
+            <strong>${escapeHTML(habit.title)}</strong>
+            <b>${percent}%</b>
+          </div>
+          <div class="habit-stat-track"><span style="width:${percent}%;background:${accent}"></span></div>
+          <small>${count}/30 kun · oxirgi 30 kun</small>
+        </div>
+      `;
+    }).join('') || '<p class="habit-stat-empty">Hozircha faol odatlar mavjud emas.</p>';
+  }
 
   const dates = Array.from({ length: 7 }, (_, i) => shiftDate(today(), i - 6));
   $('#weeklyChart').innerHTML = dates.map(date => {
@@ -1215,7 +1256,8 @@ function bindEvents() {
     const data = {
       title: $('#habitTitle').value.trim(),
       category: $('#habitCategory').value,
-      targetDays: $('#habitTarget').value
+      targetDays: $('#habitTarget').value,
+      color: $('input[name="habitColor"]:checked')?.value || DEFAULT_HABIT_COLOR
     };
     if (!data.title) return;
     const id = $('#habitId').value;

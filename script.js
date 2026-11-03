@@ -1006,14 +1006,22 @@ function renderAnalytics() {
   }
 
   const dates = Array.from({ length: 7 }, (_, i) => shiftDate(today(), i - 6));
+  // Har bir kun ustuni bajarilgan odatlarning o'z rangidagi segmentlaridan tuziladi.
+  // Shu sababli bir kunda 10 ta odat bajarilgan bo'lsa, ustunda 10 ta rangli bo'lak ko'rinadi.
   $('#weeklyChart').innerHTML = dates.map(date => {
+    const completed = active.filter(habit => isChecked(habit.id, date));
     const total = active.length;
-    const done = doneCountOn(date);
-    const percent = total ? Math.round(done / total * 100) : 0;
+    const percent = total ? Math.round(completed.length / total * 100) : 0;
+    const segments = completed.map(habit => {
+      const color = normalizeHabitColor(habit.color);
+      return `<i class="bar-segment" title="${escapeHTML(habit.title)}" style="background:${color}"></i>`;
+    }).join('');
     return `
       <div class="bar-col ${date === today() ? 'today' : ''}">
         <span class="bar-value">${percent}%</span>
-        <div class="bar-track"><div class="bar-fill" style="height:${percent}%"></div></div>
+        <div class="bar-track" title="${completed.length}/${total} odat bajarildi">
+          <div class="bar-stack" style="height:${percent}%">${segments}</div>
+        </div>
         <span class="bar-label">${DAY_NAMES[(parseDate(date).getDay() + 6) % 7]}</span>
       </div>
     `;

@@ -71,12 +71,14 @@ const HABIT_COLORS = [
 ];
 const DEFAULT_HABIT_COLOR = HABIT_COLORS[0];
 const DEFAULT_HABIT_ICON = '🎯';
+let selectedHabitColor = DEFAULT_HABIT_COLOR;
+let selectedHabitIcon = DEFAULT_HABIT_ICON;
 
 function renderHabitPickers() {
   const iconBox = $('.habit-icon-picker');
   const colorBox = $('.habit-color-picker');
-  if (iconBox) iconBox.innerHTML = HABIT_ICONS.map((icon, i) => `<label title="${escapeHTML(icon)}"><input type="radio" name="habitIcon" value="${icon}" ${i === 0 ? 'checked' : ''}><span>${icon}</span></label>`).join('');
-  if (colorBox) colorBox.innerHTML = HABIT_COLORS.map((color, i) => `<label title="${color}" style="--swatch:${color}"><input type="radio" name="habitColor" value="${color}" ${i === 0 ? 'checked' : ''}><span></span></label>`).join('');
+  if (iconBox) iconBox.innerHTML = HABIT_ICONS.map((icon, i) => `<button type="button" class="habit-choice-icon ${i === 0 ? 'selected' : ''}" data-habit-icon="${escapeHTML(icon)}" aria-label="${escapeHTML(icon)}" aria-pressed="${i === 0}">${icon}</button>`).join('');
+  if (colorBox) colorBox.innerHTML = HABIT_COLORS.map((color, i) => `<button type="button" class="habit-choice-color ${i === 0 ? 'selected' : ''}" data-habit-color="${color}" style="--swatch:${color}" title="${color}" aria-label="${color}" aria-pressed="${i === 0}"><span></span></button>`).join('');
 }
 
 function habitIcon(habit) { return habit?.icon || CATEGORY_ICONS[habit?.category] || DEFAULT_HABIT_ICON; }
@@ -589,6 +591,7 @@ function goTo(page) {
     planner: 'REJALASHTIRUVCHI',
     pomodoro: 'FOKUS TAYMERI',
     analytics: 'TAHLIL',
+    achievements: 'YUTUQLAR',
     settings: 'SOZLAMALAR'
   };
   $('#pageCrumb').textContent = names[page] || page.toUpperCase();
@@ -596,6 +599,7 @@ function goTo(page) {
   if (page === 'planner') renderPlanner();
   if (page === 'pomodoro') renderTimer();
   if (page === 'analytics') renderAnalytics();
+  if (page === 'achievements') renderAchievements();
   if (page === 'settings') renderSettings();
 }
 
@@ -611,19 +615,28 @@ function closeModals() {
   $$('.modal-backdrop').forEach(element => element.classList.add('hidden'));
 }
 
+function updateHabitPickerSelection() {
+  $$('.habit-choice-icon').forEach(button => {
+    const selected = button.dataset.habitIcon === selectedHabitIcon;
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+  $$('.habit-choice-color').forEach(button => {
+    const selected = button.dataset.habitColor === selectedHabitColor;
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+}
+
 function openHabitModal(habit = null) {
   $('#habitForm').reset();
   $('#habitId').value = habit?.id || '';
   $('#habitTitle').value = habit?.title || '';
   $('#habitCategory').value = habit?.category || 'focus';
   $('#habitTarget').value = String(habit?.targetDays || 5);
-  const selectedColor = normalizeHabitColor(habit?.color);
-  const selectedIcon = habit?.icon || CATEGORY_ICONS[habit?.category] || DEFAULT_HABIT_ICON;
-  const iconInput = $(`input[name="habitIcon"][value="${selectedIcon}"]`);
-  if (iconInput) iconInput.checked = true;
-  const colorInput = $(`input[name="habitColor"][value="${selectedColor}"]`);
-  if (colorInput) colorInput.checked = true;
-  if (!colorInput) $('input[name="habitColor"]')?.click();
+  selectedHabitColor = normalizeHabitColor(habit?.color);
+  selectedHabitIcon = habit?.icon || CATEGORY_ICONS[habit?.category] || DEFAULT_HABIT_ICON;
+  updateHabitPickerSelection();
   $('#habitModalTitle').textContent = habit ? 'Odatni tahrirlash' : 'Yangi odat';
   openModal('habitModalBackdrop');
 }
@@ -1127,7 +1140,47 @@ function renderAll() {
   renderPlanner();
   renderTimer();
   renderAnalytics();
+  renderAchievements();
   renderSettings();
+}
+
+
+/* ==============================
+   YUTUQLAR VA BADGE TIZIMI
+============================== */
+function renderAchievements() {
+  const total = state.logs.length;
+  const streak = currentStreak();
+  const habits = state.habits.length;
+  const xp = xpTotal();
+  const sessions = Number(state.pomodoro?.sessions || 0);
+  const badges = [
+    { icon: '🌱', name: 'Birinchi qadam', desc: 'Birinchi odatingizni yarating.', value: habits, goal: 1, unit: 'odat' },
+    { icon: '✅', name: 'Boshlanish', desc: 'Birinchi odatni bajaring.', value: total, goal: 1, unit: 'bajarilish' },
+    { icon: '🔥', name: 'Uch kunlik olov', desc: '3 kunlik ketma-ket seriyaga erishing.', value: streak, goal: 3, unit: 'kun' },
+    { icon: '⚡', name: 'Bir haftalik ritm', desc: '7 kunlik seriyani saqlang.', value: streak, goal: 7, unit: 'kun' },
+    { icon: '💎', name: 'Ikki haftalik qat’iyat', desc: '14 kun davomida izchil bo‘ling.', value: streak, goal: 14, unit: 'kun' },
+    { icon: '🏆', name: 'Bir oylik afsona', desc: '30 kunlik seriyaga erishing.', value: streak, goal: 30, unit: 'kun' },
+    { icon: '📚', name: 'Odatlar kolleksiyasi', desc: '5 ta odat yarating.', value: habits, goal: 5, unit: 'odat' },
+    { icon: '🎯', name: 'Maqsad sari', desc: '10 ta odat yarating.', value: habits, goal: 10, unit: 'odat' },
+    { icon: '🌟', name: 'O‘nlik', desc: '10 marta odatlarni bajaring.', value: total, goal: 10, unit: 'marta' },
+    { icon: '🚀', name: 'Yuzlik', desc: '100 ta bajarilishni jamlang.', value: total, goal: 100, unit: 'marta' },
+    { icon: '🧠', name: 'Fokus ustasi', desc: '5 ta Pomodoro sessiyasini yakunlang.', value: sessions, goal: 5, unit: 'sessiya' },
+    { icon: '👑', name: 'Tajriba yig‘uvchi', desc: '500 XP to‘plang.', value: xp, goal: 500, unit: 'XP' }
+  ];
+  const unlocked = badges.filter(b => b.value >= b.goal).length;
+  $('#achievementUnlocked').textContent = `${unlocked} / ${badges.length}`;
+  $('#achievementOverall').style.width = `${unlocked / badges.length * 100}%`;
+  $('#achievementGrid').innerHTML = badges.map(b => {
+    const done = b.value >= b.goal;
+    const percent = Math.min(100, Math.round(b.value / b.goal * 100));
+    return `<article class="achievement-card ${done ? 'unlocked' : 'locked'}">
+      <div class="achievement-card-top"><span class="achievement-icon">${b.icon}</span><span class="achievement-state">${done ? '✓ OCHILDI' : '🔒 QULFLANGAN'}</span></div>
+      <h3>${b.name}</h3><p>${b.desc}</p>
+      <div class="achievement-progress"><span style="width:${percent}%"></span></div>
+      <div class="achievement-progress-label"><span>${Math.min(b.value, b.goal)} / ${b.goal} ${b.unit}</span><b>${percent}%</b></div>
+    </article>`;
+  }).join('');
 }
 
 /* ==============================
@@ -1207,6 +1260,18 @@ function resetAll() {
 ============================== */
 
 function bindEvents() {
+  $('.habit-icon-picker').addEventListener('click', event => {
+    const button = event.target.closest('[data-habit-icon]');
+    if (!button) return;
+    selectedHabitIcon = button.dataset.habitIcon;
+    updateHabitPickerSelection();
+  });
+  $('.habit-color-picker').addEventListener('click', event => {
+    const button = event.target.closest('[data-habit-color]');
+    if (!button) return;
+    selectedHabitColor = normalizeHabitColor(button.dataset.habitColor);
+    updateHabitPickerSelection();
+  });
   $$('.nav-item[data-page]').forEach(button => {
     button.addEventListener('click', () => goTo(button.dataset.page));
   });
@@ -1298,8 +1363,8 @@ function bindEvents() {
       title: $('#habitTitle').value.trim(),
       category: $('#habitCategory').value,
       targetDays: $('#habitTarget').value,
-      color: $('input[name="habitColor"]:checked')?.value || DEFAULT_HABIT_COLOR,
-      icon: $('input[name="habitIcon"]:checked')?.value || DEFAULT_HABIT_ICON
+      color: selectedHabitColor || DEFAULT_HABIT_COLOR,
+      icon: selectedHabitIcon || DEFAULT_HABIT_ICON
     };
     if (!data.title) return;
     const id = $('#habitId').value;

@@ -9,37 +9,61 @@
   let client = null;
   let currentUser = null;
   let handlingUserId = null;
+
   let syncTimer = null;
   let syncInProgress = false;
   let pendingSnapshot = null;
+
   let realtimeChannel = null;
   let applyingRemoteUpdate = false;
+
   const accountKey = (userId) =>
     `${STORAGE_KEY}_user_${userId}`;
 
+
+  // =========================================
+  // STATUS
+  // =========================================
+
   function setStatus(message, type = 'muted') {
     const element = $('#vertexAuthStatus');
+
     if (!element) return;
 
     element.textContent = message;
     element.dataset.kind = type;
   }
 
+
+  // =========================================
+  // BUTTONS
+  // =========================================
+
   function setButtons(loggedIn) {
     const login = $('#vertexLoginBtn');
     const signup = $('#vertexSignupBtn');
     const logout = $('#vertexLogoutBtn');
+
     const email = $('#vertexAuthEmail');
     const password = $('#vertexAuthPassword');
 
-    if (login) login.classList.toggle('hidden', loggedIn);
-    if (signup) signup.classList.toggle('hidden', loggedIn);
-    if (logout) logout.classList.toggle('hidden', !loggedIn);
+    if (login) {
+      login.classList.toggle('hidden', loggedIn);
+    }
+
+    if (signup) {
+      signup.classList.toggle('hidden', loggedIn);
+    }
+
+    if (logout) {
+      logout.classList.toggle('hidden', !loggedIn);
+    }
 
     if (email) email.disabled = loggedIn;
     if (password) password.disabled = loggedIn;
 
     const label = $('#vertexAccountLabel');
+
     if (label) {
       label.textContent = loggedIn
         ? currentUser?.email || 'Hisobga ulangan'
@@ -47,12 +71,18 @@
     }
   }
 
+
+  // =========================================
+  // AUTH PANEL
+  // =========================================
+
   function addPanel() {
     const settings = $('#page-settings');
 
     if (!settings || $('#vertexAuthPanel')) return;
 
     const layout = $('.settings-layout', settings);
+
     if (!layout) return;
 
     const panel = document.createElement('section');
@@ -82,7 +112,10 @@
       >Ulanish tekshirilmoqda...</div>
 
       <form id="vertexAuthForm" class="settings-form">
-        <label for="vertexAuthEmail">Email manzili</label>
+
+        <label for="vertexAuthEmail">
+          Email manzili
+        </label>
 
         <input
           id="vertexAuthEmail"
@@ -93,7 +126,9 @@
           required
         >
 
-        <label for="vertexAuthPassword">Parol</label>
+        <label for="vertexAuthPassword">
+          Parol
+        </label>
 
         <input
           id="vertexAuthPassword"
@@ -106,6 +141,7 @@
         >
 
         <div class="vertex-auth-actions">
+
           <button
             class="button primary"
             id="vertexLoginBtn"
@@ -123,12 +159,31 @@
             id="vertexLogoutBtn"
             type="button"
           >Chiqish</button>
+
         </div>
       </form>
     `;
 
     settings.insertBefore(panel, layout);
   }
+
+
+  // =========================================
+  // REALTIME CLEANUP
+  // =========================================
+
+  function removeRealtime() {
+    if (!realtimeChannel || !client) return;
+
+    client.removeChannel(realtimeChannel);
+
+    realtimeChannel = null;
+  }
+
+
+  // =========================================
+  // CLOUD SAVE
+  // =========================================
 
   async function pushCloud(snapshot) {
     if (!client || !currentUser) return;
@@ -140,16 +195,20 @@
 
     syncInProgress = true;
 
+    const userId = currentUser.id;
+
     try {
       const data = snapshot ||
         window.VertexApp.getState();
 
-      setStatus('Ma’lumotlar bulutga saqlanmoqda...');
+      setStatus(
+        'Ma’lumotlar bulutga saqlanmoqda...'
+      );
 
       const { error } = await client
         .from('user_data')
         .upsert({
-          user_id: currentUser.id,
+          user_id: userId,
           app_data: data,
           updated_at: new Date().toISOString()
         }, {
@@ -158,28 +217,43 @@
 
       if (error) throw error;
 
-      setStatus(
-        '✓ Ma’lumotlar bulutda saqlandi.',
-        'success'
-      );
-    } catch (error) {
-      console.error('VERTEX cloud sync:', error);
+      if (currentUser?.id === userId) {
+        setStatus(
+          '✓ Ma’lumotlar bulutda saqlandi.',
+          'success'
+        );
+      }
 
-      setStatus(
-        'Bulutga saqlash amalga oshmadi. Internet va Supabase sozlamalarini tekshiring.',
-        'error'
+    } catch (error) {
+      console.error(
+        'VERTEX cloud sync:',
+        error
       );
+
+      if (currentUser?.id === userId) {
+        setStatus(
+          'Bulutga saqlash amalga oshmadi. Internet va Supabase sozlamalarini tekshiring.',
+          'error'
+        );
+      }
+
     } finally {
       syncInProgress = false;
 
       if (pendingSnapshot && currentUser) {
         const nextSnapshot = pendingSnapshot;
+
         pendingSnapshot = null;
 
         pushCloud(nextSnapshot);
       }
     }
   }
+
+
+  // =========================================
+  // CLOUD LOAD
+  // =========================================
 
   async function loadCloud(user) {
     const { data, error } = await client
@@ -192,93 +266,145 @@
 
     return data?.app_data ?? null;
   }
+
+
+  // =========================================
+  // REALTIME SYNC
+  // =========================================
+
   function subscribeRealtime(user) {
-  if (realtimeChannel) {
-    client.removeChannel(realtimeChannel);
-    realtimeChannel = null;
-  }
 
-  realtimeChannel = client
-    .channel(`vertex-user-${user.id}`)
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'user_data',
-        filter: `user_id=eq.${user.id}`
-      },
-      (payload) => {
-        if (!payload.new?.app_data) return;
+    removeRealtime();
 
-        const app = window.VertexApp;
+    realtimeChannel = client
+      .channel(`vertex-user-${user.id}`)
 
-        if (!app) return;
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_data',
+          filter: `user_id=eq.${user.id}`
+        },
 
-        const remoteData = payload.new.app_data;
-        const localData = app.getState();
+        (payload) => {
 
-        // O'zimiz yuborgan o'zgarishni qayta qo'llamaymiz.
-        if (
-          JSON.stringify(remoteData) ===
-          JSON.stringify(localData)
-        ) {
-          return;
+          if (currentUser?.id !== user.id) return;
+
+          if (!payload.new?.app_data) return;
+
+          const app = window.VertexApp;
+
+          if (!app) return;
+
+          const remoteData = payload.new.app_data;
+          const localData = app.getState();
+
+          // Bir xil ma'lumotni qayta qo'llamaymiz.
+          if (
+            JSON.stringify(remoteData) ===
+            JSON.stringify(localData)
+          ) {
+            return;
+          }
+
+          try {
+
+            applyingRemoteUpdate = true;
+
+            app.setState(
+              remoteData,
+              accountKey(user.id)
+            );
+
+            setStatus(
+              '✓ Boshqa qurilmadagi o‘zgarishlar sinxronlandi.',
+              'success'
+            );
+
+          } catch (error) {
+
+            console.error(
+              'VERTEX realtime update:',
+              error
+            );
+
+            setStatus(
+              'Sinxronlashda xatolik yuz berdi.',
+              'error'
+            );
+
+          } finally {
+
+            applyingRemoteUpdate = false;
+
+          }
         }
+      )
 
-        try {
-          applyingRemoteUpdate = true;
+      .subscribe((status) => {
 
-          app.setState(
-            remoteData,
-            accountKey(user.id)
-          );
+        console.log(
+          'VERTEX realtime:',
+          status
+        );
+
+        if (status === 'SUBSCRIBED') {
 
           setStatus(
-            '✓ Boshqa qurilmadagi o‘zgarishlar sinxronlandi.',
+            '✓ Real-time sinxronlash faol.',
             'success'
           );
-        } catch (error) {
-          console.error('VERTEX realtime update:', error);
+
+        }
+
+        if (
+          status === 'CHANNEL_ERROR' ||
+          status === 'TIMED_OUT'
+        ) {
 
           setStatus(
-            'Sinxronlashda xatolik yuz berdi.',
+            'Real-time ulanishda xatolik. Internetni tekshiring.',
             'error'
           );
-        } finally {
-          applyingRemoteUpdate = false;
-        }
-      }
-    )
-    .subscribe((status) => {
-      console.log('VERTEX realtime:', status);
 
-      if (status === 'SUBSCRIBED') {
-        setStatus(
-          '✓ Real-time sinxronlash faol.',
-          'success'
-        );
-      }
-    });
+        }
+      });
   }
+
+
+  // =========================================
+  // ACCOUNT SESSION
+  // =========================================
+
   async function applySession(user) {
+
     const app = window.VertexApp;
 
     if (!app || !client) return;
 
+    // LOGOUT / GUEST MODE
     if (!user) {
-      if (currentUser) {
-        currentUser = null;
-        pendingSnapshot = null;
-        clearTimeout(syncTimer);
+
+      removeRealtime();
+
+      currentUser = null;
+      pendingSnapshot = null;
+
+      clearTimeout(syncTimer);
+
+      if (app.getGuestState) {
 
         app.setState(
           app.getGuestState(),
           STORAGE_KEY
         );
+
       }
 
       setButtons(false);
+
       setStatus(
         'Mehmon rejimi. Ma’lumotlar ushbu qurilmada saqlanadi.'
       );
@@ -286,32 +412,73 @@
       return;
     }
 
+
+    // SAME USER
     if (currentUser?.id === user.id) {
+
       setButtons(true);
+
       return;
     }
 
+
+    // PREVENT DUPLICATE SESSION
     if (handlingUserId === user.id) return;
 
     handlingUserId = user.id;
 
     try {
-      setStatus('Hisob ma’lumotlari yuklanmoqda...');
+
+      // Old session cleanup
+      removeRealtime();
+
+      clearTimeout(syncTimer);
+
+      pendingSnapshot = null;
+
+      currentUser = null;
+
+      setStatus(
+        'Hisob ma’lumotlari yuklanmoqda...'
+      );
 
       const cloudData = await loadCloud(user);
 
+      // Account could have changed while loading.
+      const {
+        data: sessionData,
+        error: sessionError
+      } = await client.auth.getSession();
+
+      if (sessionError) throw sessionError;
+
+      if (
+        sessionData.session?.user?.id !== user.id
+      ) {
+        return;
+      }
+
       const key = accountKey(user.id);
 
+
+      // EXISTING CLOUD DATA
       if (cloudData !== null) {
+
         currentUser = user;
 
-        app.setState(cloudData, key);
+        app.setState(
+          cloudData,
+          key
+        );
 
         setStatus(
           '✓ Hisobga kirildi. Bulutdagi ma’lumotlar yuklandi.',
           'success'
         );
+
       } else {
+
+        // GUEST DATA MIGRATION
         const guestData = app.getGuestState();
 
         const hasGuestData = Boolean(
@@ -323,96 +490,165 @@
         let useGuestData = false;
 
         if (hasGuestData) {
+
           useGuestData = confirm(
             'Ushbu qurilmada mehmon ma’lumotlari bor. ' +
             'OK bossangiz, ular hisobingizga ko‘chiriladi. ' +
             'Cancel bossangiz, hisob yangi ma’lumotlar bilan boshlanadi.'
           );
+
         }
 
         currentUser = user;
 
         if (useGuestData) {
-          app.setState(guestData, key);
+
+          app.setState(
+            guestData,
+            key
+          );
+
         } else {
-          app.setState({}, key);
+
+          app.setState(
+            {},
+            key
+          );
+
         }
 
         setButtons(true);
 
         await pushCloud(app.getState());
+
       }
 
+
+      // ENABLE REALTIME
       setButtons(true);
+
+      subscribeRealtime(user);
+
     } catch (error) {
-      console.error('VERTEX account loading:', error);
+
+      console.error(
+        'VERTEX account loading:',
+        error
+      );
 
       setStatus(
         'Hisob ma’lumotlarini yuklab bo‘lmadi. ' +
         'Supabase jadvali va RLS sozlamalarini tekshiring.',
         'error'
       );
+
     } finally {
+
       handlingUserId = null;
+
     }
   }
 
+
+  // =========================================
+  // LOGIN
+  // =========================================
+
   async function login() {
-    const email = $('#vertexAuthEmail')?.value.trim();
-    const password = $('#vertexAuthPassword')?.value;
+
+    const email =
+      $('#vertexAuthEmail')?.value.trim();
+
+    const password =
+      $('#vertexAuthPassword')?.value;
 
     if (!email || !password) {
-      setStatus('Email va parolni kiriting.', 'error');
+
+      setStatus(
+        'Email va parolni kiriting.',
+        'error'
+      );
+
       return;
     }
 
     setStatus('Hisobga kirilmoqda...');
 
-    const { error } = await client.auth.signInWithPassword({
-      email,
-      password
-    });
+    const { error } = await client.auth
+      .signInWithPassword({
+        email,
+        password
+      });
 
     if (error) {
-      console.error('VERTEX login:', error);
+
+      console.error(
+        'VERTEX login:',
+        error
+      );
 
       setStatus(
-        'Kirish amalga oshmadi: ' + error.message,
+        'Kirish amalga oshmadi: ' +
+        error.message,
         'error'
       );
 
       return;
     }
 
-    setStatus('Kirish muvaffaqiyatli.', 'success');
+    setStatus(
+      'Kirish muvaffaqiyatli.',
+      'success'
+    );
   }
 
+
+  // =========================================
+  // SIGNUP
+  // =========================================
+
   async function signup() {
-    const email = $('#vertexAuthEmail')?.value.trim();
-    const password = $('#vertexAuthPassword')?.value;
+
+    const email =
+      $('#vertexAuthEmail')?.value.trim();
+
+    const password =
+      $('#vertexAuthPassword')?.value;
 
     if (!email || !password) {
-      setStatus('Email va parolni kiriting.', 'error');
+
+      setStatus(
+        'Email va parolni kiriting.',
+        'error'
+      );
+
       return;
     }
 
     if (password.length < 6) {
+
       setStatus(
         'Parol kamida 6 ta belgidan iborat bo‘lishi kerak.',
         'error'
       );
+
       return;
     }
 
     setStatus('Hisob yaratilmoqda...');
 
-    const { data, error } = await client.auth.signUp({
-      email,
-      password
-    });
+    const { data, error } = await client.auth
+      .signUp({
+        email,
+        password
+      });
 
     if (error) {
-      console.error('VERTEX signup:', error);
+
+      console.error(
+        'VERTEX signup:',
+        error
+      );
 
       setStatus(
         'Ro‘yxatdan o‘tish amalga oshmadi: ' +
@@ -424,41 +660,72 @@
     }
 
     if (!data.session) {
+
       setStatus(
         'Hisob yaratildi. Email manzilingizni tasdiqlang, so‘ng tizimga kiring.',
         'success'
       );
+
     } else {
+
       setStatus(
         'Hisob yaratildi. Ma’lumotlar yuklanmoqda...',
         'success'
       );
+
     }
   }
 
+
+  // =========================================
+  // LOGOUT
+  // =========================================
+
   async function logout() {
+
     if (!client || !currentUser) return;
+
+    setStatus('Hisobdan chiqilmoqda...');
 
     const { error } = await client.auth.signOut();
 
     if (error) {
-      console.error('VERTEX logout:', error);
+
+      console.error(
+        'VERTEX logout:',
+        error
+      );
 
       setStatus(
-        'Hisobdan chiqishda xatolik: ' + error.message,
+        'Hisobdan chiqishda xatolik: ' +
+        error.message,
         'error'
       );
 
       return;
     }
 
-    setStatus('Hisobdan chiqildi.', 'success');
+    setStatus(
+      'Hisobdan chiqildi.',
+      'success'
+    );
   }
 
+
+  // =========================================
+  // AUTOMATIC CLOUD SYNC
+  // =========================================
+
   function bindSync() {
+
     window.addEventListener(
       'vertex:state-saved',
+
       (event) => {
+
+        // Ignore remote updates.
+        if (applyingRemoteUpdate) return;
+
         if (!currentUser) return;
 
         if (
@@ -471,13 +738,22 @@
         clearTimeout(syncTimer);
 
         syncTimer = setTimeout(() => {
+
           pushCloud(event.detail.state);
+
         }, 800);
+
       }
     );
   }
 
+
+  // =========================================
+  // INITIALIZATION
+  // =========================================
+
   async function init() {
+
     addPanel();
 
     if (
@@ -487,6 +763,7 @@
       window.VERTEX_SUPABASE_URL.includes('YOUR_') ||
       window.VERTEX_SUPABASE_KEY.includes('YOUR_')
     ) {
+
       setStatus(
         'Supabase sozlamalari kiritilmagan. supabase-config.js faylini tekshiring.',
         'error'
@@ -496,63 +773,104 @@
     }
 
     if (!$('#vertexAuthForm')) {
-      console.error('VERTEX auth panel topilmadi.');
+
+      console.error(
+        'VERTEX auth panel topilmadi.'
+      );
+
       return;
     }
 
+
+    // CREATE SUPABASE CLIENT
     client = window.supabase.createClient(
       window.VERTEX_SUPABASE_URL,
       window.VERTEX_SUPABASE_KEY
     );
 
+
+    // LOGIN FORM
     $('#vertexAuthForm').addEventListener(
       'submit',
+
       async (event) => {
+
         event.preventDefault();
+
         await login();
+
       }
     );
 
+
+    // SIGNUP BUTTON
     $('#vertexSignupBtn').addEventListener(
       'click',
       signup
     );
 
+
+    // LOGOUT BUTTON
     $('#vertexLogoutBtn').addEventListener(
       'click',
       logout
     );
 
+
+    // AUTO SYNC
     bindSync();
 
+
+    // CHECK SESSION
     const {
       data,
       error
     } = await client.auth.getSession();
 
     if (error) {
+
       setStatus(
         'Hisob holatini tekshirib bo‘lmadi.',
         'error'
       );
 
       console.error(error);
+
       return;
     }
 
-    await applySession(data.session?.user || null);
 
+    // LOAD EXISTING SESSION
+    await applySession(
+      data.session?.user || null
+    );
+
+
+    // AUTH STATE LISTENER
     client.auth.onAuthStateChange(
       (_event, session) => {
+
         setTimeout(() => {
-          applySession(session?.user || null);
+
+          applySession(
+            session?.user || null
+          );
+
         }, 0);
+
       }
     );
+
   }
+
+
+  // =========================================
+  // START APP
+  // =========================================
 
   document.addEventListener(
     'DOMContentLoaded',
     init
   );
+
 })();

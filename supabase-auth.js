@@ -12,7 +12,8 @@
   let syncTimer = null;
   let syncInProgress = false;
   let pendingSnapshot = null;
-
+let realtimeChannel = null;
+let applyingRemoteUpdate = false;
   const accountKey = (userId) =>
     `${STORAGE_KEY}_user_${userId}`;
 

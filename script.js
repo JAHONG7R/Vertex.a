@@ -650,7 +650,7 @@ function updateHabit(id, data) {
 function deleteHabit(id) {
   const habit = state.habits.find(item => item.id === id);
   if (!habit) return;
-  if (!confirm(`“${habit.title}” odatini va uning belgilashlar tarixini o‘chirmoqchimisiz?`)) return;
+  if (!window.confirm(`“${habit.title}” odatini o‘chirishni tasdiqlaysizmi?\n\nUning bajarilgan kunlari tarixi ham o‘chadi. Bu amalni ortga qaytarib bo‘lmaydi.`)) return;
   state.habits = state.habits.filter(item => item.id !== id);
   state.logs = state.logs.filter(log => log.habitId !== id);
   saveState();
@@ -1012,9 +1012,10 @@ function renderAnalytics() {
     const completed = active.filter(habit => isChecked(habit.id, date));
     const total = active.length;
     const percent = total ? Math.round(completed.length / total * 100) : 0;
+    const segmentHeight = completed.length ? (100 / completed.length) : 0;
     const segments = completed.map(habit => {
       const color = normalizeHabitColor(habit.color);
-      return `<i class="bar-segment" title="${escapeHTML(habit.title)}" style="background:${color}"></i>`;
+      return `<i class="bar-segment" title="${escapeHTML(habit.title)}" style="height:${segmentHeight}%;background:${color};background-color:${color};flex:0 0 ${segmentHeight}%"></i>`;
     }).join('');
     return `
       <div class="bar-col ${date === today() ? 'today' : ''}">

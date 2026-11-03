@@ -19,7 +19,6 @@ function localDateString(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
-
   return `${y}-${m}-${d}`;
 }
 
@@ -37,18 +36,14 @@ function shiftDate(s, amount) {
 function weekStart(s = today()) {
   const d = parseDate(s);
   const mondayOffset = (d.getDay() + 6) % 7;
-
   d.setDate(d.getDate() - mondayOffset);
-
   return localDateString(d);
 }
 
 function uid() {
   return (
     window.crypto?.randomUUID?.() ||
-    `v${Date.now().toString(36)}${Math.random()
-      .toString(36)
-      .slice(2, 8)}`
+    `v${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`
   );
 }
 
@@ -70,19 +65,7 @@ const CATEGORY_ICONS = {
   discipline: '↗'
 };
 
-const DAY_NAMES = [
-  'Du', 'Se', 'Cho', 'Pay', 'Ju', 'Shan', 'Yak'
-];
-
-const DAY_LONG = [
-  'Dushanba',
-  'Seshanba',
-  'Chorshanba',
-  'Payshanba',
-  'Juma',
-  'Shanba',
-  'Yakshanba'
-];
+const DAY_NAMES = ['Du', 'Se', 'Cho', 'Pay', 'Ju', 'Shan', 'Yak'];
 
 const DEFAULT_STATE = () => ({
   version: 3,
@@ -112,11 +95,6 @@ let timerInterval = null;
 let timerRunning = false;
 let toastTimeout = null;
 
-/*
- * SUPABASE INTEGRATSIYASI UCHUN:
- * Mehmon ma'lumotlari va akkaunt ma'lumotlari
- * alohida localStorage kalitlarida saqlanadi.
- */
 let activeStorageKey = STORAGE_KEY;
 
 function safeArray(value) {
@@ -124,25 +102,18 @@ function safeArray(value) {
 }
 
 function validDate(s) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s))) {
-    return false;
-  }
-
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s))) return false;
   const d = parseDate(s);
-
-  return (
-    !Number.isNaN(d.getTime()) &&
-    localDateString(d) === String(s)
-  );
+  return !Number.isNaN(d.getTime()) && localDateString(d) === String(s);
 }
 
 function normalizeCategory(category) {
-  return Object.hasOwn(CATEGORIES, category)
-    ? category
-    : 'focus';
+  return Object.hasOwn(CATEGORIES, category) ? category : 'focus';
 }
 
 function normalizeHabit(habit) {
+  if (!habit || typeof habit !== 'object') return null;
+
   const title = String(
     habit.title ?? habit.name ?? habit.text ?? ''
   ).trim().slice(0, 80);
@@ -161,195 +132,103 @@ function normalizeHabit(habit) {
     id: String(habit.id ?? uid()),
     title,
     category: normalizeCategory(habit.category),
-    targetDays: [3, 5, 6, 7].includes(target)
-      ? target
-      : 5,
+    targetDays: [3, 5, 6, 7].includes(target) ? target : 5,
     isArchived: Boolean(
-      habit.isArchived ??
-      habit.is_archived ??
-      habit.archived
+      habit.isArchived ?? habit.is_archived ?? habit.archived
     ),
-    createdAt: validDate(habit.createdAt)
-      ? habit.createdAt
-      : today()
+    createdAt: validDate(habit.createdAt) ? habit.createdAt : today()
   };
 }
 
 function normalizeState(raw) {
   const next = DEFAULT_STATE();
-
-  if (!raw || typeof raw !== 'object') {
-    return next;
-  }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return next;
 
   next.userName = String(
-    raw.userName ??
-    raw.profileName ??
-    raw.name ??
-    'Foydalanuvchi'
+    raw.userName ?? raw.profileName ?? raw.name ?? 'Foydalanuvchi'
   ).slice(0, 40) || 'Foydalanuvchi';
 
-  next.habits = safeArray(raw.habits)
-    .map(normalizeHabit)
-    .filter(Boolean);
+  next.habits = safeArray(raw.habits).map(normalizeHabit).filter(Boolean);
 
   const seen = new Set();
-
   const pushLog = (habitId, date) => {
     const id = String(habitId);
     const key = `${id}|${date}`;
-
     if (
       validDate(date) &&
       next.habits.some(h => h.id === id) &&
       !seen.has(key)
     ) {
-      next.logs.push({
-        habitId: id,
-        date
-      });
-
+      next.logs.push({ habitId: id, date });
       seen.add(key);
     }
   };
 
   if (Array.isArray(raw.logs)) {
     raw.logs.forEach(log => {
-      const habitId =
-        log.habitId ??
-        log.habit_id;
-
-      const date =
-        log.date ??
-        log.completed_date ??
-        log.day;
-
-      if (habitId != null) {
-        pushLog(habitId, String(date ?? ''));
-      }
+      if (!log || typeof log !== 'object') return;
+      const habitId = log.habitId ?? log.habit_id;
+      const date = log.date ?? log.completed_date ?? log.day;
+      if (habitId != null) pushLog(habitId, String(date ?? ''));
     });
-  } else if (
-    raw.checks &&
-    typeof raw.checks === 'object'
-  ) {
+  } else if (raw.checks && typeof raw.checks === 'object') {
     Object.entries(raw.checks).forEach(([key, value]) => {
-      if (
-        value !== true &&
-        value !== 1 &&
-        value !== 'true'
-      ) {
-        return;
-      }
-
+      if (value !== true && value !== 1 && value !== 'true') return;
       const dateMatch = key.match(/\d{4}-\d{2}-\d{2}/);
-
       if (!dateMatch) return;
-
       const date = dateMatch[0];
-
       const habitId = key
         .replace(date, '')
         .replace(/[_|:/-]+$/, '')
         .replace(/^[_|:/-]+/, '');
-
-      let habit = next.habits.find(
-        h => h.id === habitId
-      );
-
+      let habit = next.habits.find(h => h.id === habitId);
       if (!habit) {
-        const reverse = key
-          .slice(date.length)
+        const reverse = key.slice(date.length)
           .replace(/^[_|:/-]+/, '')
           .replace(/[_|:/-]+$/, '');
-
-        habit = next.habits.find(
-          h => h.id === reverse
-        );
+        habit = next.habits.find(h => h.id === reverse);
       }
-
-      if (habit) {
-        pushLog(habit.id, date);
-      }
+      if (habit) pushLog(habit.id, date);
     });
   }
 
   next.tasks = safeArray(raw.tasks)
-    .map(task => ({
-      id: String(task.id ?? uid()),
-
-      title: String(
-        task.title ??
-        task.name ??
-        task.text ??
-        ''
-      ).trim().slice(0, 120),
-
-      date: validDate(
-        task.date ??
-        task.dueDate ??
-        task.due_date
-      )
-        ? String(
-            task.date ??
-            task.dueDate ??
-            task.due_date
-          )
-        : today(),
-
-      done: Boolean(
-        task.done ??
-        task.completed ??
-        task.is_done
-      )
-    }))
+    .filter(task => task && typeof task === 'object')
+    .map(task => {
+      const taskDate = task.date ?? task.dueDate ?? task.due_date;
+      return {
+        id: String(task.id ?? uid()),
+        title: String(task.title ?? task.name ?? task.text ?? '')
+          .trim().slice(0, 120),
+        date: validDate(taskDate) ? String(taskDate) : today(),
+        done: Boolean(task.done ?? task.completed ?? task.is_done)
+      };
+    })
     .filter(task => task.title);
 
-  const settings =
-    raw.settings &&
-    typeof raw.settings === 'object'
-      ? raw.settings
-      : {};
+  const settings = raw.settings && typeof raw.settings === 'object'
+    ? raw.settings
+    : {};
 
   next.settings = {
     focusMinutes: clampInt(
-      settings.focusMinutes ??
-      settings.focus ??
-      raw.focusMinutes,
-      1,
-      120,
-      25
+      settings.focusMinutes ?? settings.focus ?? raw.focusMinutes,
+      1, 120, 25
     ),
-
     shortMinutes: clampInt(
-      settings.shortMinutes ??
-      settings.shortBreakMinutes ??
-      5,
-      1,
-      30,
-      5
+      settings.shortMinutes ?? settings.shortBreakMinutes ?? 5,
+      1, 30, 5
     ),
-
     longMinutes: clampInt(
-      settings.longMinutes ??
-      settings.longBreakMinutes ??
-      15,
-      1,
-      60,
-      15
+      settings.longMinutes ?? settings.longBreakMinutes ?? 15,
+      1, 60, 15
     )
   };
 
   const rawMode = raw.pomodoro?.mode;
-
   next.pomodoro = {
-    mode: ['focus', 'short', 'long'].includes(rawMode)
-      ? rawMode
-      : 'focus',
-
-    sessions: Math.max(
-      0,
-      Number(raw.pomodoro?.sessions) || 0
-    )
+    mode: ['focus', 'short', 'long'].includes(rawMode) ? rawMode : 'focus',
+    sessions: Math.max(0, Number(raw.pomodoro?.sessions) || 0)
   };
 
   return next;
@@ -357,10 +236,99 @@ function normalizeState(raw) {
 
 function clampInt(value, min, max, fallback) {
   const n = Number(value);
-
   return Number.isFinite(n)
     ? Math.min(max, Math.max(min, Math.round(n)))
     : fallback;
+}
+
+/* ==============================
+   AVTOMATIK ZAXIRA NUSXASI
+============================== */
+
+function backupKey(storageKey = activeStorageKey) {
+  return `${storageKey}__backup_v1`;
+}
+
+function backupMetaKey(storageKey = activeStorageKey) {
+  return `${storageKey}__backup_v1_meta`;
+}
+
+function createBackup(storageKey = activeStorageKey) {
+  try {
+    const current = localStorage.getItem(storageKey);
+    if (!current) return false;
+
+    const parsed = JSON.parse(current);
+    if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.habits)) {
+      return false;
+    }
+
+    localStorage.setItem(backupKey(storageKey), current);
+    localStorage.setItem(
+      backupMetaKey(storageKey),
+      JSON.stringify({ savedAt: new Date().toISOString() })
+    );
+    return true;
+  } catch (error) {
+    console.warn('Avtomatik zaxira yaratilmadi:', error);
+    return false;
+  }
+}
+
+function getBackupInfo(storageKey = activeStorageKey) {
+  try {
+    const data = localStorage.getItem(backupKey(storageKey));
+    if (!data) return { available: false, savedAt: null };
+
+    const parsed = JSON.parse(data);
+    if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.habits)) {
+      return { available: false, savedAt: null };
+    }
+
+    const meta = JSON.parse(
+      localStorage.getItem(backupMetaKey(storageKey)) || '{}'
+    );
+
+    return {
+      available: true,
+      savedAt: meta.savedAt || null
+    };
+  } catch (error) {
+    return { available: false, savedAt: null };
+  }
+}
+
+function restoreBackup() {
+  const info = getBackupInfo();
+  if (!info.available) {
+    notify('Avtomatik zaxira nusxasi topilmadi.');
+    renderSettings();
+    return;
+  }
+
+  if (!confirm(
+    'Avtomatik zaxira nusxasini tiklash hozirgi ma’lumotlaringizni almashtiradi. Davom etasizmi?'
+  )) return;
+
+  try {
+    const raw = localStorage.getItem(backupKey());
+    const parsed = JSON.parse(raw);
+
+    // Tiklashdan oldin hozirgi holatni zaxiraga olamiz.
+    createBackup(activeStorageKey);
+
+    state = normalizeState(parsed);
+    pauseTimer();
+    timerSeconds = modeDuration(state.pomodoro.mode);
+    plannerDate = today();
+
+    saveState();
+    renderAll();
+    notify('Avtomatik zaxira nusxasi tiklandi.');
+  } catch (error) {
+    console.error('Zaxirani tiklashda xatolik:', error);
+    notify('Zaxira nusxasini tiklab bo‘lmadi.');
+  }
 }
 
 /* ==============================
@@ -371,67 +339,40 @@ function migrateOldData() {
   for (const key of OLD_KEYS) {
     try {
       const raw = localStorage.getItem(key);
-
       if (!raw) continue;
-
       const converted = normalizeState(JSON.parse(raw));
-
-      if (
-        converted.habits.length ||
-        converted.logs.length ||
-        converted.tasks.length
-      ) {
+      if (converted.habits.length || converted.logs.length || converted.tasks.length) {
         state = converted;
         saveState();
         return true;
       }
     } catch (error) {
-      console.warn(
-        'Eski ma’lumotlarni ko‘chirish imkoni bo‘lmadi:',
-        error
-      );
+      console.warn('Eski ma’lumotlarni ko‘chirish imkoni bo‘lmadi:', error);
     }
   }
-
   return false;
 }
 
 function loadState() {
-  /*
-   * Ilova birinchi ishga tushganda faqat mehmon
-   * ma'lumotlarini o'qiydi. Akkaunt ma'lumotlarini
-   * supabase-auth.js alohida yuklaydi.
-   */
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-
-    if (raw) {
-      return normalizeState(JSON.parse(raw));
-    }
+    if (raw) return normalizeState(JSON.parse(raw));
   } catch (error) {
-    console.warn(
-      'Saqlangan ma’lumotlarni o‘qib bo‘lmadi:',
-      error
-    );
+    console.warn('Saqlangan ma’lumotlarni o‘qib bo‘lmadi:', error);
   }
-
   state = DEFAULT_STATE();
   migrateOldData();
-
   return state;
 }
 
 function saveState() {
   try {
-    localStorage.setItem(
-      activeStorageKey,
-      JSON.stringify(state)
-    );
+    // Joriy saqlangan holatni yangilashdan oldin zaxiralaymiz.
+    createBackup(activeStorageKey);
 
-    /*
-     * Bulutli modul ushbu hodisani tinglaydi.
-     * Faqat akkaunt kaliti mos bo'lsa, bulutga yozadi.
-     */
+    localStorage.setItem(activeStorageKey, JSON.stringify(state));
+
+    // Supabase moduli kutadigan hodisa va detail shakli o‘zgartirilmagan.
     window.dispatchEvent(
       new CustomEvent('vertex:state-saved', {
         detail: {
@@ -442,87 +383,53 @@ function saveState() {
     );
   } catch (error) {
     console.error('Saqlash xatosi:', error);
-
-    notify(
-      'Ma’lumotni saqlab bo‘lmadi. Brauzer xotirasini tekshiring.'
-    );
+    notify('Ma’lumotni saqlab bo‘lmadi. Brauzer xotirasini tekshiring.');
   }
 }
 
 function notify(message) {
   const element = $('#toast');
-
   if (!element) {
     console.log(message);
     return;
   }
-
   element.textContent = message;
   element.classList.add('show');
-
   clearTimeout(toastTimeout);
-
-  toastTimeout = setTimeout(() => {
-    element.classList.remove('show');
-  }, 2800);
+  toastTimeout = setTimeout(() => element.classList.remove('show'), 2800);
 }
 
-/*
- * Supabase autentifikatsiya moduli uchun
- * xavfsiz ko'chirma va holatni almashtirish interfeysi.
- */
 window.VertexApp = {
   getState() {
     return JSON.parse(JSON.stringify(state));
   },
-
   getGuestState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-
-      return raw
-        ? normalizeState(JSON.parse(raw))
-        : DEFAULT_STATE();
+      return raw ? normalizeState(JSON.parse(raw)) : DEFAULT_STATE();
     } catch (error) {
-      console.error(
-        'Mehmon ma’lumotlarini o‘qishda xatolik:',
-        error
-      );
-
+      console.error('Mehmon ma’lumotlarini o‘qishda xatolik:', error);
       return DEFAULT_STATE();
     }
   },
-
   getStorageKey() {
     return activeStorageKey;
   },
-
   setState(raw, storageKey = STORAGE_KEY) {
     activeStorageKey = storageKey;
     state = normalizeState(raw);
-
     pauseTimer();
-
     timerSeconds = modeDuration(state.pomodoro.mode);
     plannerDate = today();
-
     try {
-      localStorage.setItem(
-        activeStorageKey,
-        JSON.stringify(state)
-      );
+      // Bulutdan yuklangan holat qayta bulutga yuborilmasligi uchun
+      // bu yerda saveState() yoki state-saved hodisasi chaqirilmaydi.
+      localStorage.setItem(activeStorageKey, JSON.stringify(state));
     } catch (error) {
-      console.error(
-        'Holatni saqlashda xatolik:',
-        error
-      );
+      console.error('Holatni saqlashda xatolik:', error);
     }
-
-    if ($('#todayPercent')) {
-      renderAll();
-    }
+    if ($('#todayPercent')) renderAll();
   },
-
   notify(message) {
     notify(message);
   }
@@ -542,22 +449,12 @@ function escapeHTML(value) {
   })[char]);
 }
 
-function dateLabel(
-  date,
-  options = { day: 'numeric', month: 'short' }
-) {
-  return parseDate(date).toLocaleDateString(
-    'uz-UZ',
-    options
-  );
+function dateLabel(date, options = { day: 'numeric', month: 'short' }) {
+  return parseDate(date).toLocaleDateString('uz-UZ', options);
 }
 
 function isChecked(habitId, date) {
-  return state.logs.some(
-    log =>
-      log.habitId === habitId &&
-      log.date === date
-  );
+  return state.logs.some(log => log.habitId === habitId && log.date === date);
 }
 
 function toggleCheck(habitId, date) {
@@ -565,76 +462,46 @@ function toggleCheck(habitId, date) {
     notify('Kelajakdagi kunni belgilab bo‘lmaydi.');
     return;
   }
-
   const index = state.logs.findIndex(
-    log =>
-      log.habitId === habitId &&
-      log.date === date
+    log => log.habitId === habitId && log.date === date
   );
-
-  if (index >= 0) {
-    state.logs.splice(index, 1);
-  } else {
-    state.logs.push({ habitId, date });
-  }
-
+  if (index >= 0) state.logs.splice(index, 1);
+  else state.logs.push({ habitId, date });
   saveState();
   renderAll();
 }
 
 function getHabitLogs(habitId, from, to) {
   return state.logs.filter(
-    log =>
-      log.habitId === habitId &&
-      log.date >= from &&
-      log.date <= to
+    log => log.habitId === habitId && log.date >= from && log.date <= to
   );
 }
 
 function streakForHabit(habitId) {
   let date = today();
   let count = 0;
-
-  if (!isChecked(habitId, date)) {
-    date = shiftDate(date, -1);
-  }
-
+  if (!isChecked(habitId, date)) date = shiftDate(date, -1);
   for (let i = 0; i < 500; i++) {
     if (isChecked(habitId, date)) {
       count++;
       date = shiftDate(date, -1);
-    } else {
-      break;
-    }
+    } else break;
   }
-
   return count;
 }
 
 function currentStreak() {
   let date = today();
   let count = 0;
-
-  const active = state.habits.filter(
-    habit => !habit.isArchived
-  );
-
-  const hasAny = day =>
-    active.some(habit => isChecked(habit.id, day));
-
-  if (!hasAny(date)) {
-    date = shiftDate(date, -1);
-  }
-
+  const active = state.habits.filter(habit => !habit.isArchived);
+  const hasAny = day => active.some(habit => isChecked(habit.id, day));
+  if (!hasAny(date)) date = shiftDate(date, -1);
   for (let i = 0; i < 500; i++) {
     if (hasAny(date)) {
       count++;
       date = shiftDate(date, -1);
-    } else {
-      break;
-    }
+    } else break;
   }
-
   return count;
 }
 
@@ -643,59 +510,33 @@ function xpTotal() {
 }
 
 function activeHabits() {
-  return state.habits.filter(
-    habit => !habit.isArchived
-  );
+  return state.habits.filter(habit => !habit.isArchived);
 }
 
 function doneCountOn(date) {
-  return activeHabits().filter(
-    habit => isChecked(habit.id, date)
-  ).length;
+  return activeHabits().filter(habit => isChecked(habit.id, date)).length;
 }
 
 function todayRate() {
   const habits = activeHabits();
-
-  return habits.length
-    ? Math.round(
-        doneCountOn(today()) / habits.length * 100
-      )
-    : 0;
+  return habits.length ? Math.round(doneCountOn(today()) / habits.length * 100) : 0;
 }
 
 function rateForDays(days) {
   const habits = activeHabits();
-
   if (!habits.length) return 0;
-
   const end = today();
   const start = shiftDate(end, -(days - 1));
-
   let done = 0;
-
-  for (
-    let date = start;
-    date <= end;
-    date = shiftDate(date, 1)
-  ) {
-    done += habits.filter(
-      habit => isChecked(habit.id, date)
-    ).length;
+  for (let date = start; date <= end; date = shiftDate(date, 1)) {
+    done += habits.filter(habit => isChecked(habit.id, date)).length;
   }
-
-  return Math.round(
-    done / (habits.length * days) * 100
-  );
+  return Math.round(done / (habits.length * days) * 100);
 }
 
 function weekDates(anchor = today()) {
   const start = weekStart(anchor);
-
-  return Array.from(
-    { length: 7 },
-    (_, index) => shiftDate(start, index)
-  );
+  return Array.from({ length: 7 }, (_, index) => shiftDate(start, index));
 }
 
 function categoryLabel(category) {
@@ -708,23 +549,13 @@ function categoryLabel(category) {
 
 function goTo(page) {
   if (!$('#page-' + page)) return;
-
   activePage = page;
-
   $$('.page').forEach(element => {
-    element.classList.toggle(
-      'active',
-      element.id === `page-${page}`
-    );
+    element.classList.toggle('active', element.id === `page-${page}`);
   });
-
   $$('.nav-item[data-page]').forEach(button => {
-    button.classList.toggle(
-      'active',
-      button.dataset.page === page
-    );
+    button.classList.toggle('active', button.dataset.page === page);
   });
-
   const names = {
     dashboard: 'UMUMIY KO‘RINISH',
     habits: 'ODATLAR',
@@ -733,63 +564,39 @@ function goTo(page) {
     analytics: 'TAHLIL',
     settings: 'SOZLAMALAR'
   };
-
-  $('#pageCrumb').textContent =
-    names[page] || page.toUpperCase();
-
+  $('#pageCrumb').textContent = names[page] || page.toUpperCase();
   $('#sidebar').classList.remove('open');
-
   if (page === 'planner') renderPlanner();
   if (page === 'pomodoro') renderTimer();
   if (page === 'analytics') renderAnalytics();
+  if (page === 'settings') renderSettings();
 }
 
 function openModal(id) {
   const element = $('#' + id);
-
   if (!element) return;
-
   element.classList.remove('hidden');
-
-  const input = $(
-    'input:not([type=hidden]), select',
-    element
-  );
-
-  if (input) {
-    setTimeout(() => input.focus(), 30);
-  }
+  const input = $('input:not([type=hidden]), select', element);
+  if (input) setTimeout(() => input.focus(), 30);
 }
 
 function closeModals() {
-  $$('.modal-backdrop').forEach(element => {
-    element.classList.add('hidden');
-  });
+  $$('.modal-backdrop').forEach(element => element.classList.add('hidden'));
 }
 
 function openHabitModal(habit = null) {
   $('#habitForm').reset();
-
   $('#habitId').value = habit?.id || '';
   $('#habitTitle').value = habit?.title || '';
-  $('#habitCategory').value =
-    habit?.category || 'focus';
-
-  $('#habitTarget').value = String(
-    habit?.targetDays || 5
-  );
-
-  $('#habitModalTitle').textContent = habit
-    ? 'Odatni tahrirlash'
-    : 'Yangi odat';
-
+  $('#habitCategory').value = habit?.category || 'focus';
+  $('#habitTarget').value = String(habit?.targetDays || 5);
+  $('#habitModalTitle').textContent = habit ? 'Odatni tahrirlash' : 'Yangi odat';
   openModal('habitModalBackdrop');
 }
 
 function openTaskModal() {
   $('#taskForm').reset();
   $('#taskDateInput').value = plannerDate;
-
   openModal('taskModalBackdrop');
 }
 
@@ -798,86 +605,48 @@ function openTaskModal() {
 ============================== */
 
 function addHabit(data) {
-  const habit = {
+  state.habits.unshift({
     id: uid(),
     title: data.title.trim(),
     category: data.category,
     targetDays: Number(data.targetDays),
     isArchived: false,
     createdAt: today()
-  };
-
-  state.habits.unshift(habit);
-
+  });
   saveState();
   renderAll();
-
   notify('Yangi odat qo‘shildi.');
 }
 
 function updateHabit(id, data) {
-  const habit = state.habits.find(
-    item => item.id === id
-  );
-
+  const habit = state.habits.find(item => item.id === id);
   if (!habit) return;
-
   habit.title = data.title.trim();
   habit.category = data.category;
   habit.targetDays = Number(data.targetDays);
-
   saveState();
   renderAll();
-
   notify('Odat yangilandi.');
 }
 
 function deleteHabit(id) {
-  const habit = state.habits.find(
-    item => item.id === id
-  );
-
+  const habit = state.habits.find(item => item.id === id);
   if (!habit) return;
-
-  if (
-    !confirm(
-      `“${habit.title}” odatini va uning belgilashlar tarixini o‘chirmoqchimisiz?`
-    )
-  ) {
-    return;
-  }
-
-  state.habits = state.habits.filter(
-    item => item.id !== id
-  );
-
-  state.logs = state.logs.filter(
-    log => log.habitId !== id
-  );
-
+  if (!confirm(`“${habit.title}” odatini va uning belgilashlar tarixini o‘chirmoqchimisiz?`)) return;
+  state.habits = state.habits.filter(item => item.id !== id);
+  state.logs = state.logs.filter(log => log.habitId !== id);
   saveState();
   renderAll();
-
   notify('Odat o‘chirildi.');
 }
 
 function archiveHabit(id) {
-  const habit = state.habits.find(
-    item => item.id === id
-  );
-
+  const habit = state.habits.find(item => item.id === id);
   if (!habit) return;
-
   habit.isArchived = !habit.isArchived;
-
   saveState();
   renderAll();
-
-  notify(
-    habit.isArchived
-      ? 'Odat arxivlandi.'
-      : 'Odat arxivdan qaytarildi.'
-  );
+  notify(habit.isArchived ? 'Odat arxivlandi.' : 'Odat arxivdan qaytarildi.');
 }
 
 /* ==============================
@@ -886,38 +655,22 @@ function archiveHabit(id) {
 
 function renderHeader() {
   const date = parseDate(today());
-
-  $('#todayLabel').textContent =
-    date.toLocaleDateString('uz-UZ', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    }).toUpperCase();
-
-  $('#footerDate').textContent =
-    date.toLocaleDateString('uz-UZ', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long'
-    });
-
+  $('#todayLabel').textContent = date.toLocaleDateString('uz-UZ', {
+    day: 'numeric', month: 'short', year: 'numeric'
+  }).toUpperCase();
+  $('#footerDate').textContent = date.toLocaleDateString('uz-UZ', {
+    weekday: 'long', day: 'numeric', month: 'long'
+  });
   const name = state.userName || 'Foydalanuvchi';
-
   $('#sidebarName').textContent = name;
-
-  $('#sidebarAvatar').textContent =
-    (name.trim()[0] || 'U').toUpperCase();
-
+  $('#sidebarAvatar').textContent = (name.trim()[0] || 'U').toUpperCase();
   $('#userNameInput').value = name;
-
   const hour = new Date().getHours();
-
-  $('#greetingTitle').textContent =
-    hour < 12
-      ? 'Xayrli tong, ' + name + '!'
-      : hour < 18
-        ? 'Kuningiz samarali o‘tsin, ' + name + '!'
-        : 'Xayrli kech, ' + name + '!';
+  $('#greetingTitle').textContent = hour < 12
+    ? 'Xayrli tong, ' + name + '!'
+    : hour < 18
+      ? 'Kuningiz samarali o‘tsin, ' + name + '!'
+      : 'Xayrli kech, ' + name + '!';
 }
 
 function renderStats() {
@@ -926,90 +679,46 @@ function renderStats() {
   const percent = todayRate();
   const xp = xpTotal();
   const level = Math.floor(xp / 100) + 1;
-
   $('#todayPercent').textContent = percent + '%';
-
-  $('#todayDoneText').textContent =
-    `${done} / ${active.length} bajarildi`;
-
+  $('#todayDoneText').textContent = `${done} / ${active.length} bajarildi`;
   $('#todayProgress').style.width = percent + '%';
-
-  $('#currentStreak').innerHTML =
-    `${currentStreak()} <small>kun</small>`;
-
-  $('#xpValue').innerHTML =
-    `${xp} <small>XP</small>`;
-
-  $('#levelLabel').textContent =
-    `${level}-daraja · keyingi darajagacha ${100 - (xp % 100)} XP`;
-
+  $('#currentStreak').innerHTML = `${currentStreak()} <small>kun</small>`;
+  $('#xpValue').innerHTML = `${xp} <small>XP</small>`;
+  $('#levelLabel').textContent = `${level}-daraja · keyingi darajagacha ${100 - (xp % 100)} XP`;
   $('#levelProgress').style.width = (xp % 100) + '%';
-
   const adherence = rateForDays(30);
-
-  $('#adherenceValue').textContent =
-    adherence + '%';
-
-  $('#adherenceProgress').style.width =
-    adherence + '%';
+  $('#adherenceValue').textContent = adherence + '%';
+  $('#adherenceProgress').style.width = adherence + '%';
 }
 
 function renderWeekStrip() {
   const dates = weekDates();
-
-  $('#weekStrip').innerHTML = dates.map(
-    (date, index) => `
-      <div class="week-day ${
-        date === today() ? 'today' : ''
-      } ${
-        doneCountOn(date) > 0 ? 'done' : ''
-      }">
-        <span class="day-name">${DAY_NAMES[index]}</span>
-        <span class="day-num">${parseDate(date).getDate()}</span>
-        <span class="day-dot"></span>
-      </div>
-    `
-  ).join('');
+  $('#weekStrip').innerHTML = dates.map((date, index) => `
+    <div class="week-day ${date === today() ? 'today' : ''} ${doneCountOn(date) > 0 ? 'done' : ''}">
+      <span class="day-name">${DAY_NAMES[index]}</span>
+      <span class="day-num">${parseDate(date).getDate()}</span>
+      <span class="day-dot"></span>
+    </div>
+  `).join('');
 }
 
 function renderDashboardHabits() {
   const habits = activeHabits().slice(0, 5);
   const box = $('#dashboardHabits');
-
   box.innerHTML = habits.map(habit => `
     <div class="habit-preview">
-      <span class="habit-glyph">
-        ${CATEGORY_ICONS[habit.category] || '◉'}
-      </span>
-
+      <span class="habit-glyph">${CATEGORY_ICONS[habit.category] || '◉'}</span>
       <div class="habit-preview-info">
         <strong>${escapeHTML(habit.title)}</strong>
-        <small>
-          ${escapeHTML(categoryLabel(habit.category))}
-          · ${streakForHabit(habit.id)} kunlik seriya
-        </small>
+        <small>${escapeHTML(categoryLabel(habit.category))} · ${streakForHabit(habit.id)} kunlik seriya</small>
       </div>
-
-      <button
-        class="check-button ${
-          isChecked(habit.id, today()) ? 'checked' : ''
-        }"
-        data-toggle-check="${escapeHTML(habit.id)}"
-        data-date="${today()}"
-        aria-label="Odat holatini o‘zgartirish"
-      >${isChecked(habit.id, today()) ? '✓' : '○'}</button>
+      <button class="check-button ${isChecked(habit.id, today()) ? 'checked' : ''}"
+        data-toggle-check="${escapeHTML(habit.id)}" data-date="${today()}"
+        aria-label="Odat holatini o‘zgartirish">${isChecked(habit.id, today()) ? '✓' : '○'}</button>
     </div>
   `).join('');
-
-  $('#dashboardEmpty').classList.toggle(
-    'hidden',
-    habits.length > 0
-  );
-
-  box.classList.toggle(
-    'hidden',
-    habits.length === 0
-  );
+  $('#dashboardEmpty').classList.toggle('hidden', habits.length > 0);
+  box.classList.toggle('hidden', habits.length === 0);
 }
 
 function renderDashboardTasks() {
@@ -1017,29 +726,15 @@ function renderDashboardTasks() {
     .filter(task => task.date === today())
     .sort((a, b) => Number(a.done) - Number(b.done))
     .slice(0, 4);
-
   $('#dashboardTasks').innerHTML = tasks.map(task => `
     <div class="task-row">
-      <button
-        class="task-check ${task.done ? 'done' : ''}"
-        data-toggle-task="${escapeHTML(task.id)}"
-        aria-label="Vazifa holatini o‘zgartirish"
-      >${task.done ? '✓' : ''}</button>
-
-      <span class="task-title ${
-        task.done ? 'done' : ''
-      }">${escapeHTML(task.title)}</span>
-
-      <span class="task-date">
-        ${task.done ? 'BAJARILDI' : 'BUGUN'}
-      </span>
+      <button class="task-check ${task.done ? 'done' : ''}" data-toggle-task="${escapeHTML(task.id)}"
+        aria-label="Vazifa holatini o‘zgartirish">${task.done ? '✓' : ''}</button>
+      <span class="task-title ${task.done ? 'done' : ''}">${escapeHTML(task.title)}</span>
+      <span class="task-date">${task.done ? 'BAJARILDI' : 'BUGUN'}</span>
     </div>
   `).join('');
-
-  $('#dashboardTasksEmpty').classList.toggle(
-    'hidden',
-    tasks.length > 0
-  );
+  $('#dashboardTasksEmpty').classList.toggle('hidden', tasks.length > 0);
 }
 
 function renderDashboard() {
@@ -1047,15 +742,10 @@ function renderDashboard() {
   renderWeekStrip();
   renderDashboardHabits();
   renderDashboardTasks();
-
   $('#dashTimer').textContent = formatTime(timerSeconds);
-
-  $('#dashTimerMode').textContent =
-    state.pomodoro.mode === 'focus'
-      ? 'FOCUS'
-      : state.pomodoro.mode === 'short'
-        ? 'SHORT BREAK'
-        : 'LONG BREAK';
+  $('#dashTimerMode').textContent = state.pomodoro.mode === 'focus'
+    ? 'FOCUS'
+    : state.pomodoro.mode === 'short' ? 'SHORT BREAK' : 'LONG BREAK';
 }
 
 /* ==============================
@@ -1064,116 +754,45 @@ function renderDashboard() {
 
 function visibleHabits() {
   return state.habits
-    .filter(habit =>
-      showArchived
-        ? habit.isArchived
-        : !habit.isArchived
-    )
-    .filter(habit =>
-      activeFilter === 'all' ||
-      habit.category === activeFilter
-    );
+    .filter(habit => showArchived ? habit.isArchived : !habit.isArchived)
+    .filter(habit => activeFilter === 'all' || habit.category === activeFilter);
 }
 
 function renderHabits() {
   const habits = visibleHabits();
-
-  $('#habitCount').textContent =
-    `${habits.length} ta odat`;
-
+  $('#habitCount').textContent = `${habits.length} ta odat`;
   const tbody = $('#habitTableBody');
-
   tbody.innerHTML = habits.map(habit => {
     const start = weekStart(today());
-
-    const days = Array.from(
-      { length: 7 },
-      (_, index) => shiftDate(start, index)
-    );
-
+    const days = Array.from({ length: 7 }, (_, index) => shiftDate(start, index));
     const dayCells = days.map(date => `
-      <td>
-        <button
-          class="habit-cell-check ${
-            isChecked(habit.id, date) ? 'checked' : ''
-          }"
-          data-toggle-check="${escapeHTML(habit.id)}"
-          data-date="${date}"
-          ${
-            date > today() || habit.isArchived
-              ? 'disabled'
-              : ''
-          }
-          aria-label="${escapeHTML(habit.title)}"
-        >${isChecked(habit.id, date) ? '✓' : ''}</button>
-      </td>
+      <td><button class="habit-cell-check ${isChecked(habit.id, date) ? 'checked' : ''}"
+        data-toggle-check="${escapeHTML(habit.id)}" data-date="${date}"
+        ${date > today() || habit.isArchived ? 'disabled' : ''}
+        aria-label="${escapeHTML(habit.title)}">${isChecked(habit.id, date) ? '✓' : ''}</button></td>
     `).join('');
-
     return `
       <tr>
-        <td class="habit-name-cell">
-          <div class="habit-name-wrap">
-            <span class="habit-glyph">
-              ${CATEGORY_ICONS[habit.category] || '◉'}
-            </span>
-
-            <div class="habit-name-text">
-              <strong>${escapeHTML(habit.title)}</strong>
-              <small>
-                ${escapeHTML(categoryLabel(habit.category))}
-                · haftasiga ${habit.targetDays} kun
-                ${habit.isArchived ? ' · arxiv' : ''}
-              </small>
-            </div>
+        <td class="habit-name-cell"><div class="habit-name-wrap">
+          <span class="habit-glyph">${CATEGORY_ICONS[habit.category] || '◉'}</span>
+          <div class="habit-name-text"><strong>${escapeHTML(habit.title)}</strong>
+            <small>${escapeHTML(categoryLabel(habit.category))} · haftasiga ${habit.targetDays} kun ${habit.isArchived ? ' · arxiv' : ''}</small>
           </div>
-        </td>
-
+        </div></td>
         ${dayCells}
-
-        <td class="streak-cell">
-          ↗ ${streakForHabit(habit.id)}d
-        </td>
-
-        <td>
-          <div class="row-actions">
-            <button
-              class="mini-action"
-              data-edit-habit="${escapeHTML(habit.id)}"
-              title="Tahrirlash"
-            >✎</button>
-
-            <button
-              class="mini-action"
-              data-archive-habit="${escapeHTML(habit.id)}"
-              title="Arxivlash"
-            >${habit.isArchived ? '↶' : '▣'}</button>
-
-            <button
-              class="mini-action danger"
-              data-delete-habit="${escapeHTML(habit.id)}"
-              title="O‘chirish"
-            >×</button>
-          </div>
-        </td>
+        <td class="streak-cell">↗ ${streakForHabit(habit.id)}d</td>
+        <td><div class="row-actions">
+          <button class="mini-action" data-edit-habit="${escapeHTML(habit.id)}" title="Tahrirlash">✎</button>
+          <button class="mini-action" data-archive-habit="${escapeHTML(habit.id)}" title="Arxivlash">${habit.isArchived ? '↶' : '▣'}</button>
+          <button class="mini-action danger" data-delete-habit="${escapeHTML(habit.id)}" title="O‘chirish">×</button>
+        </div></td>
       </tr>
     `;
   }).join('');
-
-  $('#habitsEmpty').classList.toggle(
-    'hidden',
-    habits.length > 0
-  );
-
-  tbody.parentElement.classList.toggle(
-    'hidden',
-    habits.length === 0
-  );
-
+  $('#habitsEmpty').classList.toggle('hidden', habits.length > 0);
+  tbody.parentElement.classList.toggle('hidden', habits.length === 0);
   $$('#categoryFilters .filter-chip').forEach(button => {
-    button.classList.toggle(
-      'active',
-      button.dataset.filter === activeFilter
-    );
+    button.classList.toggle('active', button.dataset.filter === activeFilter);
   });
 }
 
@@ -1183,67 +802,29 @@ function renderHabits() {
 
 function renderPlanner() {
   $('#plannerDate').value = plannerDate;
-
-  $('#plannerDateTitle').textContent =
-    plannerDate === today()
-      ? 'Bugungi vazifalar'
-      : dateLabel(plannerDate, {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        }) + ' vazifalari';
-
+  $('#plannerDateTitle').textContent = plannerDate === today()
+    ? 'Bugungi vazifalar'
+    : dateLabel(plannerDate, { day: 'numeric', month: 'long', year: 'numeric' }) + ' vazifalari';
   const tasks = state.tasks
     .filter(task => task.date === plannerDate)
     .sort((a, b) => Number(a.done) - Number(b.done));
-
   const done = tasks.filter(task => task.done).length;
-
-  const percent = tasks.length
-    ? Math.round(done / tasks.length * 100)
-    : 0;
-
+  const percent = tasks.length ? Math.round(done / tasks.length * 100) : 0;
   $('#taskTotal').textContent = tasks.length;
   $('#taskDone').textContent = done;
   $('#taskPercent').textContent = percent + '%';
-
-  $('#plannerStatus').textContent =
-    !tasks.length
-      ? 'Boshlashga tayyor'
-      : percent === 100
-        ? 'Ajoyib! Hammasi bajarildi'
-        : `${tasks.length - done} ta vazifa qoldi`;
-
+  $('#plannerStatus').textContent = !tasks.length
+    ? 'Boshlashga tayyor'
+    : percent === 100 ? 'Ajoyib! Hammasi bajarildi' : `${tasks.length - done} ta vazifa qoldi`;
   $('#plannerTaskList').innerHTML = tasks.map(task => `
     <div class="planner-task">
-      <button
-        class="task-check ${task.done ? 'done' : ''}"
-        data-toggle-task="${escapeHTML(task.id)}"
-      >${task.done ? '✓' : ''}</button>
-
-      <span class="task-title ${
-        task.done ? 'done' : ''
-      }">${escapeHTML(task.title)}</span>
-
-      <div class="task-actions">
-        <button
-          class="mini-action danger"
-          data-delete-task="${escapeHTML(task.id)}"
-          aria-label="Vazifani o‘chirish"
-        >×</button>
-      </div>
+      <button class="task-check ${task.done ? 'done' : ''}" data-toggle-task="${escapeHTML(task.id)}">${task.done ? '✓' : ''}</button>
+      <span class="task-title ${task.done ? 'done' : ''}">${escapeHTML(task.title)}</span>
+      <div class="task-actions"><button class="mini-action danger" data-delete-task="${escapeHTML(task.id)}" aria-label="Vazifani o‘chirish">×</button></div>
     </div>
   `).join('');
-
-  $('#plannerEmpty').classList.toggle(
-    'hidden',
-    tasks.length > 0
-  );
-
-  $('#plannerTaskList').classList.toggle(
-    'hidden',
-    tasks.length === 0
-  );
+  $('#plannerEmpty').classList.toggle('hidden', tasks.length > 0);
+  $('#plannerTaskList').classList.toggle('hidden', tasks.length === 0);
 }
 
 /* ==============================
@@ -1253,27 +834,21 @@ function renderPlanner() {
 function formatTime(seconds) {
   const m = Math.floor(Math.max(0, seconds) / 60);
   const s = Math.max(0, seconds) % 60;
-
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 function modeDuration(mode) {
-  const minutes =
-    mode === 'short'
-      ? state.settings.shortMinutes
-      : mode === 'long'
-        ? state.settings.longMinutes
-        : state.settings.focusMinutes;
-
+  const minutes = mode === 'short'
+    ? state.settings.shortMinutes
+    : mode === 'long' ? state.settings.longMinutes : state.settings.focusMinutes;
   return minutes * 60;
 }
 
 function setTimerMode(mode) {
+  if (!['focus', 'short', 'long'].includes(mode)) return;
   pauseTimer();
-
   state.pomodoro.mode = mode;
   timerSeconds = modeDuration(mode);
-
   saveState();
   renderTimer();
   renderDashboard();
@@ -1281,48 +856,22 @@ function setTimerMode(mode) {
 
 function renderTimer() {
   const mode = state.pomodoro.mode;
-
   const labels = {
     focus: ['FOCUS SESSION', 'DIQQATNI JAMLANG'],
     short: ['SHORT BREAK', 'DAM OLING'],
     long: ['LONG BREAK', 'TO‘LIQ TIKLANING']
   };
-
   $('#timerModeLabel').textContent = labels[mode][0];
-
-  $('#timerStatus').textContent = timerRunning
-    ? 'SESSIYA DAVOM ETMOQDA'
-    : labels[mode][1];
-
+  $('#timerStatus').textContent = timerRunning ? 'SESSIYA DAVOM ETMOQDA' : labels[mode][1];
   $('#mainTimer').textContent = formatTime(timerSeconds);
-
-  $('#timerStart').innerHTML = timerRunning
-    ? 'Ⅱ Pauza'
-    : '▶ Davom etish';
-
-  $('#sessionCount').textContent =
-    state.pomodoro.sessions;
-
+  $('#timerStart').innerHTML = timerRunning ? 'Ⅱ Pauza' : '▶ Davom etish';
+  $('#sessionCount').textContent = state.pomodoro.sessions;
   $$('#timerModes .timer-tab').forEach(button => {
-    button.classList.toggle(
-      'active',
-      button.dataset.mode === mode
-    );
+    button.classList.toggle('active', button.dataset.mode === mode);
   });
-
-  $('#timerRing').classList.toggle(
-    'running',
-    timerRunning
-  );
-
-  const fraction =
-    1 - timerSeconds / modeDuration(mode);
-
-  const degrees = Math.max(
-    0,
-    Math.min(360, fraction * 360)
-  );
-
+  $('#timerRing').classList.toggle('running', timerRunning);
+  const fraction = 1 - timerSeconds / modeDuration(mode);
+  const degrees = Math.max(0, Math.min(360, fraction * 360));
   $('#timerRing').style.background =
     `conic-gradient(var(--lime) ${degrees}deg,#323b28 ${degrees}deg 360deg)`;
 }
@@ -1332,7 +881,6 @@ function pauseTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
   }
-
   timerRunning = false;
 }
 
@@ -1342,49 +890,29 @@ function startTimer() {
     renderTimer();
     return;
   }
-
-  if (timerSeconds <= 0) {
-    timerSeconds = modeDuration(state.pomodoro.mode);
-  }
-
+  if (timerSeconds <= 0) timerSeconds = modeDuration(state.pomodoro.mode);
   timerRunning = true;
   renderTimer();
-
   timerInterval = setInterval(() => {
     timerSeconds--;
-
     if (timerSeconds <= 0) {
       timerSeconds = 0;
       pauseTimer();
-
       if (state.pomodoro.mode === 'focus') {
         state.pomodoro.sessions++;
-
         saveState();
-
-        notify(
-          'Fokus sessiyasi tugadi. Tanaffus qilish vaqti!'
-        );
+        notify('Fokus sessiyasi tugadi. Tanaffus qilish vaqti!');
       } else {
-        notify(
-          'Tanaffus tugadi. Tayyor bo‘lsangiz, davom eting.'
-        );
+        notify('Tanaffus tugadi. Tayyor bo‘lsangiz, davom eting.');
       }
-
       renderTimer();
       renderDashboard();
-
       return;
     }
-
     $('#mainTimer').textContent = formatTime(timerSeconds);
     $('#dashTimer').textContent = formatTime(timerSeconds);
-
-    const fraction =
-      1 - timerSeconds / modeDuration(state.pomodoro.mode);
-
+    const fraction = 1 - timerSeconds / modeDuration(state.pomodoro.mode);
     const degrees = fraction * 360;
-
     $('#timerRing').style.background =
       `conic-gradient(var(--lime) ${degrees}deg,#323b28 ${degrees}deg 360deg)`;
   }, 1000);
@@ -1392,9 +920,7 @@ function startTimer() {
 
 function resetTimer() {
   pauseTimer();
-
   timerSeconds = modeDuration(state.pomodoro.mode);
-
   renderTimer();
   renderDashboard();
 }
@@ -1406,162 +932,79 @@ function resetTimer() {
 function renderAnalytics() {
   const week = rateForDays(7);
   const month = rateForDays(30);
-
   $('#analyticsWeekRate').textContent = week + '%';
   $('#analyticsMonthRate').textContent = month + '%';
   $('#totalCompletions').textContent = state.logs.length;
 
   const active = activeHabits();
   let best = null;
-
   if (active.length) {
     best = active.map(habit => {
       let count = 0;
-
       for (let i = 0; i < 30; i++) {
-        if (isChecked(habit.id, shiftDate(today(), -i))) {
-          count++;
-        }
+        if (isChecked(habit.id, shiftDate(today(), -i))) count++;
       }
-
-      return {
-        h: habit,
-        rate: Math.round(count / 30 * 100),
-        n: count
-      };
-    }).sort(
-      (a, b) => b.rate - a.rate || b.n - a.n
-    )[0];
+      return { h: habit, rate: Math.round(count / 30 * 100), n: count };
+    }).sort((a, b) => b.rate - a.rate || b.n - a.n)[0];
   }
+  $('#bestHabit').textContent = best && best.n ? best.h.title : '—';
+  $('#bestHabitRate').textContent = best && best.n
+    ? `${best.rate}% · oxirgi 30 kun`
+    : 'Hali yetarli ma’lumot yo‘q';
 
-  $('#bestHabit').textContent =
-    best && best.n ? best.h.title : '—';
-
-  $('#bestHabitRate').textContent =
-    best && best.n
-      ? `${best.rate}% · oxirgi 30 kun`
-      : 'Hali yetarli ma’lumot yo‘q';
-
-  const dates = Array.from(
-    { length: 7 },
-    (_, i) => shiftDate(today(), i - 6)
-  );
-
+  const dates = Array.from({ length: 7 }, (_, i) => shiftDate(today(), i - 6));
   $('#weeklyChart').innerHTML = dates.map(date => {
     const total = active.length;
     const done = doneCountOn(date);
-
-    const percent = total
-      ? Math.round(done / total * 100)
-      : 0;
-
+    const percent = total ? Math.round(done / total * 100) : 0;
     return `
-      <div class="bar-col ${
-        date === today() ? 'today' : ''
-      }">
+      <div class="bar-col ${date === today() ? 'today' : ''}">
         <span class="bar-value">${percent}%</span>
-
-        <div class="bar-track">
-          <div
-            class="bar-fill"
-            style="height:${percent}%"
-          ></div>
-        </div>
-
-        <span class="bar-label">${
-          DAY_NAMES[(parseDate(date).getDay() + 6) % 7]
-        }</span>
+        <div class="bar-track"><div class="bar-fill" style="height:${percent}%"></div></div>
+        <span class="bar-label">${DAY_NAMES[(parseDate(date).getDay() + 6) % 7]}</span>
       </div>
     `;
   }).join('');
 
   if (!active.length) {
-    $('#insightTitle').textContent =
-      'Birinchi odatingizni yarating.';
-
-    $('#insightText').textContent =
-      'Odatlar qo‘shilgach, bu sahifa bajarish ko‘rsatkichlari va foydali kuzatuvlarni ko‘rsatadi.';
-
-    $('#nextStepText').textContent =
-      'Bitta sodda, o‘lchash mumkin bo‘lgan odat qo‘shing.';
+    $('#insightTitle').textContent = 'Birinchi odatingizni yarating.';
+    $('#insightText').textContent = 'Odatlar qo‘shilgach, bu sahifa bajarish ko‘rsatkichlari va foydali kuzatuvlarni ko‘rsatadi.';
+    $('#nextStepText').textContent = 'Bitta sodda, o‘lchash mumkin bo‘lgan odat qo‘shing.';
   } else if (week >= 70) {
-    $('#insightTitle').textContent =
-      'Siz yaxshi izchillik ko‘rsatyapsiz!';
-
-    $('#insightText').textContent =
-      `So‘nggi haftada odatlaringizning ${week}% ini bajardingiz. Shu ritmni saqlash uchun maqsadlarni real va barqaror tuting.`;
-
-    $('#nextStepText').textContent =
-      'Hozirgi odatlarni davom ettiring; birdaniga ko‘p yangi maqsad qo‘shmang.';
+    $('#insightTitle').textContent = 'Siz yaxshi izchillik ko‘rsatyapsiz!';
+    $('#insightText').textContent = `So‘nggi haftada odatlaringizning ${week}% ini bajardingiz. Shu ritmni saqlash uchun maqsadlarni real va barqaror tuting.`;
+    $('#nextStepText').textContent = 'Hozirgi odatlarni davom ettiring; birdaniga ko‘p yangi maqsad qo‘shmang.';
   } else if (week > 0) {
-    $('#insightTitle').textContent =
-      'Kichik qadamlar bilan davom eting.';
-
-    $('#insightText').textContent =
-      `Haftalik bajarish ko‘rsatkichi ${week}%. Qaysi kun yoki odat ko‘proq e’tibor talab qilayotganini kuzating.`;
-
-    $('#nextStepText').textContent =
-      'Eng oson odatingizdan boshlang va uni har kuni belgilashga harakat qiling.';
+    $('#insightTitle').textContent = 'Kichik qadamlar bilan davom eting.';
+    $('#insightText').textContent = `Haftalik bajarish ko‘rsatkichi ${week}%. Qaysi kun yoki odat ko‘proq e’tibor talab qilayotganini kuzating.`;
+    $('#nextStepText').textContent = 'Eng oson odatingizdan boshlang va uni har kuni belgilashga harakat qiling.';
   } else {
-    $('#insightTitle').textContent =
-      'Bugun yangi boshlanish bo‘lishi mumkin.';
-
-    $('#insightText').textContent =
-      'Hali bu haftada bajarilgan odat belgilanmagan. Bitta kichik harakat bilan boshlang.';
-
-    $('#nextStepText').textContent =
-      'Birinchi odatingizni bugun bajaring va jadvalda belgilang.';
+    $('#insightTitle').textContent = 'Bugun yangi boshlanish bo‘lishi mumkin.';
+    $('#insightText').textContent = 'Hali bu haftada bajarilgan odat belgilanmagan. Bitta kichik harakat bilan boshlang.';
+    $('#nextStepText').textContent = 'Birinchi odatingizni bugun bajaring va jadvalda belgilang.';
   }
 
-  $('#categoryBreakdown').innerHTML =
-    Object.entries(CATEGORIES)
-      .filter(([key]) =>
-        key !== 'discipline' ||
-        state.habits.some(habit => habit.category === key)
-      )
-      .map(([key, label]) => {
-        const habits = active.filter(
-          habit => habit.category === key
-        );
-
-        let count = 0;
-
-        for (const habit of habits) {
-          for (let i = 0; i < 30; i++) {
-            if (isChecked(habit.id, shiftDate(today(), -i))) {
-              count++;
-            }
-          }
+  $('#categoryBreakdown').innerHTML = Object.entries(CATEGORIES)
+    .filter(([key]) => key !== 'discipline' || state.habits.some(habit => habit.category === key))
+    .map(([key, label]) => {
+      const habits = active.filter(habit => habit.category === key);
+      let count = 0;
+      for (const habit of habits) {
+        for (let i = 0; i < 30; i++) {
+          if (isChecked(habit.id, shiftDate(today(), -i))) count++;
         }
-
-        const possible = habits.length * 30;
-
-        const percent = possible
-          ? Math.round(count / possible * 100)
-          : 0;
-
-        return `
-          <div class="category-item">
-            <span class="category-name">
-              ${escapeHTML(label)}
-            </span>
-
-            <strong>${percent}%</strong>
-
-            <small>
-              ${habits.length} ta odat · 30 kun
-            </small>
-
-            <div class="progress-track">
-              <div
-                class="progress-fill"
-                style="width:${percent}%"
-              ></div>
-            </div>
-          </div>
-        `;
-      })
-      .join('');
+      }
+      const possible = habits.length * 30;
+      const percent = possible ? Math.round(count / possible * 100) : 0;
+      return `
+        <div class="category-item">
+          <span class="category-name">${escapeHTML(label)}</span>
+          <strong>${percent}%</strong>
+          <small>${habits.length} ta odat · 30 kun</small>
+          <div class="progress-track"><div class="progress-fill" style="width:${percent}%"></div></div>
+        </div>
+      `;
+    }).join('');
 }
 
 /* ==============================
@@ -1570,15 +1013,26 @@ function renderAnalytics() {
 
 function renderSettings() {
   $('#userNameInput').value = state.userName;
+  $('#focusMinutes').value = state.settings.focusMinutes;
+  $('#shortMinutes').value = state.settings.shortMinutes;
+  $('#longMinutes').value = state.settings.longMinutes;
 
-  $('#focusMinutes').value =
-    state.settings.focusMinutes;
+  const backup = getBackupInfo();
+  const status = $('#backupStatus');
+  const restoreButton = $('#restoreBackupBtn');
 
-  $('#shortMinutes').value =
-    state.settings.shortMinutes;
-
-  $('#longMinutes').value =
-    state.settings.longMinutes;
+  if (status && restoreButton) {
+    if (backup.available) {
+      const dateText = backup.savedAt
+        ? new Date(backup.savedAt).toLocaleString('uz-UZ')
+        : 'sana noma’lum';
+      status.textContent = `Oxirgi zaxira: ${dateText}`;
+      restoreButton.disabled = false;
+    } else {
+      status.textContent = 'Hozircha avtomatik zaxira mavjud emas.';
+      restoreButton.disabled = true;
+    }
+  }
 }
 
 function renderAll() {
@@ -1599,96 +1053,70 @@ function renderAll() {
 ============================== */
 
 function exportData() {
-  const blob = new Blob(
-    [
-      JSON.stringify({
-        ...state,
-        exportedAt: new Date().toISOString(),
-        app: 'VERTEX Growth System'
-      }, null, 2)
-    ],
-    { type: 'application/json' }
-  );
+  const blob = new Blob([
+    JSON.stringify({
+      ...state,
+      exportedAt: new Date().toISOString(),
+      app: 'VERTEX Growth System'
+    }, null, 2)
+  ], { type: 'application/json' });
 
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-
   a.href = url;
   a.download = `vertex-backup-${today()}.json`;
-
   document.body.appendChild(a);
   a.click();
   a.remove();
 
-  URL.revokeObjectURL(url);
-
+  // Mobil brauzerlarda yuklash tugashiga vaqt beramiz.
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
   notify('Zaxira fayli tayyor.');
 }
 
 function importData(file) {
   if (!file) return;
-
   if (file.size > 2 * 1024 * 1024) {
     notify('Fayl hajmi 2 MB dan kichik bo‘lishi kerak.');
     return;
   }
 
   const reader = new FileReader();
-
   reader.onload = () => {
     try {
       const parsed = JSON.parse(String(reader.result));
-
-      if (
-        !parsed ||
-        typeof parsed !== 'object' ||
-        !Array.isArray(parsed.habits)
-      ) {
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) ||
+          !Array.isArray(parsed.habits)) {
         throw new Error('invalid');
       }
-
-      if (
-        !confirm(
-          'Import qilingan ma’lumotlar hozirgi ma’lumotlaringizni almashtiradi. Davom etasizmi?'
-        )
-      ) {
+      if (!confirm('Import qilingan ma’lumotlar hozirgi ma’lumotlaringizni almashtiradi. Davom etasizmi?')) {
         return;
       }
-
       state = normalizeState(parsed);
-
+      pauseTimer();
+      timerSeconds = modeDuration(state.pomodoro.mode);
       saveState();
       renderAll();
-
       notify('Ma’lumotlar muvaffaqiyatli tiklandi.');
     } catch (error) {
-      notify(
-        'Fayl noto‘g‘ri yoki Vertex zaxira nusxasi emas.'
-      );
+      console.error('Import xatosi:', error);
+      notify('Fayl noto‘g‘ri yoki Vertex zaxira nusxasi emas.');
     }
   };
-
+  reader.onerror = () => notify('Faylni o‘qib bo‘lmadi. Qayta urinib ko‘ring.');
   reader.readAsText(file);
 }
 
 function resetAll() {
-  if (
-    !confirm(
-      'Barcha odatlar, tarix va vazifalarni o‘chirishni xohlaysizmi? Bu amalni ortga qaytarib bo‘lmaydi.'
-    )
-  ) {
+  if (!confirm('Barcha odatlar, tarix va vazifalarni o‘chirishni xohlaysizmi? Bu amalni ortga qaytarib bo‘lmaydi.')) {
     return;
   }
-
   pauseTimer();
-
   state = DEFAULT_STATE();
   timerSeconds = state.settings.focusMinutes * 60;
-
   saveState();
   renderAll();
   goTo('dashboard');
-
   notify('Ish maydoni tozalandi.');
 }
 
@@ -1698,47 +1126,21 @@ function resetAll() {
 
 function bindEvents() {
   $$('.nav-item[data-page]').forEach(button => {
-    button.addEventListener(
-      'click',
-      () => goTo(button.dataset.page)
-    );
+    button.addEventListener('click', () => goTo(button.dataset.page));
   });
-
   $$('[data-goto]').forEach(button => {
-    button.addEventListener(
-      'click',
-      () => goTo(button.dataset.goto)
-    );
+    button.addEventListener('click', () => goTo(button.dataset.goto));
   });
-
   $$('[data-action="add-habit"]').forEach(button => {
-    button.addEventListener(
-      'click',
-      () => openHabitModal()
-    );
+    button.addEventListener('click', () => openHabitModal());
   });
-
   $$('[data-action="add-task"]').forEach(button => {
-    button.addEventListener(
-      'click',
-      openTaskModal
-    );
+    button.addEventListener('click', openTaskModal);
   });
 
-  $('#quickSettings').addEventListener(
-    'click',
-    () => goTo('settings')
-  );
-
-  $('#topSettings').addEventListener(
-    'click',
-    () => goTo('settings')
-  );
-
-  $('#mobileMenu').addEventListener(
-    'click',
-    () => $('#sidebar').classList.toggle('open')
-  );
+  $('#quickSettings').addEventListener('click', () => goTo('settings'));
+  $('#topSettings').addEventListener('click', () => goTo('settings'));
+  $('#mobileMenu').addEventListener('click', () => $('#sidebar').classList.toggle('open'));
 
   $('#showArchived').addEventListener('change', event => {
     showArchived = event.target.checked;
@@ -1747,99 +1149,61 @@ function bindEvents() {
 
   $('#categoryFilters').addEventListener('click', event => {
     const button = event.target.closest('[data-filter]');
-
     if (!button) return;
-
     activeFilter = button.dataset.filter;
-
     renderHabits();
   });
 
   document.addEventListener('click', event => {
     const toggle = event.target.closest('[data-toggle-check]');
-
     if (toggle) {
-      toggleCheck(
-        toggle.dataset.toggleCheck,
-        toggle.dataset.date
-      );
-
+      toggleCheck(toggle.dataset.toggleCheck, toggle.dataset.date);
       return;
     }
 
     const task = event.target.closest('[data-toggle-task]');
-
     if (task) {
-      const item = state.tasks.find(
-        t => t.id === task.dataset.toggleTask
-      );
-
+      const item = state.tasks.find(t => t.id === task.dataset.toggleTask);
       if (item) {
         item.done = !item.done;
         saveState();
         renderAll();
       }
-
       return;
     }
 
     const edit = event.target.closest('[data-edit-habit]');
-
     if (edit) {
-      openHabitModal(
-        state.habits.find(
-          h => h.id === edit.dataset.editHabit
-        )
-      );
-
+      openHabitModal(state.habits.find(h => h.id === edit.dataset.editHabit));
       return;
     }
 
     const archive = event.target.closest('[data-archive-habit]');
-
     if (archive) {
       archiveHabit(archive.dataset.archiveHabit);
       return;
     }
 
     const del = event.target.closest('[data-delete-habit]');
-
     if (del) {
       deleteHabit(del.dataset.deleteHabit);
       return;
     }
 
     const delTask = event.target.closest('[data-delete-task]');
-
     if (delTask) {
-      const item = state.tasks.find(
-        t => t.id === delTask.dataset.deleteTask
-      );
-
-      if (
-        item &&
-        confirm(`“${item.title}” vazifasini o‘chirasizmi?`)
-      ) {
-        state.tasks = state.tasks.filter(
-          t => t.id !== item.id
-        );
-
+      const item = state.tasks.find(t => t.id === delTask.dataset.deleteTask);
+      if (item && confirm(`“${item.title}” vazifasini o‘chirasizmi?`)) {
+        state.tasks = state.tasks.filter(t => t.id !== item.id);
         saveState();
         renderAll();
-
         notify('Vazifa o‘chirildi.');
       }
-
       return;
     }
 
-    if (event.target.closest('[data-close-modal]')) {
-      closeModals();
-    }
-
-    if (event.target.classList.contains('modal-backdrop')) {
-      closeModals();
-    }
+    if (event.target.closest('[data-close-modal]')) closeModals();
+    if (event.target.classList.contains('modal-backdrop')) closeModals();
   });
 
   document.addEventListener('keydown', event => {
@@ -1848,48 +1212,29 @@ function bindEvents() {
 
   $('#habitForm').addEventListener('submit', event => {
     event.preventDefault();
-
     const data = {
       title: $('#habitTitle').value.trim(),
       category: $('#habitCategory').value,
       targetDays: $('#habitTarget').value
     };
-
     if (!data.title) return;
-
     const id = $('#habitId').value;
-
-    if (id) {
-      updateHabit(id, data);
-    } else {
-      addHabit(data);
-    }
-
+    if (id) updateHabit(id, data);
+    else addHabit(data);
     closeModals();
   });
 
   $('#taskForm').addEventListener('submit', event => {
     event.preventDefault();
-
     const title = $('#taskTitleInput').value.trim();
     const date = $('#taskDateInput').value;
-
     if (!title || !validDate(date)) return;
-
-    state.tasks.push({
-      id: uid(),
-      title,
-      date,
-      done: false
-    });
-
+    state.tasks.push({ id: uid(), title, date, done: false });
     plannerDate = date;
-
     saveState();
     renderAll();
     closeModals();
     goTo('planner');
-
     notify('Vazifa qo‘shildi.');
   });
 
@@ -1902,92 +1247,49 @@ function bindEvents() {
 
   $('#timerModes').addEventListener('click', event => {
     const button = event.target.closest('[data-mode]');
-
-    if (button) {
-      setTimerMode(button.dataset.mode);
-    }
+    if (button) setTimerMode(button.dataset.mode);
   });
-
-  $('#timerStart').addEventListener(
-    'click',
-    startTimer
-  );
-
-  $('#timerReset').addEventListener(
-    'click',
-    resetTimer
-  );
+  $('#timerStart').addEventListener('click', startTimer);
+  $('#timerReset').addEventListener('click', resetTimer);
 
   $('#profileForm').addEventListener('submit', event => {
     event.preventDefault();
-
-    state.userName =
-      $('#userNameInput').value.trim().slice(0, 40) ||
-      'Foydalanuvchi';
-
+    state.userName = $('#userNameInput').value.trim().slice(0, 40) || 'Foydalanuvchi';
     saveState();
     renderHeader();
-
     notify('Profil saqlandi.');
   });
 
   $('#timerSettingsForm').addEventListener('submit', event => {
     event.preventDefault();
-
-    state.settings.focusMinutes = clampInt(
-      $('#focusMinutes').value,
-      1,
-      120,
-      25
-    );
-
-    state.settings.shortMinutes = clampInt(
-      $('#shortMinutes').value,
-      1,
-      30,
-      5
-    );
-
-    state.settings.longMinutes = clampInt(
-      $('#longMinutes').value,
-      1,
-      60,
-      15
-    );
-
+    state.settings.focusMinutes = clampInt($('#focusMinutes').value, 1, 120, 25);
+    state.settings.shortMinutes = clampInt($('#shortMinutes').value, 1, 30, 5);
+    state.settings.longMinutes = clampInt($('#longMinutes').value, 1, 60, 15);
     pauseTimer();
-
     timerSeconds = modeDuration(state.pomodoro.mode);
-
     saveState();
     renderTimer();
     renderDashboard();
-
     notify('Taymer sozlamalari saqlandi.');
   });
 
-  $('#exportBtn').addEventListener(
-    'click',
-    exportData
-  );
-
+  $('#exportBtn').addEventListener('click', exportData);
   $('#importFile').addEventListener('change', event => {
     importData(event.target.files[0]);
     event.target.value = '';
   });
+  $('#resetBtn').addEventListener('click', resetAll);
 
-  $('#resetBtn').addEventListener(
-    'click',
-    resetAll
-  );
+  const restoreButton = $('#restoreBackupBtn');
+  if (restoreButton) {
+    restoreButton.addEventListener('click', restoreBackup);
+  }
 }
 
 function init() {
   state = loadState();
-
   timerSeconds = modeDuration(state.pomodoro.mode);
   plannerDate = today();
-
   bindEvents();
   renderAll();
 }

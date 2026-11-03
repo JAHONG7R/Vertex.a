@@ -20,6 +20,16 @@
     .habit-color-picker span{display:block;width:25px;height:25px;border-radius:50%;background:var(--swatch);border:3px solid #171a14;outline:1px solid rgba(255,255,255,.18)}
     .habit-color-picker input:checked+span{outline:2px solid var(--swatch);outline-offset:2px}
     .habit-glyph{color:var(--habit-accent,#d4f34a)}
+    .habit-stat-list{display:grid;gap:12px;margin:0 0 18px}
+    .habit-stat-row{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:rgba(255,255,255,.02)}
+    .habit-stat-icon{width:34px;height:34px;flex:none;display:grid;place-items:center;border-radius:10px;font-size:16px}
+    .habit-stat-main{flex:1;min-width:0}
+    .habit-stat-head{display:flex;justify-content:space-between;gap:10px;font-size:11px;margin-bottom:7px}
+    .habit-stat-head strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .habit-stat-head span{font-family:"Space Mono",monospace;font-size:10px}
+    .habit-stat-track{height:5px;border-radius:8px;background:#30372a;overflow:hidden}
+    .habit-stat-track i{height:100%;display:block;border-radius:8px}
+    .habit-stat-main small{display:block;color:#929987;font-size:9px;margin-top:6px}
     @media(max-width:560px){.habit-editor-modal{max-height:88vh;overflow-y:auto}}
   </style>
 
@@ -101,7 +111,7 @@
         <div class="page-heading"><div><div class="eyebrow">MA’LUMOTLAR / 05</div><h1>Rivojlanish tahlili</h1><p class="subheading">Natijani kuzating, naqshlarni aniqlang va keyingi qadamni belgilang.</p></div></div>
         <div class="stats-grid analytics-stats"><article class="stat-card"><div class="stat-top"><span>OXIRGI 7 KUN</span><span class="stat-symbol">▥</span></div><div class="stat-value"><strong id="analyticsWeekRate">0%</strong><span class="stat-note">odatlarni bajarish</span></div></article><article class="stat-card"><div class="stat-top"><span>OXIRGI 30 KUN</span><span class="stat-symbol">⌁</span></div><div class="stat-value"><strong id="analyticsMonthRate">0%</strong><span class="stat-note">odatlarni bajarish</span></div></article><article class="stat-card"><div class="stat-top"><span>ENG BARQAROR ODAT</span><span class="stat-symbol">↗</span></div><div class="stat-value"><strong class="text-stat" id="bestHabit">—</strong><span class="stat-note" id="bestHabitRate">Ma’lumot yig‘ilmoqda</span></div></article><article class="stat-card"><div class="stat-top"><span>BAJARILGANLAR</span><span class="stat-symbol">✓</span></div><div class="stat-value"><strong id="totalCompletions">0</strong><span class="stat-note">jami belgilangan kunlar</span></div></article></div>
         <div class="analytics-grid"><section class="panel chart-panel"><div class="panel-heading"><div><div class="eyebrow">SO‘NGGI 7 KUN</div><h2>Kunlik natija</h2></div><span class="legend"><i></i> Bajarilgan odatlar</span></div><div class="bar-chart" id="weeklyChart"></div></section><section class="panel insights-panel"><div class="eyebrow">SIZNING TAHLILINGIZ</div><h2 id="insightTitle">Izchillik — natijaning asosi.</h2><p id="insightText">Odatlaringizni belgilashni boshlang. Bir necha kundan so‘ng bu yerda foydali kuzatuvlar paydo bo‘ladi.</p><div class="insight-highlight"><span>✳</span><div><strong>Keyingi qadam</strong><p id="nextStepText">Bitta sodda odat qo‘shing va uni bugun bajaring.</p></div></div></section></div>
-        <section class="panel category-panel"><div class="panel-heading"><div><div class="eyebrow">TAQSIMOT</div><h2>Odatlar bo‘yicha natija</h2></div></div><div id="categoryBreakdown" class="category-breakdown"></div></section>
+        <section class="panel category-panel"><div class="panel-heading"><div><div class="eyebrow">SHAXSIY NATIJALAR</div><h2>Har bir odat ko‘rsatkichi</h2></div><span class="legend">30 kunlik natija</span></div><div id="habitColorStats" class="habit-stat-list"></div><div class="side-rule"></div><div class="panel-heading"><div><div class="eyebrow">TAQSIMOT</div><h2>Kategoriyalar bo‘yicha natija</h2></div></div><div id="categoryBreakdown" class="category-breakdown"></div></section>
       </section>
 
       <section class="page" id="page-settings">
@@ -136,4 +146,3 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
-

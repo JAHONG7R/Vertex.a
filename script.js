@@ -977,17 +977,29 @@ function renderAnalytics() {
       for (let i = 0; i < 30; i++) {
         if (isChecked(habit.id, shiftDate(today(), -i))) count++;
       }
+
       const percent = Math.round(count / 30 * 100);
       const accent = normalizeHabitColor(habit.color);
+
       return `
-        <div class="habit-stat-item" style="${habitAccent(habit)}">
-          <div class="habit-stat-top">
-            <span class="habit-stat-dot" aria-hidden="true"></span>
-            <strong>${escapeHTML(habit.title)}</strong>
-            <b>${percent}%</b>
+        <div class="habit-stat-row" style="${habitAccent(habit)}">
+          <span class="habit-stat-icon"
+            style="background:${accent}22;color:${accent}">
+            ${CATEGORY_ICONS[habit.category] || '◉'}
+          </span>
+
+          <div class="habit-stat-main">
+            <div class="habit-stat-head">
+              <strong>${escapeHTML(habit.title)}</strong>
+              <span style="color:${accent}">${percent}%</span>
+            </div>
+
+            <div class="habit-stat-track">
+              <i style="width:${percent}%;background:${accent}"></i>
+            </div>
+
+            <small>${count}/30 kun · oxirgi 30 kun</small>
           </div>
-          <div class="habit-stat-track"><span style="width:${percent}%;background:${accent}"></span></div>
-          <small>${count}/30 kun · oxirgi 30 kun</small>
         </div>
       `;
     }).join('') || '<p class="habit-stat-empty">Hozircha faol odatlar mavjud emas.</p>';

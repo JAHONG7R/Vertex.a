@@ -56,21 +56,34 @@ const CATEGORIES = {
   discipline: 'Intizom'
 };
 
-const CATEGORY_ICONS = {
-  focus: '◈',
-  health: '✳',
-  learning: '▤',
-  mindset: '◎',
-  recovery: '☾',
-  discipline: '↗'
-};
-
-const HABIT_COLORS = ['#d4f34a', '#70d6ff', '#ff9f68', '#c7a6ff', '#ff83a8', '#72dfb2', '#f5cf67'];
+const CATEGORY_ICONS = { focus: '🎯', health: '🍋', learning: '📚', mindset: '🧠', recovery: '🌙', discipline: '⚡' };
+const HABIT_ICONS = ['🎯','⚡','🔥','✨','💎','🌟','🚀','🧠','📚','📖','✍️','📝','💡','🎓','🗣️','🌍','💻','🎨','🎵','🎧','🏃','🚴','🏋️','🧘','💪','🥗','🍎','💧','🫧','🌿','🍀','🌱','🌸','🌻','☀️','🌙','😴','🛌','🧹','🧺','🧼','🪥','🧴','🧘‍♂️','🧘‍♀️','🤝','❤️','💜','🩵','🧡','💛','🤍','🖤','🏆','📈','🛠️','🧩','⏳','🕯️','🪴','🧊','🍊','🍋','🍓','🥝','🫐','🍇','🥑','🌈','🦋','🐝','🦁','🐢'];
+const HABIT_COLORS = [
+  '#D4F34A','#70D6FF','#FF9F68','#C7A6FF','#FF83A8','#72DFB2','#F5CF67',
+  '#DFFF00','#CCFF00','#B6FF00','#A2FF00','#8CFF00','#C6FF3D','#E8FF4A','#F5FF00',
+  '#FFEA00','#FFD000','#FFB000','#FF9500','#FF7A00','#FF5E00','#FF3D00','#FF1744',
+  '#FF2D95','#FF4FD8','#F000FF','#D500F9','#B000FF','#8C52FF','#7048FF','#536DFF',
+  '#2979FF','#00A8FF','#00C8FF','#00E5FF','#00F5D4','#00E6A8','#00D084','#39E75F',
+  '#A8E10C','#7CFC00','#C0CA33','#F4D35E','#E9C46A','#F6BD60','#E07A5F','#C77DFF',
+  '#A78BFA','#8ECAE6','#90BE6D','#5E8C61','#2A9D8F','#264653','#3D405B','#6D597A',
+  '#B56576','#E56B6F','#F28482','#F7A8B8','#D4A5A5','#C9B1FF','#B8C0FF','#A0C4FF',
+  '#BDB2FF','#FFC6FF','#FDFFB6','#CAFFBF','#9BF6FF','#FFFFFF','#D6D6D6','#A3A3A3'
+];
 const DEFAULT_HABIT_COLOR = HABIT_COLORS[0];
+const DEFAULT_HABIT_ICON = '🎯';
+
+function renderHabitPickers() {
+  const iconBox = $('.habit-icon-picker');
+  const colorBox = $('.habit-color-picker');
+  if (iconBox) iconBox.innerHTML = HABIT_ICONS.map((icon, i) => `<label title="${escapeHTML(icon)}"><input type="radio" name="habitIcon" value="${icon}" ${i === 0 ? 'checked' : ''}><span>${icon}</span></label>`).join('');
+  if (colorBox) colorBox.innerHTML = HABIT_COLORS.map((color, i) => `<label title="${color}" style="--swatch:${color}"><input type="radio" name="habitColor" value="${color}" ${i === 0 ? 'checked' : ''}><span></span></label>`).join('');
+}
+
+function habitIcon(habit) { return habit?.icon || CATEGORY_ICONS[habit?.category] || DEFAULT_HABIT_ICON; }
 
 function normalizeHabitColor(color) {
   const value = String(color || '').toLowerCase();
-  return HABIT_COLORS.includes(value) ? value : DEFAULT_HABIT_COLOR;
+  return HABIT_COLORS.includes(value.toUpperCase()) ? value.toUpperCase() : DEFAULT_HABIT_COLOR;
 }
 
 function habitAccent(habit) {
@@ -145,6 +158,7 @@ function normalizeHabit(habit) {
     title,
     category: normalizeCategory(habit.category),
     color: normalizeHabitColor(habit.color ?? habit.habitColor),
+    icon: HABIT_ICONS.includes(habit.icon) ? habit.icon : (CATEGORY_ICONS[normalizeCategory(habit.category)] || DEFAULT_HABIT_ICON),
     targetDays: [3, 5, 6, 7].includes(target) ? target : 5,
     isArchived: Boolean(
       habit.isArchived ?? habit.is_archived ?? habit.archived
@@ -604,8 +618,12 @@ function openHabitModal(habit = null) {
   $('#habitCategory').value = habit?.category || 'focus';
   $('#habitTarget').value = String(habit?.targetDays || 5);
   const selectedColor = normalizeHabitColor(habit?.color);
+  const selectedIcon = habit?.icon || CATEGORY_ICONS[habit?.category] || DEFAULT_HABIT_ICON;
+  const iconInput = $(`input[name="habitIcon"][value="${selectedIcon}"]`);
+  if (iconInput) iconInput.checked = true;
   const colorInput = $(`input[name="habitColor"][value="${selectedColor}"]`);
   if (colorInput) colorInput.checked = true;
+  if (!colorInput) $('input[name="habitColor"]')?.click();
   $('#habitModalTitle').textContent = habit ? 'Odatni tahrirlash' : 'Yangi odat';
   openModal('habitModalBackdrop');
 }
@@ -625,6 +643,7 @@ function addHabit(data) {
     id: uid(),
     title: data.title.trim(),
     category: data.category,
+    icon: data.icon || DEFAULT_HABIT_ICON,
     color: normalizeHabitColor(data.color),
     targetDays: Number(data.targetDays),
     isArchived: false,
@@ -640,6 +659,7 @@ function updateHabit(id, data) {
   if (!habit) return;
   habit.title = data.title.trim();
   habit.category = data.category;
+  habit.icon = data.icon || habitIcon(habit);
   habit.color = normalizeHabitColor(data.color);
   habit.targetDays = Number(data.targetDays);
   saveState();
@@ -725,7 +745,7 @@ function renderDashboardHabits() {
   const box = $('#dashboardHabits');
   box.innerHTML = habits.map(habit => `
     <div class="habit-preview">
-      <span class="habit-glyph" style="${habitAccent(habit)}">${CATEGORY_ICONS[habit.category] || '◉'}</span>
+      <span class="habit-glyph" style="${habitAccent(habit)}">${habitIcon(habit)}</span>
       <div class="habit-preview-info">
         <strong>${escapeHTML(habit.title)}</strong>
         <small>${escapeHTML(categoryLabel(habit.category))} · ${streakForHabit(habit.id)} kunlik seriya</small>
@@ -792,7 +812,7 @@ function renderHabits() {
     return `
       <tr>
         <td class="habit-name-cell"><div class="habit-name-wrap">
-          <span class="habit-glyph" style="${habitAccent(habit)}">${CATEGORY_ICONS[habit.category] || '◉'}</span>
+          <span class="habit-glyph" style="${habitAccent(habit)}">${habitIcon(habit)}</span>
           <div class="habit-name-text"><strong>${escapeHTML(habit.title)}</strong>
             <small>${escapeHTML(categoryLabel(habit.category))} · haftasiga ${habit.targetDays} kun ${habit.isArchived ? ' · arxiv' : ''}</small>
           </div>
@@ -985,7 +1005,7 @@ function renderAnalytics() {
         <div class="habit-stat-row" style="${habitAccent(habit)}">
           <span class="habit-stat-icon"
             style="background:${accent}22;color:${accent}">
-            ${CATEGORY_ICONS[habit.category] || '◉'}
+            ${habitIcon(habit)}
           </span>
 
           <div class="habit-stat-main">
@@ -1278,7 +1298,8 @@ function bindEvents() {
       title: $('#habitTitle').value.trim(),
       category: $('#habitCategory').value,
       targetDays: $('#habitTarget').value,
-      color: $('input[name="habitColor"]:checked')?.value || DEFAULT_HABIT_COLOR
+      color: $('input[name="habitColor"]:checked')?.value || DEFAULT_HABIT_COLOR,
+      icon: $('input[name="habitIcon"]:checked')?.value || DEFAULT_HABIT_ICON
     };
     if (!data.title) return;
     const id = $('#habitId').value;
@@ -1350,6 +1371,7 @@ function bindEvents() {
 }
 
 function init() {
+  renderHabitPickers();
   state = loadState();
   timerSeconds = modeDuration(state.pomodoro.mode);
   plannerDate = today();

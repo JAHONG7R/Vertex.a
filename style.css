@@ -31,3 +31,22 @@
 .habit-color-picker input:checked+span{outline:2px solid var(--swatch);outline-offset:3px;box-shadow:0 0 14px color-mix(in srgb,var(--swatch) 55%,transparent)}
 .habit-glyph{font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
 @media(max-width:480px){.habit-icon-picker,.habit-color-picker{grid-template-columns:repeat(7,minmax(0,1fr))}}
+
+/* Reliable, tap-friendly habit icon and color selectors */
+.habit-icon-picker,.habit-color-picker{display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px!important;max-height:200px;overflow-y:auto;padding:5px 4px 10px;margin:0 0 15px;scrollbar-width:thin}
+.habit-choice-icon,.habit-choice-color{appearance:none;-webkit-appearance:none;position:relative;display:grid;place-items:center;min-width:0;min-height:42px;padding:3px;border:1px solid #ffffff20;border-radius:10px;background:#171a14;color:inherit;cursor:pointer;touch-action:manipulation}
+.habit-choice-icon{font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji",sans-serif;font-size:23px;line-height:1.2}
+.habit-choice-icon.selected{border-color:var(--lime);background:#29331d;box-shadow:0 0 0 2px #d4f34a35}
+.habit-choice-color{min-height:38px;background:transparent;border-color:transparent}
+.habit-choice-color span{display:block;width:25px;height:25px;border-radius:50%;background:var(--swatch);border:2px solid #171a14;outline:1px solid #ffffff55;box-shadow:0 0 8px color-mix(in srgb,var(--swatch) 28%,transparent)}
+.habit-choice-color.selected{border-color:var(--swatch);background:#ffffff0a;box-shadow:0 0 0 2px color-mix(in srgb,var(--swatch) 28%,transparent)}
+.habit-choice-color.selected span{outline:2px solid var(--swatch);outline-offset:2px;box-shadow:0 0 13px color-mix(in srgb,var(--swatch) 55%,transparent)}
+.habit-glyph{font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji",sans-serif}
+@media(max-width:480px){.habit-icon-picker,.habit-color-picker{grid-template-columns:repeat(7,minmax(0,1fr))}}
+
+
+/* Achievement collection */
+.achievement-summary{display:flex;align-items:center;gap:24px;padding:20px 22px;margin:0 0 20px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(120deg,#20271b,#171b14);}
+.achievement-summary>div:first-child{display:flex;align-items:center;gap:13px;min-width:145px}.achievement-summary-icon{font-size:30px}.achievement-summary strong{display:block;font-family:var(--mono);font-size:22px}.achievement-summary small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.achievement-summary-track{height:8px;flex:1;background:#343b2d;border-radius:20px;overflow:hidden}.achievement-summary-track span{display:block;height:100%;width:0;background:linear-gradient(90deg,#b8e83e,#e8f879);border-radius:20px;transition:width .35s}.achievement-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.achievement-card{min-width:0;padding:18px;border:1px solid var(--line);border-radius:15px;background:var(--panel);transition:border-color .2s,transform .2s}.achievement-card.unlocked{border-color:#b7e83e66;background:linear-gradient(145deg,#252d1d,var(--panel))}.achievement-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.achievement-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:#ffffff0b;font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji",sans-serif;font-size:27px}.achievement-state{font-size:8px;letter-spacing:.7px;color:var(--muted)}.achievement-card.unlocked .achievement-state{color:var(--lime)}.achievement-card h3{font-size:14px;margin:15px 0 6px}.achievement-card p{font-size:10px;line-height:1.6;color:var(--muted);min-height:32px;margin:0 0 15px}.achievement-progress{height:5px;border-radius:10px;background:#343b2d;overflow:hidden}.achievement-progress span{display:block;height:100%;border-radius:10px;background:var(--lime)}.achievement-progress-label{display:flex;justify-content:space-between;gap:8px;margin-top:8px;color:var(--muted);font-size:9px}.achievement-progress-label b{color:var(--text);font-family:var(--mono)}.achievement-card.locked .achievement-icon{filter:grayscale(.7);opacity:.75}
+@media(max-width:850px){.achievement-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.achievement-grid{grid-template-columns:1fr}.achievement-summary{padding:15px;gap:12px;flex-wrap:wrap}.achievement-summary-track{flex-basis:100%}}

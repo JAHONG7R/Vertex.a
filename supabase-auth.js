@@ -192,7 +192,75 @@
 
     return data?.app_data ?? null;
   }
+  function subscribeRealtime(user) {
+  if (realtimeChannel) {
+    client.removeChannel(realtimeChannel);
+    realtimeChannel = null;
+  }
 
+  realtimeChannel = client
+    .channel(`vertex-user-${user.id}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'user_data',
+        filter: `user_id=eq.${user.id}`
+      },
+      (payload) => {
+        if (!payload.new?.app_data) return;
+
+        const app = window.VertexApp;
+
+        if (!app) return;
+
+        const remoteData = payload.new.app_data;
+        const localData = app.getState();
+
+        // O'zimiz yuborgan o'zgarishni qayta qo'llamaymiz.
+        if (
+          JSON.stringify(remoteData) ===
+          JSON.stringify(localData)
+        ) {
+          return;
+        }
+
+        try {
+          applyingRemoteUpdate = true;
+
+          app.setState(
+            remoteData,
+            accountKey(user.id)
+          );
+
+          setStatus(
+            '✓ Boshqa qurilmadagi o‘zgarishlar sinxronlandi.',
+            'success'
+          );
+        } catch (error) {
+          console.error('VERTEX realtime update:', error);
+
+          setStatus(
+            'Sinxronlashda xatolik yuz berdi.',
+            'error'
+          );
+        } finally {
+          applyingRemoteUpdate = false;
+        }
+      }
+    )
+    .subscribe((status) => {
+      console.log('VERTEX realtime:', status);
+
+      if (status === 'SUBSCRIBED') {
+        setStatus(
+          '✓ Real-time sinxronlash faol.',
+          'success'
+        );
+      }
+    });
+  }
   async function applySession(user) {
     const app = window.VertexApp;
 

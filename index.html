@@ -10,17 +10,14 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 
-<!-- Supabase kutubxonasi -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-
-<!-- Supabase loyiha sozlamalari -->
-<script src="supabase-config.js" defer></script>
-
-<!-- VERTEX ilovasining asosiy kodi -->
-<script src="script.js" defer></script>
-
-<!-- Login, signup, logout va bulutli sinxronlash -->
-<script src="supabase-auth.js" defer></script>
+  <!-- Supabase kutubxonasi -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <!-- Supabase loyiha sozlamalari -->
+  <script src="supabase-config.js" defer></script>
+  <!-- VERTEX ilovasining asosiy kodi -->
+  <script src="script.js" defer></script>
+  <!-- Login, signup, logout va bulutli sinxronlash -->
+  <script src="supabase-auth.js" defer></script>
 </head>
 <body>
   <div class="app-shell">
@@ -37,10 +34,7 @@
         <button class="nav-item" data-page="analytics"><span class="nav-icon">⌁</span> Tahlil</button>
       </nav>
       <div class="sidebar-bottom">
-        <div class="sidebar-tip">
-          <span class="tip-spark">✳</span>
-          <p>Har kuni kichik qadam. Vaqt o‘tib, katta o‘zgarish.</p>
-        </div>
+        <div class="sidebar-tip"><span class="tip-spark">✳</span><p>Har kuni kichik qadam. Vaqt o‘tib, katta o‘zgarish.</p></div>
         <button class="nav-item settings-link" data-page="settings"><span class="nav-icon">⚙</span> Sozlamalar</button>
         <div class="profile-mini">
           <div class="avatar" id="sidebarAvatar">U</div>
@@ -54,17 +48,11 @@
       <header class="topbar">
         <button class="mobile-menu icon-button" id="mobileMenu" aria-label="Menyuni ochish">☰</button>
         <div class="breadcrumb"><span>VERTEX</span><i>/</i><strong id="pageCrumb">UMUMIY KO‘RINISH</strong></div>
-        <div class="topbar-right">
-          <span class="today-chip"><span class="live-dot"></span><span id="todayLabel"></span></span>
-          <button class="icon-button" id="topSettings" aria-label="Sozlamalar" title="Sozlamalar">⚙</button>
-        </div>
+        <div class="topbar-right"><span class="today-chip"><span class="live-dot"></span><span id="todayLabel"></span></span><button class="icon-button" id="topSettings" aria-label="Sozlamalar" title="Sozlamalar">⚙</button></div>
       </header>
 
       <section class="page active" id="page-dashboard">
-        <div class="page-heading">
-          <div><div class="eyebrow">SHAXSIY RIVOJLANISH / 01</div><h1 id="greetingTitle">Bugun nimani yaxshilaymiz?</h1><p class="subheading">Maqsadlaringizni mayda, muntazam harakatlarga aylantiring.</p></div>
-          <button class="button primary" data-action="add-habit"><span>＋</span> Odat qo‘shish</button>
-        </div>
+        <div class="page-heading"><div><div class="eyebrow">SHAXSIY RIVOJLANISH / 01</div><h1 id="greetingTitle">Bugun nimani yaxshilaymiz?</h1><p class="subheading">Maqsadlaringizni mayda, muntazam harakatlarga aylantiring.</p></div><button class="button primary" data-action="add-habit"><span>＋</span> Odat qo‘shish</button></div>
         <div class="stats-grid">
           <article class="stat-card"><div class="stat-top"><span>BUGUNGI NATIJA</span><span class="stat-symbol">◉</span></div><div class="stat-value"><strong id="todayPercent">0%</strong><span class="stat-note" id="todayDoneText">0 / 0 bajarildi</span></div><div class="progress-track"><div class="progress-fill" id="todayProgress"></div></div></article>
           <article class="stat-card"><div class="stat-top"><span>JORIY SERIYA</span><span class="stat-symbol">↗</span></div><div class="stat-value"><strong id="currentStreak">0 <small>kun</small></strong><span class="stat-note">ketma-ket davom etish</span></div><div class="mini-sparkline" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></article>
@@ -72,25 +60,10 @@
           <article class="stat-card"><div class="stat-top"><span>30 KUNLIK BARQARORLIK</span><span class="stat-symbol">▥</span></div><div class="stat-value"><strong id="adherenceValue">0%</strong><span class="stat-note">bajarilgan odatlar ulushi</span></div><div class="progress-track"><div class="progress-fill" id="adherenceProgress"></div></div></article>
         </div>
         <div class="dashboard-grid">
-          <section class="panel weekly-panel">
-            <div class="panel-heading"><div><div class="eyebrow">IZCHILLIK</div><h2>Haftalik kuzatuv</h2></div><button class="text-button" data-goto="habits">Barchasi <span>↗</span></button></div>
-            <div class="week-strip" id="weekStrip"></div>
-            <div class="habit-preview-list" id="dashboardHabits"></div>
-            <div class="empty-state compact hidden" id="dashboardEmpty"><span class="empty-icon">◉</span><strong>Hali odatlar yo‘q</strong><p>Birinchi odatingizni qo‘shib, kuzatishni boshlang.</p><button class="button secondary" data-action="add-habit">＋ Odat qo‘shish</button></div>
-          </section>
-          <section class="panel focus-panel">
-            <div class="panel-heading"><div><div class="eyebrow">DIQQATNI JAMLANG</div><h2>Fokus sessiyasi</h2></div><span class="status-pill"><span class="live-dot"></span> TAYYOR</span></div>
-            <div class="focus-orb"><div class="orb-inner"><span class="orb-label" id="dashTimerMode">FOCUS</span><strong id="dashTimer">25:00</strong><small>DAQIQA : SONIYA</small></div></div>
-            <div class="focus-session-label" id="dashSessionLabel">Bitta vazifaga e’tibor qarating.</div>
-            <button class="button primary full-width" data-goto="pomodoro">Sessiyani boshlash <span>→</span></button>
-            <div class="focus-footer"><span>◷ 25 daqiqa fokus</span><span>·</span><span>5 daqiqa tanaffus</span></div>
-          </section>
+          <section class="panel weekly-panel"><div class="panel-heading"><div><div class="eyebrow">IZCHILLIK</div><h2>Haftalik kuzatuv</h2></div><button class="text-button" data-goto="habits">Barchasi <span>↗</span></button></div><div class="week-strip" id="weekStrip"></div><div class="habit-preview-list" id="dashboardHabits"></div><div class="empty-state compact hidden" id="dashboardEmpty"><span class="empty-icon">◉</span><strong>Hali odatlar yo‘q</strong><p>Birinchi odatingizni qo‘shib, kuzatishni boshlang.</p><button class="button secondary" data-action="add-habit">＋ Odat qo‘shish</button></div></section>
+          <section class="panel focus-panel"><div class="panel-heading"><div><div class="eyebrow">DIQQATNI JAMLANG</div><h2>Fokus sessiyasi</h2></div><span class="status-pill"><span class="live-dot"></span> TAYYOR</span></div><div class="focus-orb"><div class="orb-inner"><span class="orb-label" id="dashTimerMode">FOCUS</span><strong id="dashTimer">25:00</strong><small>DAQIQA : SONIYA</small></div></div><div class="focus-session-label" id="dashSessionLabel">Bitta vazifaga e’tibor qarating.</div><button class="button primary full-width" data-goto="pomodoro">Sessiyani boshlash <span>→</span></button><div class="focus-footer"><span>◷ 25 daqiqa fokus</span><span>·</span><span>5 daqiqa tanaffus</span></div></section>
         </div>
-        <section class="panel task-panel">
-          <div class="panel-heading"><div><div class="eyebrow">BUGUNGI REJA</div><h2>Vazifalar</h2></div><button class="text-button" data-goto="planner">Rejaga o‘tish <span>↗</span></button></div>
-          <div class="dashboard-tasks" id="dashboardTasks"></div>
-          <div class="empty-inline hidden" id="dashboardTasksEmpty">Bugun uchun vazifa yo‘q. <button class="inline-action" data-goto="planner">Vazifa qo‘shish</button></div>
-        </section>
+        <section class="panel task-panel"><div class="panel-heading"><div><div class="eyebrow">BUGUNGI REJA</div><h2>Vazifalar</h2></div><button class="text-button" data-goto="planner">Rejaga o‘tish <span>↗</span></button></div><div class="dashboard-tasks" id="dashboardTasks"></div><div class="empty-inline hidden" id="dashboardTasksEmpty">Bugun uchun vazifa yo‘q. <button class="inline-action" data-goto="planner">Vazifa qo‘shish</button></div></section>
       </section>
 
       <section class="page" id="page-habits">
@@ -119,21 +92,33 @@
 
       <section class="page" id="page-settings">
         <div class="page-heading"><div><div class="eyebrow">SHAXSIYLASHTIRISH / 06</div><h1>Sozlamalar</h1><p class="subheading">Profilingiz va ish maydoni sozlamalarini boshqaring.</p></div></div>
-        <div class="settings-layout"><section class="panel settings-panel"><div class="settings-section-head"><div class="settings-icon">◎</div><div><h2>Profil</h2><p>Ilovada ko‘rinadigan ismingiz.</p></div></div><form id="profileForm" class="settings-form"><label for="userNameInput">Ism yoki taxallus</label><input id="userNameInput" maxlength="40" placeholder="Masalan, Aziz" required><button class="button primary" type="submit">Profilni saqlash</button></form><div class="settings-divider"></div><div class="settings-section-head"><div class="settings-icon">◷</div><div><h2>Pomodoro taymeri</h2><p>Sessiya va tanaffus davomiyligini belgilang.</p></div></div><form id="timerSettingsForm" class="settings-form timer-settings-form"><div class="form-row"><label>Fokus (daqiqa)<input type="number" id="focusMinutes" min="1" max="120" required></label><label>Qisqa tanaffus<input type="number" id="shortMinutes" min="1" max="30" required></label><label>Uzun tanaffus<input type="number" id="longMinutes" min="1" max="60" required></label></div><button class="button primary" type="submit">Taymerni saqlash</button></form></section>
-          <section class="panel settings-panel"><div class="settings-section-head"><div class="settings-icon">⇅</div><div><h2>Ma’lumotlar</h2><p>Zaxira nusxa oling yoki ma’lumotlaringizni tiklang.</p></div></div><div class="setting-action"><div><strong>JSON zaxira nusxasi</strong><p>Odatlar, belgilashlar va vazifalarni faylga saqlaydi.</p></div><button class="button secondary" id="exportBtn">Eksport ↗</button></div><div class="setting-action"><div><strong>Zaxira nusxasini tiklash</strong><p>Avval eksport qilingan Vertex JSON faylini yuklang.</p></div><label class="button secondary file-button" for="importFile">Import ↑</label><input type="file" id="importFile" accept=".json,application/json" hidden></div><div class="settings-divider"></div><div class="settings-section-head danger-heading"><div class="settings-icon">!</div><div><h2>Ma’lumotlarni tozalash</h2><p>Bu amalni bajarishdan oldin zaxira nusxa oling.</p></div></div><button class="button danger" id="resetBtn">Barcha ma’lumotlarni tozalash</button></section></div>
-        <div class="privacy-note"><span>▣</span><p><strong>Maxfiylik:</strong> ma’lumotlar ushbu brauzerda saqlanadi. Brauzer ma’lumotlarini tozalash ularni o‘chirishi mumkin.</p></div>
+        <div class="settings-layout">
+          <section class="panel settings-panel">
+            <div class="settings-section-head"><div class="settings-icon">◎</div><div><h2>Profil</h2><p>Ilovada ko‘rinadigan ismingiz.</p></div></div>
+            <form id="profileForm" class="settings-form"><label for="userNameInput">Ism yoki taxallus</label><input id="userNameInput" maxlength="40" placeholder="Masalan, Aziz" required><button class="button primary" type="submit">Profilni saqlash</button></form>
+            <div class="settings-divider"></div>
+            <div class="settings-section-head"><div class="settings-icon">◷</div><div><h2>Pomodoro taymeri</h2><p>Sessiya va tanaffus davomiyligini belgilang.</p></div></div>
+            <form id="timerSettingsForm" class="settings-form timer-settings-form"><div class="form-row"><label>Fokus (daqiqa)<input type="number" id="focusMinutes" min="1" max="120" required></label><label>Qisqa tanaffus<input type="number" id="shortMinutes" min="1" max="30" required></label><label>Uzun tanaffus<input type="number" id="longMinutes" min="1" max="60" required></label></div><button class="button primary" type="submit">Taymerni saqlash</button></form>
+          </section>
+          <section class="panel settings-panel">
+            <div class="settings-section-head"><div class="settings-icon">⇅</div><div><h2>Ma’lumotlar</h2><p>Zaxira nusxa oling yoki ma’lumotlaringizni tiklang.</p></div></div>
+            <div class="setting-action"><div><strong>JSON zaxira nusxasi</strong><p>Odatlar, belgilashlar va vazifalarni faylga saqlaydi.</p></div><button class="button secondary" id="exportBtn">Eksport ↗</button></div>
+            <div class="setting-action"><div><strong>Zaxira nusxasini tiklash</strong><p>Avval eksport qilingan Vertex JSON faylini yuklang.</p></div><label class="button secondary file-button" for="importFile">Import ↑</label><input type="file" id="importFile" accept=".json,application/json" hidden></div>
+            <div class="setting-action"><div><strong>Avtomatik zaxira</strong><p id="backupStatus">Hozircha avtomatik zaxira mavjud emas.</p></div><button class="button secondary" id="restoreBackupBtn" disabled>Qayta tiklash ↶</button></div>
+            <div class="settings-divider"></div>
+            <div class="settings-section-head danger-heading"><div class="settings-icon">!</div><div><h2>Ma’lumotlarni tozalash</h2><p>Bu amalni bajarishdan oldin zaxira nusxa oling.</p></div></div>
+            <button class="button danger" id="resetBtn">Barcha ma’lumotlarni tozalash</button>
+          </section>
+        </div>
+        <div class="privacy-note"><span>▣</span><p><strong>Maxfiylik:</strong> ma’lumotlar ushbu brauzerda saqlanadi. Avtomatik zaxira ham shu brauzerda saqlanadi. Brauzer ma’lumotlarini tozalash ularni o‘chirishi mumkin.</p></div>
       </section>
 
       <footer class="app-footer"><span>VERTEX <i>·</i> O‘ZINGIZNING YAXSHIROQ VERSIYANGIZNI YARATING</span><span id="footerDate"></span></footer>
     </main>
   </div>
 
-  <div class="modal-backdrop hidden" id="habitModalBackdrop" role="presentation">
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="habitModalTitle"><div class="modal-heading"><div><div class="eyebrow">ODATLAR</div><h2 id="habitModalTitle">Yangi odat</h2></div><button class="icon-button modal-close" data-close-modal aria-label="Yopish">×</button></div><form id="habitForm"><input type="hidden" id="habitId"><label for="habitTitle">Odat nomi</label><input id="habitTitle" maxlength="80" placeholder="Masalan, 20 daqiqa kitob o‘qish" required><div class="form-row"><label for="habitCategory">Kategoriya<select id="habitCategory"><option value="focus">Fokus</option><option value="health">Salomatlik</option><option value="learning">Ta’lim</option><option value="mindset">Tafakkur</option><option value="recovery">Dam olish</option></select></label><label for="habitTarget">Haftalik maqsad<select id="habitTarget"><option value="3">Haftasiga 3 kun</option><option value="5" selected>Haftasiga 5 kun</option><option value="6">Haftasiga 6 kun</option><option value="7">Har kuni</option></select></label></div><div class="modal-actions"><button type="button" class="button secondary" data-close-modal>Bekor qilish</button><button type="submit" class="button primary">Saqlash</button></div></form></section>
-  </div>
-  <div class="modal-backdrop hidden" id="taskModalBackdrop" role="presentation">
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle"><div class="modal-heading"><div><div class="eyebrow">REJALASHTIRUVCHI</div><h2 id="taskModalTitle">Yangi vazifa</h2></div><button class="icon-button modal-close" data-close-modal aria-label="Yopish">×</button></div><form id="taskForm"><label for="taskTitleInput">Vazifa nomi</label><input id="taskTitleInput" maxlength="120" placeholder="Masalan, ingliz tili mashqlarini bajarish" required><label for="taskDateInput">Sana</label><input type="date" id="taskDateInput" required><div class="modal-actions"><button type="button" class="button secondary" data-close-modal>Bekor qilish</button><button type="submit" class="button primary">Vazifa qo‘shish</button></div></form></section>
-  </div>
+  <div class="modal-backdrop hidden" id="habitModalBackdrop" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="habitModalTitle"><div class="modal-heading"><div><div class="eyebrow">ODATLAR</div><h2 id="habitModalTitle">Yangi odat</h2></div><button class="icon-button modal-close" data-close-modal aria-label="Yopish">×</button></div><form id="habitForm"><input type="hidden" id="habitId"><label for="habitTitle">Odat nomi</label><input id="habitTitle" maxlength="80" placeholder="Masalan, 20 daqiqa kitob o‘qish" required><div class="form-row"><label for="habitCategory">Kategoriya<select id="habitCategory"><option value="focus">Fokus</option><option value="health">Salomatlik</option><option value="learning">Ta’lim</option><option value="mindset">Tafakkur</option><option value="recovery">Dam olish</option></select></label><label for="habitTarget">Haftalik maqsad<select id="habitTarget"><option value="3">Haftasiga 3 kun</option><option value="5" selected>Haftasiga 5 kun</option><option value="6">Haftasiga 6 kun</option><option value="7">Har kuni</option></select></label></div><div class="modal-actions"><button type="button" class="button secondary" data-close-modal>Bekor qilish</button><button type="submit" class="button primary">Saqlash</button></div></form></section></div>
+  <div class="modal-backdrop hidden" id="taskModalBackdrop" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle"><div class="modal-heading"><div><div class="eyebrow">REJALASHTIRUVCHI</div><h2 id="taskModalTitle">Yangi vazifa</h2></div><button class="icon-button modal-close" data-close-modal aria-label="Yopish">×</button></div><form id="taskForm"><label for="taskTitleInput">Vazifa nomi</label><input id="taskTitleInput" maxlength="120" placeholder="Masalan, ingliz tili mashqlarini bajarish" required><label for="taskDateInput">Sana</label><input type="date" id="taskDateInput" required><div class="modal-actions"><button type="button" class="button secondary" data-close-modal>Bekor qilish</button><button type="submit" class="button primary">Vazifa qo‘shish</button></div></form></section></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
-                                                                                                                                                                                                                                                                                                                                                                                                               </html>
+</html>

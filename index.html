@@ -56,6 +56,7 @@
         <button class="nav-item" data-page="planner"><span class="nav-icon">▦</span> Rejalashtiruvchi</button>
         <button class="nav-item" data-page="pomodoro"><span class="nav-icon">◷</span> Fokus taymeri</button>
         <button class="nav-item" data-page="analytics"><span class="nav-icon">⌁</span> Tahlil</button>
+        <button class="nav-item" data-page="achievements"><span class="nav-icon">🏆</span> Yutuqlar</button>
       </nav>
       <div class="sidebar-bottom">
         <div class="sidebar-tip"><span class="tip-spark">✳</span><p>Har kuni kichik qadam. Vaqt o‘tib, katta o‘zgarish.</p></div>
@@ -120,6 +121,19 @@
         <div class="pomodoro-layout"><section class="panel timer-panel"><div class="timer-tabs" id="timerModes"><button class="timer-tab active" data-mode="focus">Fokus</button><button class="timer-tab" data-mode="short">Qisqa tanaffus</button><button class="timer-tab" data-mode="long">Uzun tanaffus</button></div><div class="timer-ring" id="timerRing"><div class="timer-ring-inner"><span class="eyebrow" id="timerModeLabel">FOCUS SESSION</span><strong id="mainTimer">25:00</strong><span class="timer-sub" id="timerStatus">DIQQATNI JAMLANG</span></div></div><div class="timer-controls"><button class="button primary timer-start" id="timerStart">▶ Boshlash</button><button class="button secondary" id="timerReset">↺ Qayta</button></div><div class="session-count"><span>BUGUNGI SESSIYALAR</span><strong id="sessionCount">0</strong></div></section><aside class="panel timer-notes"><div class="eyebrow">FOKUS QOIDALARI</div><h2>Vaqtingizni ongli boshqaring.</h2><div class="focus-rule"><span>01</span><div><strong>Bitta vazifani tanlang</strong><p>Taymer tugaguncha shu ishga e’tibor qarating.</p></div></div><div class="focus-rule"><span>02</span><div><strong>Chalg‘ituvchilarni chetga oling</strong><p>Bildirishnomalarni vaqtincha o‘chirib qo‘ying.</p></div></div><div class="focus-rule"><span>03</span><div><strong>Tanaffusni ham rejalang</strong><p>Qisqa tanaffus diqqatni tiklashga yordam beradi.</p></div></div><button class="text-button" data-goto="settings">Taymer sozlamalari <span>↗</span></button></aside></div>
       </section>
 
+      <section class="page" id="page-achievements">
+        <div class="page-heading"><div><div class="eyebrow">RIVOJLANISH / 06</div><h1>Yutuqlar va darajalar</h1><p class="subheading">Har bir kichik qadam tajriba va yangi marralarni olib keladi.</p></div></div>
+        <div class="stats-grid gamification-stats">
+          <article class="stat-card"><div class="stat-top"><span>JAMI TAJRIBA</span><span class="stat-symbol">✦</span></div><div class="stat-value"><strong id="gameXP">0 XP</strong></div><span class="stat-note">Har bir bajarilgan odat uchun 10 XP</span></article>
+          <article class="stat-card"><div class="stat-top"><span>HOZIRGI DARAJA</span><span class="stat-symbol">♛</span></div><div class="stat-value"><strong id="gameLevel">1</strong></div><span class="stat-note" id="gameTitle">Boshlovchi</span></article>
+          <article class="stat-card"><div class="stat-top"><span>ENG UZOQ SERIYA</span><span class="stat-symbol">🔥</span></div><div class="stat-value"><strong id="bestStreak">0 kun</strong></div><span class="stat-note">Tarixdagi eng yaxshi natija</span></article>
+          <article class="stat-card"><div class="stat-top"><span>OCHILGAN YUTUQLAR</span><span class="stat-symbol">🏅</span></div><div class="stat-value"><strong id="achievementUnlocked">0 / 12</strong></div><div class="progress-track"><div class="progress-fill" id="achievementOverall" style="width:0%"></div></div></article>
+        </div>
+        <section class="panel game-level-panel"><div class="panel-heading"><div><div class="eyebrow">KEYINGI BOSQICH</div><h2 id="nextLevelLabel">2-darajaga yo‘l</h2></div><strong id="levelProgressText">0 / 100 XP</strong></div><div class="progress-track level-track"><div class="progress-fill" id="levelProgressBar" style="width:0%"></div></div><p class="subheading" id="levelRewardText">Har bir odat bajarilishi sizga 10 XP beradi.</p></section>
+        <section class="panel game-habits-panel"><div class="panel-heading"><div><div class="eyebrow">TAJRIBA MANBALARI</div><h2>Odatlar reytingi</h2></div><span class="legend">Har bir bajarilish = 10 XP</span></div><div id="habitXPList" class="habit-stat-list"></div></section>
+        <section class="panel achievement-panel"><div class="panel-heading"><div><div class="eyebrow">MARRALAR</div><h2>Badge va yutuqlar</h2></div></div><div class="achievement-grid" id="achievementGrid"></div></section>
+      </section>
+
       <section class="page" id="page-analytics">
         <div class="page-heading"><div><div class="eyebrow">MA’LUMOTLAR / 05</div><h1>Rivojlanish tahlili</h1><p class="subheading">Natijani kuzating, naqshlarni aniqlang va keyingi qadamni belgilang.</p></div></div>
         <div class="stats-grid analytics-stats"><article class="stat-card"><div class="stat-top"><span>OXIRGI 7 KUN</span><span class="stat-symbol">▥</span></div><div class="stat-value"><strong id="analyticsWeekRate">0%</strong><span class="stat-note">odatlarni bajarish</span></div></article><article class="stat-card"><div class="stat-top"><span>OXIRGI 30 KUN</span><span class="stat-symbol">⌁</span></div><div class="stat-value"><strong id="analyticsMonthRate">0%</strong><span class="stat-note">odatlarni bajarish</span></div></article><article class="stat-card"><div class="stat-top"><span>ENG BARQAROR ODAT</span><span class="stat-symbol">↗</span></div><div class="stat-value"><strong class="text-stat" id="bestHabit">—</strong><span class="stat-note" id="bestHabitRate">Ma’lumot yig‘ilmoqda</span></div></article><article class="stat-card"><div class="stat-top"><span>BAJARILGANLAR</span><span class="stat-symbol">✓</span></div><div class="stat-value"><strong id="totalCompletions">0</strong><span class="stat-note">jami belgilangan kunlar</span></div></article></div>
@@ -134,7 +148,7 @@
       </section>
 
       <section class="page" id="page-settings">
-        <div class="page-heading"><div><div class="eyebrow">SHAXSIYLASHTIRISH / 06</div><h1>Sozlamalar</h1><p class="subheading">Profilingiz va ish maydoni sozlamalarini boshqaring.</p></div></div>
+        <div class="page-heading"><div><div class="eyebrow">SHAXSIYLASHTIRISH / 07</div><h1>Sozlamalar</h1><p class="subheading">Profilingiz va ish maydoni sozlamalarini boshqaring.</p></div></div>
         <div class="settings-layout">
           <section class="panel settings-panel">
             <div class="settings-section-head"><div class="settings-icon">◎</div><div><h2>Profil</h2><p>Ilovada ko‘rinadigan ismingiz.</p></div></div>

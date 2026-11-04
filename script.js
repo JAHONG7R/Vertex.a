@@ -1053,6 +1053,7 @@ function pauseTimer() {
 }
 
 function runTimerInterval() {
+  // Bitta interval ishlaydi; deadline mutlaq vaqt bo‘lgani uchun tab yashirilsa ham hisob to‘g‘ri qoladi.
   if (timerInterval) {
     clearInterval(timerInterval);
     timerInterval = null;
@@ -1080,12 +1081,15 @@ function runTimerInterval() {
       return;
     }
 
-    $('#mainTimer').textContent = formatTime(timerSeconds);
-    $('#dashTimer').textContent = formatTime(timerSeconds);
+    const mainTimer = $('#mainTimer');
+    const dashTimer = $('#dashTimer');
+    if (mainTimer) mainTimer.textContent = formatTime(timerSeconds);
+    if (dashTimer) dashTimer.textContent = formatTime(timerSeconds);
 
     const fraction = 1 - timerSeconds / modeDuration(state.pomodoro.mode);
     const degrees = fraction * 360;
-    $('#timerRing').style.background =
+    const ring = $('#timerRing');
+    if (ring) ring.style.background =
       `conic-gradient(var(--lime) ${degrees}deg,#323b28 ${degrees}deg 360deg)`;
   }, 1000);
 }
@@ -1325,12 +1329,39 @@ function renderAll() {
 /* ==============================
    YUTUQLAR VA BADGE TIZIMI
 ============================== */
+function longestOverallStreak() {
+  const active = activeHabits();
+  if (!active.length) return 0;
+  const dates = [...new Set(state.logs.map(log => log.date).filter(validDate))].sort();
+  if (!dates.length) return 0;
+  let best = 0, run = 0, previous = null;
+  for (const date of dates) {
+    run = previous && shiftDate(previous, 1) === date ? run + 1 : 1;
+    best = Math.max(best, run);
+    previous = date;
+  }
+  return best;
+}
+
 function renderAchievements() {
   const total = state.logs.length;
   const streak = currentStreak();
   const habits = state.habits.length;
   const xp = xpTotal();
   const sessions = Number(state.pomodoro?.sessions || 0);
+  const level = Math.floor(xp / 100) + 1;
+  const levelXP = xp % 100;
+  const titles = ['Boshlovchi', 'Izlanuvchi', 'Intiluvchi', 'Barqaror', 'Usta', 'Chempion', 'Afsona'];
+  const title = titles[Math.min(titles.length - 1, Math.floor((level - 1) / 3))];
+  const setText = (id, value) => { const el = $('#' + id); if (el) el.textContent = value; };
+  setText('gameXP', `${xp} XP`);
+  setText('gameLevel', String(level));
+  setText('gameTitle', title);
+  setText('bestStreak', `${longestOverallStreak()} kun`);
+  setText('nextLevelLabel', `${level + 1}-darajaga yo‘l`);
+  setText('levelProgressText', `${levelXP} / 100 XP`);
+  setText('levelRewardText', `${100 - levelXP} XP dan so‘ng yangi darajaga chiqasiz.`);
+  const levelBar = $('#levelProgressBar'); if (levelBar) levelBar.style.width = `${levelXP}%`;
   const badges = [
     { icon: '🌱', name: 'Birinchi qadam', desc: 'Birinchi odatingizni yarating.', value: habits, goal: 1, unit: 'odat' },
     { icon: '✅', name: 'Boshlanish', desc: 'Birinchi odatni bajaring.', value: total, goal: 1, unit: 'bajarilish' },
@@ -1346,18 +1377,20 @@ function renderAchievements() {
     { icon: '👑', name: 'Tajriba yig‘uvchi', desc: '500 XP to‘plang.', value: xp, goal: 500, unit: 'XP' }
   ];
   const unlocked = badges.filter(b => b.value >= b.goal).length;
-  $('#achievementUnlocked').textContent = `${unlocked} / ${badges.length}`;
-  $('#achievementOverall').style.width = `${unlocked / badges.length * 100}%`;
-  $('#achievementGrid').innerHTML = badges.map(b => {
+  setText('achievementUnlocked', `${unlocked} / ${badges.length}`);
+  const overall = $('#achievementOverall'); if (overall) overall.style.width = `${unlocked / badges.length * 100}%`;
+  const grid = $('#achievementGrid');
+  if (grid) grid.innerHTML = badges.map(b => {
     const done = b.value >= b.goal;
     const percent = Math.min(100, Math.round(b.value / b.goal * 100));
-    return `<article class="achievement-card ${done ? 'unlocked' : 'locked'}">
-      <div class="achievement-card-top"><span class="achievement-icon">${b.icon}</span><span class="achievement-state">${done ? '✓ OCHILDI' : '🔒 QULFLANGAN'}</span></div>
-      <h3>${b.name}</h3><p>${b.desc}</p>
-      <div class="achievement-progress"><span style="width:${percent}%"></span></div>
-      <div class="achievement-progress-label"><span>${Math.min(b.value, b.goal)} / ${b.goal} ${b.unit}</span><b>${percent}%</b></div>
-    </article>`;
+    return `<article class="achievement-card ${done ? 'unlocked' : 'locked'}"><div class="achievement-card-top"><span class="achievement-icon">${b.icon}</span><span class="achievement-state">${done ? '✓ OCHILDI' : '🔒 QULFLANGAN'}</span></div><h3>${b.name}</h3><p>${b.desc}</p><div class="achievement-progress"><span style="width:${percent}%"></span></div><div class="achievement-progress-label"><span>${Math.min(b.value, b.goal)} / ${b.goal} ${b.unit}</span><b>${percent}%</b></div></article>`;
   }).join('');
+  const list = $('#habitXPList');
+  if (list) {
+    const rows = state.habits.map(h => ({ habit: h, count: state.logs.filter(log => log.habitId === h.id).length }))
+      .sort((a,b) => b.count - a.count);
+    list.innerHTML = rows.length ? rows.map(({habit,count}) => `<div class="habit-stat-row"><div class="habit-stat-name"><span>${escapeHTML(habit.icon || '🎯')}</span><strong>${escapeHTML(habit.name)}</strong></div><div class="habit-stat-track"><span style="width:${Math.min(100, count / Math.max(1, rows[0].count) * 100)}%;background:${escapeHTML(habit.color || 'var(--lime)')} "></span></div><b>${count * 10} XP</b></div>`).join('') : '<p class="subheading">Odat qo‘shganingizdan so‘ng XP reytingi shu yerda ko‘rinadi.</p>';
+  }
 }
 
 /* ==============================

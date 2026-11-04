@@ -79,3 +79,19 @@
 .goal-foot{border-top:1px solid #ffffff12;padding-top:10px;color:#b5c19f;font-size:9px}
 @media(max-width:850px){.smart-overview{grid-template-columns:1fr}}
 @media(max-width:560px){.smart-card{padding:16px}.smart-insight-main{margin:15px 0}.smart-insight-main h2{font-size:15px}.smart-overview{gap:9px}}
+
+
+/* Phase 3: gamification */
+.gamification-stats { margin-bottom: 22px; }
+.game-level-panel, .game-habits-panel, .achievement-panel { margin-bottom: 22px; padding: 24px; }
+.level-track { height: 12px; margin: 18px 0 12px; overflow: hidden; border-radius: 99px; background: rgba(255,255,255,.08); }
+.level-track .progress-fill { height: 100%; border-radius: inherit; background: var(--lime); transition: width .35s ease; }
+.achievement-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
+.habit-stat-row { display:grid; grid-template-columns:minmax(120px,1fr) minmax(80px,1.4fr) 70px; gap:14px; align-items:center; padding:12px 0; border-bottom:1px solid rgba(255,255,255,.07); }
+.habit-stat-name { display:flex; gap:10px; align-items:center; min-width:0; }
+.habit-stat-name strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.habit-stat-track { height:8px; background:rgba(255,255,255,.08); border-radius:99px; overflow:hidden; }
+.habit-stat-track span { display:block; height:100%; border-radius:inherit; }
+.habit-stat-row>b { text-align:right; font-size:13px; }
+@media(max-width:760px) { .achievement-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .habit-stat-row { grid-template-columns:minmax(90px,1fr) 70px; } .habit-stat-track { display:none; } }
+@media(max-width:480px) { .achievement-grid { grid-template-columns:1fr; } .game-level-panel,.game-habits-panel,.achievement-panel { padding:16px; } }

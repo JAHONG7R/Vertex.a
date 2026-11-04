@@ -179,3 +179,9 @@
 .month-day-bar{cursor:pointer;border-radius:6px;padding:2px 1px}
 .month-day-bar.selected{background:rgba(212,243,74,.10);outline:1px solid var(--accent)}
 @media(max-width:420px){.month-calendar-grid{gap:4px}.month-calendar-day{min-height:36px}.month-calendar-empty{min-height:36px}.month-selected-habit{font-size:11px}}
+
+/* Unified per-habit colors across analytics and monthly reports */
+.habit-colored-fill,.long-term-habit-row .progress-fill{background:var(--habit-accent,var(--lime))!important}
+.long-term-habit-row .long-term-habit-head strong{color:var(--habit-accent,var(--lime))}
+.month-selected-habit .month-habit-dot{background:var(--habit-accent,var(--lime))}
+.month-selected-habit .is-done{color:var(--habit-accent,var(--lime))}

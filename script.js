@@ -89,7 +89,7 @@ function normalizeHabitColor(color) {
 }
 
 function habitAccent(habit) {
-  return `--habit-accent:${normalizeHabitColor(habit?.color)}`;
+  return `--habit-accent:${normalizeHabitColor(habit?.color ?? habit?.habitColor)}`;
 }
 
 const DAY_NAMES = ['Du', 'Se', 'Cho', 'Pay', 'Ju', 'Shan', 'Yak'];
@@ -1255,8 +1255,8 @@ function renderCalendarDayDetails(date) {
   const pct = habits.length ? Math.round(completed.length / habits.length * 100) : 0;
   const rows = habits.map(habit => {
     const done = isChecked(habit.id, date);
-    const color = normalizeHabitColor(habit.color);
-    return `<div class="month-selected-habit"><span class="month-habit-dot" style="background:${color}"></span><span>${escapeHTML(habit.icon || '◉')} ${escapeHTML(habit.title)}</span><strong class="${done ? 'is-done' : 'is-missed'}">${done ? 'Bajarildi' : 'Bajarilmadi'}</strong></div>`;
+    const color = normalizeHabitColor(habit.color ?? habit.habitColor);
+    return `<div class="month-selected-habit" style="--habit-accent:${color}"><span class="month-habit-dot" style="background:${color}"></span><span>${escapeHTML(habit.icon || '◉')} ${escapeHTML(habit.title)}</span><strong class="${done ? 'is-done' : 'is-missed'}">${done ? 'Bajarildi' : 'Bajarilmadi'}</strong></div>`;
   }).join('');
   box.innerHTML = `<div class="month-selected-heading"><div><div class="eyebrow">TANLANGAN SANA</div><h3>${dateLabel(date,{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</h3></div><strong class="month-selected-rate">${pct}%</strong></div><div class="month-selected-summary"><span>${completed.length} ta bajarildi</span><span>${Math.max(0,habits.length-completed.length)} ta bajarilmadi</span><span>${habits.length} ta odat</span></div><div class="month-selected-habits">${rows || '<p class="long-term-empty">Bu sanada hisoblanadigan odatlar mavjud emas.</p>'}</div>`;
   document.querySelectorAll('.month-calendar-day').forEach(button => button.classList.toggle('selected', button.dataset.date === date));
@@ -1289,7 +1289,7 @@ function showCalendarMonthDetail(monthKey) {
     <article class="stat-card"><div class="stat-top"><span>BAJARILISH DARAJASI</span></div><div class="stat-value"><strong>${rate}%</strong></div></article>
     <article class="stat-card"><div class="stat-top"><span>BAJARILGANLAR</span></div><div class="stat-value"><strong>${done}</strong></div></article>
     <article class="stat-card"><div class="stat-top"><span>REJADAGI IMKONIYAT</span></div><div class="stat-value"><strong>${possible}</strong></div></article>`;
-  const habitRows = rows.map(x => `<div class="long-term-habit-row"><div class="long-term-habit-head"><span>${escapeHTML(x.habit.icon || '◉')} ${escapeHTML(x.habit.title)}</span><strong>${x.rate}%</strong></div><div class="progress-track"><div class="progress-fill" style="width:${x.rate}%"></div></div><small>${x.completed} / ${x.eligible} kun bajarilgan</small></div>`).join('') || '<p class="long-term-empty">Faol odatlar mavjud emas.</p>';
+  const habitRows = rows.map(x => `<div class="long-term-habit-row" style="--habit-accent:${normalizeHabitColor(x.habit.color ?? x.habit.habitColor)}"><div class="long-term-habit-head"><span>${escapeHTML(x.habit.icon || '◉')} ${escapeHTML(x.habit.title)}</span><strong>${x.rate}%</strong></div><div class="progress-track"><div class="progress-fill habit-colored-fill" style="width:${x.rate}%"></div></div><small>${x.completed} / ${x.eligible} kun bajarilgan</small></div>`).join('') || '<p class="long-term-empty">Faol odatlar mavjud emas.</p>';
 
   // Tanlangan oy uchun Analytics sahifasiga o‘xshash kunlik diagramma.
   const daily = [];
@@ -1310,7 +1310,7 @@ function showCalendarMonthDetail(monthKey) {
     const completedHabits = habits.filter(habit => d.date >= habit.createdAt && isChecked(habit.id, d.date));
     const segmentHeight = completedHabits.length ? 100 / completedHabits.length : 0;
     const segments = completedHabits.map(habit => {
-      const color = normalizeHabitColor(habit.color);
+      const color = normalizeHabitColor(habit.color ?? habit.habitColor);
       return `<i class="month-day-segment" title="${escapeHTML(habit.title)}" style="height:${segmentHeight}%;background:${color};flex:0 0 ${segmentHeight}%"></i>`;
     }).join('');
     return `<div class="month-day-bar" data-date="${d.date}" title="${dateLabel(d.date,{day:'numeric',month:'long'})}: ${d.completed}/${d.eligible} (${d.pct}%)"><span class="month-day-value">${d.pct}%</span><div class="month-day-track"><div class="month-day-stack" style="height:${d.pct}%">${segments}</div></div><small>${Number(d.date.slice(-2))}</small></div>`;
@@ -1454,7 +1454,7 @@ function renderAnalytics() {
     const percent = total ? Math.round(completed.length / total * 100) : 0;
     const segmentHeight = completed.length ? (100 / completed.length) : 0;
     const segments = completed.map(habit => {
-      const color = normalizeHabitColor(habit.color);
+      const color = normalizeHabitColor(habit.color ?? habit.habitColor);
       return `<i class="bar-segment" title="${escapeHTML(habit.title)}" style="height:${segmentHeight}%;background:${color};background-color:${color};flex:0 0 ${segmentHeight}%"></i>`;
     }).join('');
     return `

@@ -917,6 +917,28 @@ function renderPersonalCoach() {
   action.innerHTML = `<strong>Bugungi kichik qadam:</strong> “${escapeHTML(weak.h.title)}” uchun 2–5 daqiqalik eng oson variantni bajaring va Vertex’da belgilang.`;
 }
 
+
+function renderProgressPrediction() {
+  const metrics = $('#predictionMetrics'), note = $('#predictionNote'), bar = $('#predictionBar'), foot = $('#predictionFoot');
+  if (!metrics || !note || !bar || !foot) return;
+  const habits = activeHabits();
+  if (!habits.length) { metrics.innerHTML = '<span class="coach-metric">Hali odatlar yo‘q</span>'; note.textContent = 'Prognoz uchun avval odat qo‘shing.'; bar.style.width = '0%'; foot.textContent = 'Odatlar tarixi yig‘ilgach, taxmin paydo bo‘ladi.'; return; }
+  const end = today(), recentStart = shiftDate(end, -13), previousStart = shiftDate(end, -27), previousEnd = shiftDate(end, -14);
+  const possible = habits.length * 14;
+  const count = (a,b) => state.logs.filter(x => x.date >= a && x.date <= b && habits.some(h => h.id === x.habitId)).length;
+  const recent = Math.round(count(recentStart,end) / possible * 100);
+  const previous = Math.round(count(previousStart,previousEnd) / possible * 100);
+  const change = recent - previous;
+  const forecast = Math.max(0, Math.min(100, Math.round(recent + change * 0.5)));
+  const logsInWindow = state.logs.filter(x => x.date >= previousStart && x.date <= end && habits.some(h => h.id === x.habitId)).length;
+  metrics.innerHTML = `<span class="coach-metric">So‘nggi 14 kun <b>${recent}%</b></span><span class="coach-metric">Oldingi 14 kun <b>${previous}%</b></span><span class="coach-metric">Keyingi hafta taxmini <b>${forecast}%</b></span>`;
+  bar.style.width = forecast + '%';
+  if (logsInWindow < 3) { note.textContent = 'Hozircha tarix kam. Ko‘proq kunlarda odatlarni belgilasangiz, taxmin aniqroq yo‘nalish beradi.'; foot.textContent = 'Bu dastlabki taxmin; natija kafolatlanmaydi.'; }
+  else if (change > 2) { note.textContent = `So‘nggi ikki haftada natija ${change} foiz punktga yaxshilangan. Shu sur’at saqlansa, keyingi 7 kun uchun taxminiy ko‘rsatkich ${forecast}%.`; foot.textContent = 'Tavsiya: hozirgi odat vaqtingizni saqlang.'; }
+  else if (change < -2) { note.textContent = `So‘nggi ikki haftada natija ${Math.abs(change)} foiz punktga pasaygan. Hozirgi trend davom etsa, keyingi 7 kun taxminan ${forecast}% bo‘lishi mumkin.`; foot.textContent = 'Tavsiya: eng qiyin odatni kichikroq vazifaga ajrating.'; }
+  else { note.textContent = `Natijangiz deyarli barqaror. Keyingi 7 kun uchun taxminiy ko‘rsatkich ${forecast}%.`; foot.textContent = 'Tavsiya: muntazamlikni saqlab, bitta kichik yaxshilanish kiriting.'; }
+}
+
 function renderCoachPlan(){const list=$('#coachPlanList'),summary=$('#coachPlanSummary');if(!list||!summary)return;const ranked=activeHabits().map(h=>({habit:h,pct:Math.round(getHabitLogs(h.id,shiftDate(today(),-6),today()).length/7*100)})).sort((a,b)=>a.pct-b.pct);if(!ranked.length){summary.textContent='Avval odat qo‘shing — shunda Vertex reja tuzadi.';list.innerHTML='<p>Hozircha reja tuzish uchun odatlar yo‘q.</p>';}else{const focus=ranked[0].habit;summary.textContent=`Reja eng ko‘p e’tibor talab qilayotgan “${focus.title}” odatiga asoslangan.`;const steps=['Qulay vaqtni tanlang.','Odatning kichik variantini bajaring.','Bajarilgach, Vertex’da belgilang.','Nima xalaqit berganini aniqlang.','Odatni kundalik ishga bog‘lang.','Natijani tekshirib, vaqtini moslang.','Haftani yakunlab, yangi maqsad belgilang.'];list.innerHTML=steps.map((s,i)=>`<div class="coach-plan-row"><b>${['Du','Se','Ch','Pa','Ju','Sh','Ya'][i]}</b><span>${s}</span><small>${escapeHTML(focus.title)}</small></div>`).join('');}const t=localStorage.getItem('vertex_coach_reminder_time')||'19:00';const input=$('#coachReminderTime');if(input)input.value=t;updateCoachReminderStatus();}
 function updateCoachReminderStatus(){const n=$('#coachReminderStatus');if(n)n.textContent=`Eslatma ${localStorage.getItem('vertex_coach_reminder_time')||'19:00'} ga saqlangan. Vertex ochiq bo‘lganda ko‘rinadi.`;}
 
@@ -925,6 +947,7 @@ function renderDashboard() {
   renderSmartDashboard();
   renderSmartCoach();
   renderPersonalCoach();
+  renderProgressPrediction();
   renderCoachPlan();
   renderWeekStrip();
   renderDashboardHabits();

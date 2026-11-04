@@ -203,3 +203,6 @@
 .personal-coach-advice{font-size:13px;line-height:1.6;margin-top:12px;color:var(--text,#eee)}
 .personal-coach-action{margin-top:10px;padding:11px;border-radius:11px;background:var(--viz-accent-bg,rgba(180,220,80,.1));font-size:12px;line-height:1.5;color:var(--viz-text,var(--text,#eee))}
 @media(max-width:420px){.personal-coach-metrics{grid-template-columns:1fr}.coach-metric b{display:inline;margin-left:6px}}
+
+/* Progress prediction */
+.prediction-card{margin:16px 0;padding:18px;border:1px solid var(--border,rgba(255,255,255,.1));border-radius:18px;background:rgba(255,255,255,.025)}.prediction-metrics{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}.prediction-note,.prediction-foot{color:var(--muted,#a5aa9c);font-size:.9rem;line-height:1.55}.prediction-track{height:9px;overflow:hidden;border-radius:20px;background:rgba(255,255,255,.1);margin:14px 0 9px}.prediction-track span{display:block;width:0;height:100%;border-radius:inherit;background:var(--accent,#d4f34a);transition:width .35s ease}.prediction-foot{font-weight:600}

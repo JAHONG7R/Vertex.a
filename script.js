@@ -462,7 +462,6 @@ window.VertexApp = {
       console.error('Holatni saqlashda xatolik:', error);
     }
     if ($('#todayPercent')) renderAll();
-    if (timerRunning) runTimerInterval();
   },
   notify(message) {
     notify(message);
@@ -1000,21 +999,22 @@ function pauseTimer() {
   persistTimer();
 }
 
-function runTimerInterval() {
-  if (timerInterval) {
-    clearInterval(timerInterval);
-    timerInterval = null;
+function startTimer() {
+  if (timerRunning) {
+    pauseTimer();
+    renderTimer();
+    return;
   }
-
-  if (!timerRunning || !Number.isFinite(Number(timerEndsAt))) return;
-
+  if (timerSeconds <= 0) timerSeconds = modeDuration(state.pomodoro.mode);
+  timerRunning = true;
+  timerEndsAt = Date.now() + timerSeconds * 1000;
+  persistTimer();
+  renderTimer();
   timerInterval = setInterval(() => {
     timerSeconds = Math.max(0, Math.ceil((timerEndsAt - Date.now()) / 1000));
-
     if (timerSeconds <= 0) {
       timerSeconds = 0;
       pauseTimer();
-
       if (state.pomodoro.mode === 'focus') {
         state.pomodoro.sessions++;
         saveState();
@@ -1022,38 +1022,17 @@ function runTimerInterval() {
       } else {
         notify('Tanaffus tugadi. Tayyor bo‘lsangiz, davom eting.');
       }
-
       renderTimer();
       renderDashboard();
       return;
     }
-
     $('#mainTimer').textContent = formatTime(timerSeconds);
     $('#dashTimer').textContent = formatTime(timerSeconds);
-
     const fraction = 1 - timerSeconds / modeDuration(state.pomodoro.mode);
     const degrees = fraction * 360;
     $('#timerRing').style.background =
       `conic-gradient(var(--lime) ${degrees}deg,#323b28 ${degrees}deg 360deg)`;
   }, 1000);
-}
-
-function startTimer() {
-  if (timerRunning) {
-    pauseTimer();
-    renderTimer();
-    renderDashboard();
-    return;
-  }
-
-  if (timerSeconds <= 0) timerSeconds = modeDuration(state.pomodoro.mode);
-
-  timerRunning = true;
-  timerEndsAt = Date.now() + timerSeconds * 1000;
-  persistTimer();
-  renderTimer();
-  renderDashboard();
-  runTimerInterval();
 }
 
 function resetTimer() {
@@ -1074,6 +1053,46 @@ function renderAnalytics() {
   $('#analyticsWeekRate').textContent = week + '%';
   $('#analyticsMonthRate').textContent = month + '%';
   $('#totalCompletions').textContent = state.logs.length;
+
+  // Qo'shimcha Smart Analytics: oldingi davr bilan taqqoslash va eng samarali hafta kuni.
+  const analyticsHabits = activeHabits();
+  const periodRate = (offset, days) => {
+    if (!analyticsHabits.length) return 0;
+    let completed = 0;
+    for (let i = offset; i < offset + days; i++) {
+      const date = shiftDate(today(), -i);
+      completed += analyticsHabits.filter(h => isChecked(h.id, date)).length;
+    }
+    return Math.round(completed / (analyticsHabits.length * days) * 100);
+  };
+  const previousWeek = periodRate(7, 7);
+  const previousMonth = periodRate(30, 30);
+  const weekDelta = week - previousWeek;
+  const monthDelta = month - previousMonth;
+  const weekCompare = $('#analyticsWeekCompare');
+  const monthCompare = $('#analyticsMonthCompare');
+  if (weekCompare) weekCompare.textContent = `${weekDelta > 0 ? '+' : ''}${weekDelta}% oldingi 7 kunga nisbatan`;
+  if (monthCompare) monthCompare.textContent = `${monthDelta > 0 ? '+' : ''}${monthDelta}% oldingi 30 kunga nisbatan`;
+  const score = Math.round((week * 0.6) + (month * 0.4));
+  const scoreValue = $('#progressScore');
+  const scoreBar = $('#progressScoreBar');
+  const scoreLabel = $('#progressScoreLabel');
+  if (scoreValue) scoreValue.textContent = score + '/100';
+  if (scoreBar) scoreBar.style.width = score + '%';
+  if (scoreLabel) scoreLabel.textContent = score >= 80 ? 'Juda yaxshi izchillik' : score >= 60 ? 'Yaxshi yo‘nalish' : score >= 35 ? 'Rivojlanish davom etmoqda' : 'Barqarorlikni shakllantiring';
+
+  const weekdayTotals = Array.from({length: 7}, (_, day) => ({day, done: 0, possible: 0}));
+  for (let i = 0; i < 30; i++) {
+    const date = shiftDate(today(), -i);
+    const weekday = (parseDate(date).getDay() + 6) % 7;
+    weekdayTotals[weekday].done += analyticsHabits.filter(h => isChecked(h.id, date)).length;
+    weekdayTotals[weekday].possible += analyticsHabits.length;
+  }
+  const bestWeekday = weekdayTotals.filter(x => x.possible).sort((a,b) => (b.done/b.possible) - (a.done/a.possible))[0];
+  const bestDayNode = $('#bestWeekday');
+  const bestDayRateNode = $('#bestWeekdayRate');
+  if (bestDayNode) bestDayNode.textContent = bestWeekday && bestWeekday.done ? ['Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba','Yakshanba'][bestWeekday.day] : '—';
+  if (bestDayRateNode) bestDayRateNode.textContent = bestWeekday && bestWeekday.possible ? `${Math.round(bestWeekday.done / bestWeekday.possible * 100)}% · oxirgi 30 kun` : 'Ma’lumot yig‘ilmoqda';
 
   const active = activeHabits();
   let best = null;
@@ -1530,8 +1549,11 @@ function init() {
   plannerDate = today();
   bindEvents();
   renderAll();
-  // Saqlangan faol sessiyani mavjud tugash vaqtini o‘zgartirmasdan davom ettiramiz.
-  if (timerRunning) runTimerInterval();
+  // Qayta ochilganda faol sessiyani yangi interval bilan davom ettiramiz.
+  if (timerRunning) {
+    timerRunning = false;
+    startTimer();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);

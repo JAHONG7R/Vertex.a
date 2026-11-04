@@ -888,10 +888,14 @@ function renderSmartCoach() {
   insights.innerHTML = items.join('');
 }
 
+function renderCoachPlan(){const list=$('#coachPlanList'),summary=$('#coachPlanSummary');if(!list||!summary)return;const ranked=activeHabits().map(h=>({habit:h,pct:Math.round(getHabitLogs(h.id,shiftDate(today(),-6),today()).length/7*100)})).sort((a,b)=>a.pct-b.pct);if(!ranked.length){summary.textContent='Avval odat qo‘shing — shunda Vertex reja tuzadi.';list.innerHTML='<p>Hozircha reja tuzish uchun odatlar yo‘q.</p>';}else{const focus=ranked[0].habit;summary.textContent=`Reja eng ko‘p e’tibor talab qilayotgan “${focus.title}” odatiga asoslangan.`;const steps=['Qulay vaqtni tanlang.','Odatning kichik variantini bajaring.','Bajarilgach, Vertex’da belgilang.','Nima xalaqit berganini aniqlang.','Odatni kundalik ishga bog‘lang.','Natijani tekshirib, vaqtini moslang.','Haftani yakunlab, yangi maqsad belgilang.'];list.innerHTML=steps.map((s,i)=>`<div class="coach-plan-row"><b>${['Du','Se','Ch','Pa','Ju','Sh','Ya'][i]}</b><span>${s}</span><small>${escapeHTML(focus.title)}</small></div>`).join('');}const t=localStorage.getItem('vertex_coach_reminder_time')||'19:00';const input=$('#coachReminderTime');if(input)input.value=t;updateCoachReminderStatus();}
+function updateCoachReminderStatus(){const n=$('#coachReminderStatus');if(n)n.textContent=`Eslatma ${localStorage.getItem('vertex_coach_reminder_time')||'19:00'} ga saqlangan. Vertex ochiq bo‘lganda ko‘rinadi.`;}
+
 function renderDashboard() {
   renderStats();
   renderSmartDashboard();
   renderSmartCoach();
+  renderCoachPlan();
   renderWeekStrip();
   renderDashboardHabits();
   renderDashboardTasks();
@@ -1921,6 +1925,7 @@ function init() {
   restoreTimer();
   plannerDate = today();
   bindEvents();
+  if(!document.documentElement.dataset.coachReminderBound){document.documentElement.dataset.coachReminderBound='1';document.addEventListener('click',e=>{if(e.target.closest('#saveCoachReminder')){const i=document.getElementById('coachReminderTime');if(i&&i.value){localStorage.setItem('vertex_coach_reminder_time',i.value);updateCoachReminderStatus();}}});}
   // Delegated event handling: works even if analytics cards are re-rendered.
   if (!document.documentElement.dataset.longTermEventsBound) {
     document.documentElement.dataset.longTermEventsBound = '1';

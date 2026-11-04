@@ -1978,7 +1978,12 @@ function bindVertexChat(){
   if(!form||form.dataset.bound)return;form.dataset.bound='1';
   const box=document.getElementById('vertexChatMessages');
   const input=document.getElementById('vertexChatInput');
-  const add=(text,who)=>{const el=document.createElement('div');el.className='chat-bubble '+who;el.textContent=text;box.appendChild(el);box.scrollTop=box.scrollHeight;};
+  const HISTORY_KEY='vertex_coach_chat_history_v1';
+  let history=[];
+  try{history=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');if(!Array.isArray(history))history=[];}catch(e){history=[];}
+  const add=(text,who,save=true)=>{const el=document.createElement('div');el.className='chat-bubble '+who;el.textContent=text;box.appendChild(el);box.scrollTop=box.scrollHeight;if(save){history.push({text,who});history=history.slice(-40);try{localStorage.setItem(HISTORY_KEY,JSON.stringify(history));}catch(e){}}};
+  history.forEach(item=>{if(item&&typeof item.text==='string'&&['user','coach'].includes(item.who))add(item.text,item.who,false);});
+  const clear=document.getElementById('clearVertexChat');if(clear)clear.addEventListener('click',()=>{history=[];try{localStorage.removeItem(HISTORY_KEY);}catch(e){}box.innerHTML='';add('Suhbat tarixi tozalandi. Yangi savol berishingiz mumkin.','coach');});
   const reply=(q)=>{const text=q.toLowerCase(),habits=activeHabits(),logs=state.logs||[],weekStart=shiftDate(today(),-6),weekLogs=logs.filter(x=>x.date>=weekStart&&x.date<=today()),ranked=habits.map(h=>({h,n:weekLogs.filter(x=>x.habitId===h.id).length,p:Math.round(weekLogs.filter(x=>x.habitId===h.id).length/7*100)})).sort((a,b)=>a.p-b.p);
     if(!habits.length)return 'Hozircha faol odatlaringiz yo‘q. Avval bitta kichik odat qo‘shing, keyin men uning natijasini tahlil qilaman.';
     if(/salom|hello|assalom/.test(text))return 'Salom! Bugun kichik bo‘lsa ham bir qadam tashlashga tayyormisiz? Odatlaringiz yoki natijalaringiz haqida so‘rashingiz mumkin.';

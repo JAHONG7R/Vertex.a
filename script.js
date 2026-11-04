@@ -1274,7 +1274,25 @@ function showCalendarMonthDetail(monthKey) {
     <article class="stat-card"><div class="stat-top"><span>BAJARILGANLAR</span></div><div class="stat-value"><strong>${done}</strong></div></article>
     <article class="stat-card"><div class="stat-top"><span>REJADAGI IMKONIYAT</span></div><div class="stat-value"><strong>${possible}</strong></div></article>`;
   const habitRows = rows.map(x => `<div class="long-term-habit-row"><div class="long-term-habit-head"><span>${escapeHTML(x.habit.icon || '◉')} ${escapeHTML(x.habit.title)}</span><strong>${x.rate}%</strong></div><div class="progress-track"><div class="progress-fill" style="width:${x.rate}%"></div></div><small>${x.completed} / ${x.eligible} kun bajarilgan</small></div>`).join('') || '<p class="long-term-empty">Faol odatlar mavjud emas.</p>';
-  $('#longTermMonthChart').innerHTML = `<section class="long-term-breakdown"><div class="eyebrow">TANLANGAN OY</div><h3>Odatlar kesimida natija</h3>${habitRows}</section>`;
+
+  // Tanlangan oy uchun Analytics sahifasiga o‘xshash kunlik diagramma.
+  const daily = [];
+  const weekdayTotals = Array.from({length:7}, (_,i) => ({label:['Du','Se','Cho','Pa','Ju','Sha','Ya'][i], done:0, possible:0}));
+  let bestDate = null;
+  for (let date = start; date <= end; date = shiftDate(date, 1)) {
+    const eligible = habits.filter(h => date >= h.createdAt);
+    const completed = eligible.filter(h => isChecked(h.id, date)).length;
+    const pct = eligible.length ? Math.round(completed / eligible.length * 100) : 0;
+    const index = (parseDate(date).getDay() + 6) % 7;
+    weekdayTotals[index].done += completed; weekdayTotals[index].possible += eligible.length;
+    daily.push({date, completed, eligible:eligible.length, pct});
+    if (eligible.length && (!bestDate || pct > bestDate.pct)) bestDate = {date,pct};
+  }
+  const dailyBars = daily.map(d => `<div class="month-day-bar" title="${dateLabel(d.date,{day:'numeric',month:'long'})}: ${d.completed}/${d.eligible} (${d.pct}%)"><span style="height:${Math.max(d.pct,2)}%"></span><small>${Number(d.date.slice(-2))}</small></div>`).join('');
+  const weekdayStats = weekdayTotals.map(d => { const pct=d.possible?Math.round(d.done/d.possible*100):0; return `<div class="long-term-weekday-row"><span>${d.label}</span><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div><strong>${pct}%</strong></div>`; }).join('');
+  $('#longTermMonthChart').innerHTML = `
+    <section class="long-term-breakdown"><div class="eyebrow">OYLIK ANALITIKA</div><h3>Kunlar bo‘yicha bajarilish</h3><div class="month-daily-chart">${dailyBars}</div><div class="month-chart-legend"><span>Har bir ustun — bir kun</span><strong>${bestDate ? 'Eng yaxshi kun: '+dateLabel(bestDate.date,{day:'numeric',month:'long'})+' · '+bestDate.pct+'%' : 'Ma’lumot yetarli emas'}</strong></div></section>
+    <div class="long-term-detail-columns"><section class="long-term-breakdown"><div class="eyebrow">HAFTA KUNLARI</div><h3>Haftalik samaradorlik</h3>${weekdayStats}</section><section class="long-term-breakdown"><div class="eyebrow">ODATLAR KESIMIDA</div><h3>Har bir odat natijasi</h3>${habitRows}</section></div>`;
   panel.hidden = false;
   panel.scrollIntoView({behavior:'smooth', block:'nearest'});
 }

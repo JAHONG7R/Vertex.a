@@ -234,6 +234,7 @@ function normalizeState(raw) {
         title: String(task.title ?? task.name ?? task.text ?? '')
           .trim().slice(0, 120),
         date: validDate(taskDate) ? String(taskDate) : today(),
+        priority: ['high', 'medium', 'low'].includes(task.priority) ? task.priority : 'medium',
         done: Boolean(task.done ?? task.completed ?? task.is_done)
       };
     })
@@ -921,7 +922,7 @@ function renderPlanner() {
     : dateLabel(plannerDate, { day: 'numeric', month: 'long', year: 'numeric' }) + ' vazifalari';
   const tasks = state.tasks
     .filter(task => task.date === plannerDate)
-    .sort((a, b) => Number(a.done) - Number(b.done));
+    .sort((a, b) => Number(a.done) - Number(b.done) || ({high:0,medium:1,low:2}[a.priority || 'medium'] - {high:0,medium:1,low:2}[b.priority || 'medium']));
   const done = tasks.filter(task => task.done).length;
   const percent = tasks.length ? Math.round(done / tasks.length * 100) : 0;
   $('#taskTotal').textContent = tasks.length;
@@ -934,6 +935,7 @@ function renderPlanner() {
     <div class="planner-task">
       <button class="task-check ${task.done ? 'done' : ''}" data-toggle-task="${escapeHTML(task.id)}">${task.done ? '✓' : ''}</button>
       <span class="task-title ${task.done ? 'done' : ''}">${escapeHTML(task.title)}</span>
+      <span class="task-priority priority-${task.priority || 'medium'}">${task.priority === 'high' ? 'MUHIM' : task.priority === 'low' ? 'PAST' : 'ODATIY'}</span>
       <div class="task-actions"><button class="mini-action danger" data-delete-task="${escapeHTML(task.id)}" aria-label="Vazifani o‘chirish">×</button></div>
     </div>
   `).join('');
@@ -1590,7 +1592,7 @@ function bindEvents() {
     const title = $('#taskTitleInput').value.trim();
     const date = $('#taskDateInput').value;
     if (!title || !validDate(date)) return;
-    state.tasks.push({ id: uid(), title, date, done: false });
+    state.tasks.push({ id: uid(), title, date, priority: $('#taskPriorityInput').value || 'medium', done: false });
     plannerDate = date;
     saveState();
     renderAll();

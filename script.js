@@ -1247,6 +1247,22 @@ function showLongTermDetail(days) {
   panel.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
+function renderCalendarDayDetails(date) {
+  const box = document.getElementById('monthSelectedDayDetail');
+  if (!box) return;
+  const habits = activeHabits().filter(habit => date >= habit.createdAt);
+  const completed = habits.filter(habit => isChecked(habit.id, date));
+  const pct = habits.length ? Math.round(completed.length / habits.length * 100) : 0;
+  const rows = habits.map(habit => {
+    const done = isChecked(habit.id, date);
+    const color = normalizeHabitColor(habit.color);
+    return `<div class="month-selected-habit"><span class="month-habit-dot" style="background:${color}"></span><span>${escapeHTML(habit.icon || '◉')} ${escapeHTML(habit.title)}</span><strong class="${done ? 'is-done' : 'is-missed'}">${done ? 'Bajarildi' : 'Bajarilmadi'}</strong></div>`;
+  }).join('');
+  box.innerHTML = `<div class="month-selected-heading"><div><div class="eyebrow">TANLANGAN SANA</div><h3>${dateLabel(date,{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</h3></div><strong class="month-selected-rate">${pct}%</strong></div><div class="month-selected-summary"><span>${completed.length} ta bajarildi</span><span>${Math.max(0,habits.length-completed.length)} ta bajarilmadi</span><span>${habits.length} ta odat</span></div><div class="month-selected-habits">${rows || '<p class="long-term-empty">Bu sanada hisoblanadigan odatlar mavjud emas.</p>'}</div>`;
+  document.querySelectorAll('.month-calendar-day').forEach(button => button.classList.toggle('selected', button.dataset.date === date));
+  document.querySelectorAll('.month-day-bar').forEach(bar => bar.classList.toggle('selected', bar.dataset.date === date));
+}
+
 function showCalendarMonthDetail(monthKey) {
   const [year, month] = monthKey.split('-').map(Number);
   const first = `${monthKey}-01`;
@@ -1297,13 +1313,26 @@ function showCalendarMonthDetail(monthKey) {
       const color = normalizeHabitColor(habit.color);
       return `<i class="month-day-segment" title="${escapeHTML(habit.title)}" style="height:${segmentHeight}%;background:${color};flex:0 0 ${segmentHeight}%"></i>`;
     }).join('');
-    return `<div class="month-day-bar" title="${dateLabel(d.date,{day:'numeric',month:'long'})}: ${d.completed}/${d.eligible} (${d.pct}%)"><span class="month-day-value">${d.pct}%</span><div class="month-day-track"><div class="month-day-stack" style="height:${d.pct}%">${segments}</div></div><small>${Number(d.date.slice(-2))}</small></div>`;
+    return `<div class="month-day-bar" data-date="${d.date}" title="${dateLabel(d.date,{day:'numeric',month:'long'})}: ${d.completed}/${d.eligible} (${d.pct}%)"><span class="month-day-value">${d.pct}%</span><div class="month-day-track"><div class="month-day-stack" style="height:${d.pct}%">${segments}</div></div><small>${Number(d.date.slice(-2))}</small></div>`;
   }).join('');
   const weekdayStats = weekdayTotals.map(d => { const pct=d.possible?Math.round(d.done/d.possible*100):0; return `<div class="long-term-weekday-row"><span>${d.label}</span><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div><strong>${pct}%</strong></div>`; }).join('');
+  const firstWeekday = (new Date(year, month - 1, 1, 12).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month, 0, 12).getDate();
+  const calendarCells = Array.from({length:firstWeekday}, () => '<span class="month-calendar-empty"></span>');
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = `${monthKey}-${String(day).padStart(2,'0')}`;
+    const entry = daily.find(item => item.date === date);
+    const pct = entry ? entry.pct : 0;
+    const future = date > today();
+    calendarCells.push(`<button type="button" class="month-calendar-day${future?' future':''}" data-date="${date}" ${future?'disabled':''} aria-label="${day}-kun, ${pct}% bajarilish"><span>${day}</span>${entry && entry.completed ? '<i></i>' : ''}</button>`);
+  }
+  const initialDate = end;
   $('#longTermMonthChart').innerHTML = `
     <section class="long-term-breakdown"><div class="eyebrow">OYLIK ANALITIKA</div><h3>Kunlar bo‘yicha bajarilish</h3><div class="month-daily-chart">${dailyBars}</div><div class="month-chart-legend"><span>Har bir ustun — bir kun</span><strong>${bestDate ? 'Eng yaxshi kun: '+dateLabel(bestDate.date,{day:'numeric',month:'long'})+' · '+bestDate.pct+'%' : 'Ma’lumot yetarli emas'}</strong></div></section>
+    <section class="long-term-breakdown month-calendar-panel"><div class="eyebrow">OYLIK KALENDAR</div><h3>${dateLabel(first,{month:'long',year:'numeric'})}</h3><div class="month-calendar-grid month-calendar-weekdays"><span>Du</span><span>Se</span><span>Cho</span><span>Pa</span><span>Ju</span><span>Sha</span><span>Ya</span></div><div class="month-calendar-grid">${calendarCells.join('')}</div><p class="month-calendar-hint">Sanani bosing — o‘sha kundagi odatlar statistikasi chiqadi.</p><div id="monthSelectedDayDetail"></div></section>
     <div class="long-term-detail-columns"><section class="long-term-breakdown"><div class="eyebrow">HAFTA KUNLARI</div><h3>Haftalik samaradorlik</h3>${weekdayStats}</section><section class="long-term-breakdown"><div class="eyebrow">ODATLAR KESIMIDA</div><h3>Har bir odat natijasi</h3>${habitRows}</section></div>`;
   panel.hidden = false;
+  renderCalendarDayDetails(initialDate);
   panel.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
@@ -1875,6 +1904,8 @@ function init() {
       }
       const monthButton = event.target.closest('.month-detail-trigger[data-month]');
       if (monthButton) { showCalendarMonthDetail(monthButton.dataset.month); return; }
+      const calendarDay = event.target.closest('.month-calendar-day[data-date]');
+      if (calendarDay && !calendarDay.disabled) { renderCalendarDayDetails(calendarDay.dataset.date); return; }
       if (event.target.closest('#closeLongTermDetail')) {
         const panel = document.getElementById('longTermDetail');
         if (panel) panel.hidden = true;

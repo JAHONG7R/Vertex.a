@@ -1220,7 +1220,7 @@ function showLongTermDetail(days) {
       }
     }
     const pct = eligible ? Math.round(completed / eligible * 100) : 0;
-    monthRows.push(`<div class="long-term-month-row"><span>${dateLabel(monthStart,{month:'short',year:'numeric'})}</span><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div><strong>${pct}%</strong><small>${completed}/${eligible}</small></div>`);
+    monthRows.push(`<button type="button" class="long-term-month-row month-detail-trigger" data-month="${monthStart.slice(0,7)}" aria-label="${dateLabel(monthStart,{month:'long',year:'numeric'})} statistikasini ochish"><span>${dateLabel(monthStart,{month:'short',year:'numeric'})}</span><span class="progress-track"><span class="progress-fill" style="width:${pct}%"></span></span><strong>${pct}%</strong><small>${completed}/${eligible}</small></button>`);
   }
 
   const habitRows = sortedHabits.length ? sortedHabits.map(item => `
@@ -1243,6 +1243,38 @@ function showLongTermDetail(days) {
       <section class="long-term-breakdown"><div class="eyebrow">HAFTA KUNLARI</div><h3>Qaysi kun samaraliroq?</h3>${weekdayRows}</section>
     </div>
     <section class="long-term-breakdown"><div class="eyebrow">SO‘NGGI 14 KUN</div><h3>Kunlik bajarilish tarixi</h3>${dailyRows}</section>`;
+  panel.hidden = false;
+  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function showCalendarMonthDetail(monthKey) {
+  const [year, month] = monthKey.split('-').map(Number);
+  const first = `${monthKey}-01`;
+  const lastDate = new Date(year, month, 0, 12);
+  const last = localDateString(lastDate);
+  const start = first < shiftDate(today(), -364) ? shiftDate(today(), -364) : first;
+  const end = last > today() ? today() : last;
+  const habits = activeHabits();
+  let done = 0, possible = 0;
+  const rows = habits.map(habit => {
+    let eligible = 0, completed = 0;
+    for (let date = start; date <= end; date = shiftDate(date, 1)) {
+      if (date < habit.createdAt) continue;
+      eligible++;
+      if (isChecked(habit.id, date)) completed++;
+    }
+    done += completed; possible += eligible;
+    return {habit, eligible, completed, rate: eligible ? Math.round(completed / eligible * 100) : 0};
+  }).sort((a,b) => b.rate-a.rate);
+  const rate = possible ? Math.round(done / possible * 100) : 0;
+  const panel = $('#longTermDetail');
+  $('#longTermDetailTitle').textContent = `${dateLabel(first,{month:'long',year:'numeric'})} — batafsil statistika`;
+  $('#longTermDetailStats').innerHTML = `
+    <article class="stat-card"><div class="stat-top"><span>BAJARILISH DARAJASI</span></div><div class="stat-value"><strong>${rate}%</strong></div></article>
+    <article class="stat-card"><div class="stat-top"><span>BAJARILGANLAR</span></div><div class="stat-value"><strong>${done}</strong></div></article>
+    <article class="stat-card"><div class="stat-top"><span>REJADAGI IMKONIYAT</span></div><div class="stat-value"><strong>${possible}</strong></div></article>`;
+  const habitRows = rows.map(x => `<div class="long-term-habit-row"><div class="long-term-habit-head"><span>${escapeHTML(x.habit.icon || '◉')} ${escapeHTML(x.habit.title)}</span><strong>${x.rate}%</strong></div><div class="progress-track"><div class="progress-fill" style="width:${x.rate}%"></div></div><small>${x.completed} / ${x.eligible} kun bajarilgan</small></div>`).join('') || '<p class="long-term-empty">Faol odatlar mavjud emas.</p>';
+  $('#longTermMonthChart').innerHTML = `<section class="long-term-breakdown"><div class="eyebrow">TANLANGAN OY</div><h3>Odatlar kesimida natija</h3>${habitRows}</section>`;
   panel.hidden = false;
   panel.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
@@ -1813,6 +1845,8 @@ function init() {
         }
         return;
       }
+      const monthButton = event.target.closest('.month-detail-trigger[data-month]');
+      if (monthButton) { showCalendarMonthDetail(monthButton.dataset.month); return; }
       if (event.target.closest('#closeLongTermDetail')) {
         const panel = document.getElementById('longTermDetail');
         if (panel) panel.hidden = true;

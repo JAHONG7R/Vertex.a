@@ -108,13 +108,37 @@
 
 /* Clickable long-term statistics and expanded detail */
 .long-term-select{cursor:pointer;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
-.long-term-select:hover,.long-term-select:focus-visible{transform:translateY(-2px);border-color:var(--accent);outline:none;box-shadow:0 8px 24px rgba(0,0,0,.16)}
-.long-term-select:after{content:'Batafsil ko‘rish ↗';display:block;margin-top:10px;color:var(--accent);font-size:10px;font-weight:700}
+.long-term-select:hover,.long-term-select:focus-visible{transform:translateY(-2px);border-color:var(--lime);outline:none;box-shadow:0 8px 24px rgba(0,0,0,.16)}
+.long-term-select:after{content:'Batafsil ko‘rish ↗';display:block;margin-top:10px;color:var(--lime);font-size:10px;font-weight:700}
 .long-term-detail{margin-top:14px;padding:18px}
 .long-term-detail[hidden]{display:none}
 .long-term-month-chart{margin-top:22px}
 .long-term-month-row{display:grid;grid-template-columns:90px 1fr 42px;align-items:center;gap:12px;margin:12px 0;font-size:12px}
 .long-term-month-row .progress-track{height:9px}
 .long-term-month-row strong{text-align:right}
-.secondary-btn{border:1px solid var(--border);background:transparent;color:var(--text);border-radius:10px;padding:9px 13px;cursor:pointer}
+.secondary-btn{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:10px;padding:9px 13px;cursor:pointer}
 @media(max-width:560px){.long-term-month-row{grid-template-columns:72px 1fr 36px;gap:8px}}
+
+
+/* To‘liq uzoq muddatli statistika */
+#longTermDetailStats{grid-template-columns:repeat(3,minmax(0,1fr));}
+.long-term-breakdown{margin-top:22px;padding:17px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.012)}
+.long-term-breakdown h3{font-size:14px;margin:5px 0 16px}
+.long-term-detail-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.long-term-month-row{grid-template-columns:90px minmax(50px,1fr) 38px 62px}
+.long-term-month-row small{color:var(--muted-2);font-size:9px;text-align:right}
+.long-term-habit-row{padding:10px 0;border-bottom:1px solid var(--line)}
+.long-term-habit-row:last-child{border-bottom:0}
+.long-term-habit-head{display:flex;justify-content:space-between;gap:10px;font-size:11px;margin-bottom:7px}
+.long-term-habit-head span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.long-term-habit-head strong,.long-term-weekday-row strong,.long-term-daily-row strong{font-family:var(--mono);font-size:10px;color:var(--lime)}
+.long-term-habit-row small{display:block;color:var(--muted-2);font-size:9px;margin-top:5px}
+.long-term-weekday-row,.long-term-daily-row{display:grid;grid-template-columns:90px minmax(50px,1fr) 42px;gap:10px;align-items:center;margin:12px 0;font-size:10px}
+.long-term-daily-row{grid-template-columns:75px minmax(50px,1fr) 55px}
+.long-term-empty{color:var(--muted);font-size:11px}
+@media(max-width:700px){#longTermDetailStats{grid-template-columns:repeat(2,minmax(0,1fr))}.long-term-detail-columns{grid-template-columns:1fr}}
+@media(max-width:420px){.long-term-detail{padding:13px}.long-term-month-row{grid-template-columns:70px minmax(40px,1fr) 34px 48px;gap:7px;font-size:10px}.long-term-weekday-row{grid-template-columns:76px minmax(40px,1fr) 36px;gap:7px}}
+.month-detail-trigger{width:100%;text-align:left;color:inherit;background:transparent;border:0;border-radius:8px;padding:7px 5px;cursor:pointer;font:inherit}
+.month-detail-trigger:hover,.month-detail-trigger:focus-visible{background:rgba(212,243,74,.07);outline:1px solid var(--lime)}
+.month-detail-trigger .progress-track{display:block;overflow:hidden}
+.month-detail-trigger .progress-fill{display:block;height:100%}

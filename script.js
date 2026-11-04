@@ -462,6 +462,7 @@ window.VertexApp = {
       console.error('Holatni saqlashda xatolik:', error);
     }
     if ($('#todayPercent')) renderAll();
+    if (timerRunning) runTimerInterval();
   },
   notify(message) {
     notify(message);
@@ -999,22 +1000,21 @@ function pauseTimer() {
   persistTimer();
 }
 
-function startTimer() {
-  if (timerRunning) {
-    pauseTimer();
-    renderTimer();
-    return;
+function runTimerInterval() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
   }
-  if (timerSeconds <= 0) timerSeconds = modeDuration(state.pomodoro.mode);
-  timerRunning = true;
-  timerEndsAt = Date.now() + timerSeconds * 1000;
-  persistTimer();
-  renderTimer();
+
+  if (!timerRunning || !Number.isFinite(Number(timerEndsAt))) return;
+
   timerInterval = setInterval(() => {
     timerSeconds = Math.max(0, Math.ceil((timerEndsAt - Date.now()) / 1000));
+
     if (timerSeconds <= 0) {
       timerSeconds = 0;
       pauseTimer();
+
       if (state.pomodoro.mode === 'focus') {
         state.pomodoro.sessions++;
         saveState();
@@ -1022,17 +1022,38 @@ function startTimer() {
       } else {
         notify('Tanaffus tugadi. Tayyor bo‘lsangiz, davom eting.');
       }
+
       renderTimer();
       renderDashboard();
       return;
     }
+
     $('#mainTimer').textContent = formatTime(timerSeconds);
     $('#dashTimer').textContent = formatTime(timerSeconds);
+
     const fraction = 1 - timerSeconds / modeDuration(state.pomodoro.mode);
     const degrees = fraction * 360;
     $('#timerRing').style.background =
       `conic-gradient(var(--lime) ${degrees}deg,#323b28 ${degrees}deg 360deg)`;
   }, 1000);
+}
+
+function startTimer() {
+  if (timerRunning) {
+    pauseTimer();
+    renderTimer();
+    renderDashboard();
+    return;
+  }
+
+  if (timerSeconds <= 0) timerSeconds = modeDuration(state.pomodoro.mode);
+
+  timerRunning = true;
+  timerEndsAt = Date.now() + timerSeconds * 1000;
+  persistTimer();
+  renderTimer();
+  renderDashboard();
+  runTimerInterval();
 }
 
 function resetTimer() {
@@ -1509,11 +1530,8 @@ function init() {
   plannerDate = today();
   bindEvents();
   renderAll();
-  // Qayta ochilganda faol sessiyani yangi interval bilan davom ettiramiz.
-  if (timerRunning) {
-    timerRunning = false;
-    startTimer();
-  }
+  // Saqlangan faol sessiyani mavjud tugash vaqtini o‘zgartirmasdan davom ettiramiz.
+  if (timerRunning) runTimerInterval();
 }
 
 document.addEventListener('DOMContentLoaded', init);

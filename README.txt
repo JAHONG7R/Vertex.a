@@ -1,19 +1,17 @@
-VERTEX — PHASE 4: SMART PLANNER
+VERTEX — 3/6/12 OYLIK STATISTIKA YANGILANISHI
 
-Included files: index.html, script.js, style.css
+Ushbu paket Vertex Phase 4 Smart Planner versiyasi asosida tayyorlangan.
 
-Updates:
-- Task priority: High / Medium / Low.
-- Planner sorts unfinished tasks by priority while keeping completed tasks below.
-- Smart daily note summarizes the number of tasks and completion progress (shown in the planner summary/status area).
-- Existing task dates remain the deadline/date field.
-- Existing task records are migrated safely; tasks without a priority default to Medium.
-- Existing gamification and Pomodoro timer code is retained from the previously working Phase 3 build.
+YANGILIK:
+- Analytics sahifasiga alohida 3 oylik (90 kun), 6 oylik (180 kun) va 1 yillik (365 kun) statistika qo‘shildi.
+- Har bir davr uchun odat bajarilish foizi va bajarilishlar soni alohida ko‘rsatiladi.
+- Hisob-kitob bugundan orqaga qarab yuradigan kunlik loglarga asoslanadi.
+- Avvalgi ma’lumotlar va mavjud funksiyalar saqlanadi.
 
-Upload:
-1. Extract this ZIP.
-2. In your GitHub repository, upload and replace index.html, script.js, and style.css.
-3. Commit changes.
-4. Do not replace or delete supabase-config.js or supabase-auth.js.
+GITHUB UPLOAD:
+1. ZIP faylni oching.
+2. index.html, script.js va style.css fayllarini repozitoriydagi shu nomli fayllar bilan almashtiring.
+3. README.txt faqat yo‘riqnoma.
+4. supabase-config.js va supabase-auth.js fayllariga tegmang.
 
-Validation: script.js passed Node syntax check. Please test task creation, priority sorting, completion, refresh persistence, account sync, and Pomodoro on the live site.
+ESLATMA: JavaScript sintaksisi tekshirildi. Saytga yuklagandan so‘ng statistikani brauzerda tekshiring. Davrlar mavjud loglardan hisoblanadi; eski tarix bo‘lmasa, natija tabiiy ravishda past/0 bo‘lishi mumkin.

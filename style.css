@@ -102,3 +102,6 @@
 .priority-high{color:#ff9b91;background:rgba(255,100,85,.12)}.priority-medium{color:var(--lime);background:rgba(212,243,74,.09)}.priority-low{color:#9eb4c7;background:rgba(158,180,199,.10)}
 #taskForm select{width:100%;margin:7px 0 15px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--text)}
 @media(max-width:560px){.task-priority{font-size:8px;padding:4px 6px}}
+
+/* Uzoq muddatli statistika */
+.long-term-analytics{margin:0 0 16px}.long-term-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.long-term-grid .stat-card{min-height:120px}.long-term-note{font-size:9px;color:var(--muted);line-height:1.6;margin:12px 2px 0}@media(max-width:560px){.long-term-grid{grid-template-columns:1fr}.long-term-grid .stat-card{min-height:100px}}

@@ -1133,6 +1133,22 @@ function renderAnalytics() {
   $('#analyticsMonthRate').textContent = month + '%';
   $('#totalCompletions').textContent = state.logs.length;
 
+  // Uzoq muddatli statistika: 90, 180 va 365 kunlik alohida davrlar.
+  const longTermHabits = activeHabits();
+  [90, 180, 365].forEach(days => {
+    let done = 0;
+    for (let i = 0; i < days; i++) {
+      const date = shiftDate(today(), -i);
+      done += longTermHabits.filter(habit => isChecked(habit.id, date)).length;
+    }
+    const possible = longTermHabits.length * days;
+    const rate = possible ? Math.round(done / possible * 100) : 0;
+    const rateNode = document.getElementById(`analytics${days}Rate`);
+    const doneNode = document.getElementById(`analytics${days}Done`);
+    if (rateNode) rateNode.textContent = rate + '%';
+    if (doneNode) doneNode.textContent = `${done} ta bajarilish · ${days} kun ichida`;
+  });
+
   // Qo'shimcha Smart Analytics: oldingi davr bilan taqqoslash va eng samarali hafta kuni.
   const analyticsHabits = activeHabits();
   const periodRate = (offset, days) => {

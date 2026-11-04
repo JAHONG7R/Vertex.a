@@ -888,6 +888,35 @@ function renderSmartCoach() {
   insights.innerHTML = items.join('');
 }
 
+
+function renderPersonalCoach() {
+  const metrics = $('#personalCoachMetrics');
+  const advice = $('#personalCoachAdvice');
+  const action = $('#personalCoachAction');
+  if (!metrics || !advice || !action) return;
+  const habits = activeHabits();
+  if (!habits.length) {
+    metrics.innerHTML = '<span class="coach-metric">Hali odatlar yo‘q</span>';
+    advice.textContent = 'Birinchi odatingizni qo‘shing. Yetarli tarix yig‘ilgach, Coach natijalarni taqqoslaydi.';
+    action.textContent = 'Bugun bajarish oson bo‘lgan bitta odatni tanlang.';
+    return;
+  }
+  const end = today(), thisStart = shiftDate(end, -6), prevEnd = shiftDate(end, -7), prevStart = shiftDate(end, -13);
+  const possible = habits.length * 7;
+  const thisDone = state.logs.filter(x => x.date >= thisStart && x.date <= end && habits.some(h => h.id === x.habitId)).length;
+  const prevDone = state.logs.filter(x => x.date >= prevStart && x.date <= prevEnd && habits.some(h => h.id === x.habitId)).length;
+  const current = Math.round(thisDone / possible * 100), previous = Math.round(prevDone / possible * 100);
+  const delta = current - previous;
+  const rank = habits.map(h => ({h, n:getHabitLogs(h.id,thisStart,end).length})).sort((a,b)=>b.n-a.n);
+  const weak = [...rank].sort((a,b)=>a.n-b.n)[0];
+  const best = rank[0];
+  metrics.innerHTML = `<span class="coach-metric">Bu hafta <b>${current}%</b></span><span class="coach-metric">O‘tgan hafta <b>${previous}%</b></span><span class="coach-metric">Farq <b>${delta>0?'+':''}${delta}%</b></span>`;
+  if (delta > 0) advice.textContent = `Oldingi 7 kunga nisbatan natijangiz ${delta} foiz punktga oshgan. “${best.h.title}” odati eng izchil bajarilgan (${best.n}/7). Shu odatga yordam bergan vaqt yoki sharoitni saqlab qoling.`;
+  else if (delta < 0) advice.textContent = `Oldingi 7 kunga nisbatan natijangiz ${Math.abs(delta)} foiz punktga pasaygan. Bu sababni aniq ko‘rsatmaydi, ammo “${weak.h.title}” odati hozir eng ko‘p e’tibor talab qilmoqda (${weak.n}/7). Yuklamani vaqtincha kichraytirish foydali bo‘lishi mumkin.`;
+  else advice.textContent = `Natijangiz oldingi 7 kun bilan bir xil. “${weak.h.title}” odatiga kichikroq va aniqroq qadam belgilab, izchillikni oshirib ko‘ring.`;
+  action.innerHTML = `<strong>Bugungi kichik qadam:</strong> “${escapeHTML(weak.h.title)}” uchun 2–5 daqiqalik eng oson variantni bajaring va Vertex’da belgilang.`;
+}
+
 function renderCoachPlan(){const list=$('#coachPlanList'),summary=$('#coachPlanSummary');if(!list||!summary)return;const ranked=activeHabits().map(h=>({habit:h,pct:Math.round(getHabitLogs(h.id,shiftDate(today(),-6),today()).length/7*100)})).sort((a,b)=>a.pct-b.pct);if(!ranked.length){summary.textContent='Avval odat qo‘shing — shunda Vertex reja tuzadi.';list.innerHTML='<p>Hozircha reja tuzish uchun odatlar yo‘q.</p>';}else{const focus=ranked[0].habit;summary.textContent=`Reja eng ko‘p e’tibor talab qilayotgan “${focus.title}” odatiga asoslangan.`;const steps=['Qulay vaqtni tanlang.','Odatning kichik variantini bajaring.','Bajarilgach, Vertex’da belgilang.','Nima xalaqit berganini aniqlang.','Odatni kundalik ishga bog‘lang.','Natijani tekshirib, vaqtini moslang.','Haftani yakunlab, yangi maqsad belgilang.'];list.innerHTML=steps.map((s,i)=>`<div class="coach-plan-row"><b>${['Du','Se','Ch','Pa','Ju','Sh','Ya'][i]}</b><span>${s}</span><small>${escapeHTML(focus.title)}</small></div>`).join('');}const t=localStorage.getItem('vertex_coach_reminder_time')||'19:00';const input=$('#coachReminderTime');if(input)input.value=t;updateCoachReminderStatus();}
 function updateCoachReminderStatus(){const n=$('#coachReminderStatus');if(n)n.textContent=`Eslatma ${localStorage.getItem('vertex_coach_reminder_time')||'19:00'} ga saqlangan. Vertex ochiq bo‘lganda ko‘rinadi.`;}
 
@@ -895,6 +924,7 @@ function renderDashboard() {
   renderStats();
   renderSmartDashboard();
   renderSmartCoach();
+  renderPersonalCoach();
   renderCoachPlan();
   renderWeekStrip();
   renderDashboardHabits();

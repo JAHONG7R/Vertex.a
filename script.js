@@ -559,14 +559,22 @@ function todayRate() {
 
 function rateForDays(days) {
   const habits = activeHabits();
-  if (!habits.length) return 0;
+  if (!habits.length || !Number.isFinite(days) || days <= 0) return 0;
   const end = today();
   const start = shiftDate(end, -(days - 1));
   let done = 0;
-  for (let date = start; date <= end; date = shiftDate(date, 1)) {
-    done += habits.filter(habit => isChecked(habit.id, date)).length;
+  let possible = 0;
+
+  // Odat yaratilishidan oldingi kunlarni bajarilmagan deb hisoblamaymiz.
+  for (const habit of habits) {
+    const created = validDate(habit.createdAt) ? habit.createdAt : start;
+    const firstEligible = created > start ? created : start;
+    for (let date = firstEligible; date <= end; date = shiftDate(date, 1)) {
+      possible++;
+      if (isChecked(habit.id, date)) done++;
+    }
   }
-  return Math.round(done / (habits.length * days) * 100);
+  return possible ? Math.round(done / possible * 100) : 0;
 }
 
 function weekDates(anchor = today()) {
@@ -1244,6 +1252,7 @@ function showLongTermDetail(days) {
     </div>
     <section class="long-term-breakdown"><div class="eyebrow">SO‘NGGI 14 KUN</div><h3>Kunlik bajarilish tarixi</h3>${dailyRows}</section>`;
   panel.hidden = false;
+  panel.classList.remove('hidden');
   panel.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
@@ -1606,18 +1615,24 @@ function resetAll() {
 ============================== */
 
 function bindEvents() {
-  $('.habit-icon-picker').addEventListener('click', event => {
-    const button = event.target.closest('[data-habit-icon]');
-    if (!button) return;
-    selectedHabitIcon = button.dataset.habitIcon;
-    updateHabitPickerSelection();
-  });
-  $('.habit-color-picker').addEventListener('click', event => {
-    const button = event.target.closest('[data-habit-color]');
-    if (!button) return;
-    selectedHabitColor = normalizeHabitColor(button.dataset.habitColor);
-    updateHabitPickerSelection();
-  });
+  const iconPicker = $('.habit-icon-picker');
+  if (iconPicker) {
+    iconPicker.addEventListener('click', event => {
+      const button = event.target.closest('[data-habit-icon]');
+      if (!button) return;
+      selectedHabitIcon = button.dataset.habitIcon;
+      updateHabitPickerSelection();
+    });
+  }
+  const colorPicker = $('.habit-color-picker');
+  if (colorPicker) {
+    colorPicker.addEventListener('click', event => {
+      const button = event.target.closest('[data-habit-color]');
+      if (!button) return;
+      selectedHabitColor = normalizeHabitColor(button.dataset.habitColor);
+      updateHabitPickerSelection();
+    });
+  }
   $$('.nav-item[data-page]').forEach(button => {
     button.addEventListener('click', () => goTo(button.dataset.page));
   });
@@ -1792,7 +1807,7 @@ function init() {
   if (!document.documentElement.dataset.longTermEventsBound) {
     document.documentElement.dataset.longTermEventsBound = '1';
     document.addEventListener('click', event => {
-      const card = event.target.closest('.long-term-select[data-period]');
+      const card = event.target instanceof Element ? event.target.closest('.long-term-select[data-period]') : null;
       if (card) {
         event.preventDefault();
         const period = Number(card.dataset.period);
@@ -1813,7 +1828,7 @@ function init() {
         }
         return;
       }
-      if (event.target.closest('#closeLongTermDetail')) {
+      if (event.target instanceof Element && event.target.closest('#closeLongTermDetail')) {
         const panel = document.getElementById('longTermDetail');
         if (panel) panel.hidden = true;
       }

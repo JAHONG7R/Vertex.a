@@ -105,3 +105,16 @@
 
 /* Uzoq muddatli statistika */
 .long-term-analytics{margin:0 0 16px}.long-term-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.long-term-grid .stat-card{min-height:120px}.long-term-note{font-size:9px;color:var(--muted);line-height:1.6;margin:12px 2px 0}@media(max-width:560px){.long-term-grid{grid-template-columns:1fr}.long-term-grid .stat-card{min-height:100px}}
+
+/* Clickable long-term statistics and expanded detail */
+.long-term-select{cursor:pointer;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.long-term-select:hover,.long-term-select:focus-visible{transform:translateY(-2px);border-color:var(--accent);outline:none;box-shadow:0 8px 24px rgba(0,0,0,.16)}
+.long-term-select:after{content:'Batafsil ko‘rish ↗';display:block;margin-top:10px;color:var(--accent);font-size:10px;font-weight:700}
+.long-term-detail{margin-top:14px;padding:18px}
+.long-term-detail[hidden]{display:none}
+.long-term-month-chart{margin-top:22px}
+.long-term-month-row{display:grid;grid-template-columns:90px 1fr 42px;align-items:center;gap:12px;margin:12px 0;font-size:12px}
+.long-term-month-row .progress-track{height:9px}
+.long-term-month-row strong{text-align:right}
+.secondary-btn{border:1px solid var(--border);background:transparent;color:var(--text);border-radius:10px;padding:9px 13px;cursor:pointer}
+@media(max-width:560px){.long-term-month-row{grid-template-columns:72px 1fr 36px;gap:8px}}

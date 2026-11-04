@@ -1126,6 +1126,40 @@ function resetTimer() {
    TAHLIL
 ============================== */
 
+function showLongTermDetail(days) {
+  const panel = $('#longTermDetail');
+  if (!panel) return;
+  const months = days === 90 ? 3 : days === 180 ? 6 : 12;
+  const habits = activeHabits();
+  const done = Array.from({length: days}, (_, i) => shiftDate(today(), -i))
+    .reduce((sum, date) => sum + habits.filter(h => isChecked(h.id, date)).length, 0);
+  const possible = habits.length * days;
+  const rate = possible ? Math.round(done / possible * 100) : 0;
+  $('#longTermDetailTitle').textContent = `${months} oylik batafsil statistika`;
+  $('#longTermDetailStats').innerHTML = `
+    <article class="stat-card"><div class="stat-top"><span>BAJARILISH DARAJASI</span></div><div class="stat-value"><strong>${rate}%</strong></div></article>
+    <article class="stat-card"><div class="stat-top"><span>BAJARILGANLAR</span></div><div class="stat-value"><strong>${done}</strong></div></article>
+    <article class="stat-card"><div class="stat-top"><span>REJADAGI IMKONIYAT</span></div><div class="stat-value"><strong>${possible}</strong></div></article>`;
+  const monthRows = [];
+  for (let m = months - 1; m >= 0; m--) {
+    const end = new Date(); end.setHours(0,0,0,0); end.setDate(1); end.setMonth(end.getMonth() - m);
+    const start = new Date(end); const next = new Date(end); next.setMonth(next.getMonth()+1);
+    const monthDays = Math.min(days, Math.max(0, Math.round((next-start)/86400000)));
+    let count = 0, possibleMonth = 0;
+    for (let d = new Date(start); d < next; d.setDate(d.getDate()+1)) {
+      const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      if (iso > today() || (Date.now() - d.getTime())/86400000 >= days) continue;
+      possibleMonth += habits.length;
+      count += habits.filter(h => isChecked(h.id, iso)).length;
+    }
+    const pct = possibleMonth ? Math.round(count/possibleMonth*100) : 0;
+    monthRows.push(`<div class="long-term-month-row"><span>${end.toLocaleDateString('uz-UZ',{month:'short',year:'numeric'})}</span><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div><strong>${pct}%</strong></div>`);
+  }
+  $('#longTermMonthChart').innerHTML = `<div class="eyebrow">OYMA-OY BAJARILISH</div>${monthRows.join('')}`;
+  panel.hidden = false;
+  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
 function renderAnalytics() {
   const week = rateForDays(7);
   const month = rateForDays(30);
@@ -1672,6 +1706,13 @@ function init() {
   restoreTimer();
   plannerDate = today();
   bindEvents();
+  document.querySelectorAll('.long-term-select').forEach(card => {
+    const open = () => showLongTermDetail(Number(card.dataset.period));
+    card.addEventListener('click', open);
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  });
+  const closeLongTerm = document.getElementById('closeLongTermDetail');
+  if (closeLongTerm) closeLongTerm.addEventListener('click', () => { document.getElementById('longTermDetail').hidden = true; });
   renderAll();
   // Saqlangan faol sessiyani mavjud tugash vaqtini o‘zgartirmasdan davom ettiramiz.
   if (timerRunning) runTimerInterval();

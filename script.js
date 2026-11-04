@@ -793,8 +793,60 @@ function renderDashboardTasks() {
   $('#dashboardTasksEmpty').classList.toggle('hidden', tasks.length > 0);
 }
 
+
+function renderSmartDashboard() {
+  const active = activeHabits();
+  const done = doneCountOn(today());
+  const todayPct = todayRate();
+  const weekPct = rateForDays(7);
+  const monthPct = rateForDays(30);
+  const incomplete = active.length - done;
+  const quotes = [
+    'Muvaffaqiyat — har kuni takrorlangan kichik harakatlar yig‘indisi.',
+    'Mukammallikni emas, muntazamlikni tanlang.',
+    'Bugungi harakatingiz ertangi imkoniyatingizni yaratadi.',
+    'Kichik qadam ham oldinga qadamdir.',
+    'Intizom — maqsadlaringizga olib boradigan kundalik ko‘prik.',
+    'Boshlash uchun eng yaxshi vaqt — hozir.',
+    'Natija birdan kelmaydi, lekin har bir urinish hisobga kiradi.'
+  ];
+  const dayIndex = Math.floor(parseDate(today()).getTime() / 86400000) % quotes.length;
+  $('#dailyQuote').textContent = quotes[(dayIndex + quotes.length) % quotes.length];
+
+  let title = 'Bugun yangi imkoniyat.';
+  let message = active.length
+    ? `Bugun ${done}/${active.length} ta odat bajarildi. Kichik qadamlaringizni davom ettiring.`
+    : 'Birinchi odatingizni qo‘shing — Vertex sizning rivojlanishingizni kuzatishni boshlaydi.';
+  if (active.length && todayPct >= 100) {
+    title = 'Ajoyib! Bugungi odatlaringiz bajarildi.';
+    message = 'Bugungi rejangizni uddaladingiz. Endi natijani mustahkamlash va dam olish vaqti.';
+  } else if (todayPct >= 60) {
+    title = 'Yaxshi sur’atdasiz — davom eting!';
+    message = `${incomplete} ta odat qoldi. Ularni bittadan yakunlash bugungi natijangizni yanada yaxshilaydi.`;
+  } else if (done > 0) {
+    title = 'Boshladingiz — endi davomiylik muhim.';
+    message = `Bugungi odatlaringizning ${todayPct}% bajarildi. Keyingi kichik vazifani tanlang.`;
+  } else if (active.length) {
+    title = 'Birinchi odatni bajarishdan boshlang.';
+    message = 'Hozir eng oson odatingizni tanlang. Kichik g‘alaba kuningizga turtki beradi.';
+  }
+  $('#smartInsightTitle').textContent = title;
+  $('#smartInsightText').textContent = message;
+
+  $('#weeklyGoalValue').textContent = weekPct + '%';
+  $('#weeklyGoalBar').style.width = Math.min(100, weekPct / 70 * 100) + '%';
+  $('#monthlyGoalValue').textContent = monthPct + '%';
+  $('#monthlyGoalBar').style.width = Math.min(100, monthPct / 80 * 100) + '%';
+  $('#goalFootnote').textContent = weekPct >= 70 && monthPct >= 80
+    ? 'Ikkala izchillik maqsadiga ham yetdingiz. Zo‘r natija!'
+    : weekPct >= 70
+      ? 'Haftalik maqsad bajarildi — oylik izchillikni ham davom ettiring.'
+      : 'Maqsadlar yo‘nalish beradi. Bugungi kichik qadamni bajaring.';
+}
+
 function renderDashboard() {
   renderStats();
+  renderSmartDashboard();
   renderWeekStrip();
   renderDashboardHabits();
   renderDashboardTasks();

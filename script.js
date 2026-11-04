@@ -1126,36 +1126,123 @@ function resetTimer() {
    TAHLIL
 ============================== */
 
+function longTermStats(days) {
+  const end = today();
+  const start = shiftDate(end, -(days - 1));
+  const habits = activeHabits();
+  let done = 0;
+  let possible = 0;
+  const habitStats = habits.map(habit => {
+    const habitStart = habit.createdAt > start ? habit.createdAt : start;
+    let eligible = 0;
+    let completed = 0;
+    if (habitStart <= end) {
+      for (let date = habitStart; date <= end; date = shiftDate(date, 1)) {
+        eligible++;
+        if (isChecked(habit.id, date)) completed++;
+      }
+    }
+    done += completed;
+    possible += eligible;
+    return { habit, eligible, completed, rate: eligible ? Math.round(completed / eligible * 100) : 0 };
+  });
+
+  const weekday = Array.from({ length: 7 }, (_, i) => ({
+    label: ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba'][i],
+    possible: 0, done: 0
+  }));
+  for (let date = start; date <= end; date = shiftDate(date, 1)) {
+    const dayIndex = (parseDate(date).getDay() + 6) % 7;
+    habits.forEach(habit => {
+      if (date < habit.createdAt) return;
+      weekday[dayIndex].possible++;
+      if (isChecked(habit.id, date)) weekday[dayIndex].done++;
+    });
+  }
+  weekday.forEach(day => day.rate = day.possible ? Math.round(day.done / day.possible * 100) : 0);
+
+  let bestDay = null;
+  weekday.forEach(day => {
+    if (day.possible && (!bestDay || day.rate > bestDay.rate)) bestDay = day;
+  });
+
+  const dailyRows = [];
+  for (let i = Math.min(days - 1, 13); i >= 0; i--) {
+    const date = shiftDate(end, -i);
+    const eligible = habits.filter(habit => date >= habit.createdAt);
+    const completed = eligible.filter(habit => isChecked(habit.id, date)).length;
+    const rate = eligible.length ? Math.round(completed / eligible.length * 100) : 0;
+    dailyRows.push({ date, completed, eligible: eligible.length, rate });
+  }
+  return {
+    days, start, end, habits: habitStats, done, possible,
+    rate: possible ? Math.round(done / possible * 100) : 0,
+    missed: Math.max(0, possible - done),
+    average: days ? (done / days).toFixed(1) : '0',
+    bestDay, weekday, dailyRows
+  };
+}
+
 function showLongTermDetail(days) {
   const panel = $('#longTermDetail');
   if (!panel) return;
   const months = days === 90 ? 3 : days === 180 ? 6 : 12;
-  const habits = activeHabits();
-  const done = Array.from({length: days}, (_, i) => shiftDate(today(), -i))
-    .reduce((sum, date) => sum + habits.filter(h => isChecked(h.id, date)).length, 0);
-  const possible = habits.length * days;
-  const rate = possible ? Math.round(done / possible * 100) : 0;
+  const stats = longTermStats(days);
+  const sortedHabits = [...stats.habits].sort((a, b) => b.rate - a.rate);
   $('#longTermDetailTitle').textContent = `${months} oylik batafsil statistika`;
   $('#longTermDetailStats').innerHTML = `
-    <article class="stat-card"><div class="stat-top"><span>BAJARILISH DARAJASI</span></div><div class="stat-value"><strong>${rate}%</strong></div></article>
-    <article class="stat-card"><div class="stat-top"><span>BAJARILGANLAR</span></div><div class="stat-value"><strong>${done}</strong></div></article>
-    <article class="stat-card"><div class="stat-top"><span>REJADAGI IMKONIYAT</span></div><div class="stat-value"><strong>${possible}</strong></div></article>`;
+    <article class="stat-card"><div class="stat-top"><span>BAJARILISH DARAJASI</span></div><div class="stat-value"><strong>${stats.rate}%</strong></div><span class="stat-note">Mavjud kunlar bo‘yicha o‘rtacha</span></article>
+    <article class="stat-card"><div class="stat-top"><span>BAJARILGANLAR</span></div><div class="stat-value"><strong>${stats.done}</strong></div><span class="stat-note">Jami bajarilgan odatlar</span></article>
+    <article class="stat-card"><div class="stat-top"><span>BAJARILMAGANLAR</span></div><div class="stat-value"><strong>${stats.missed}</strong></div><span class="stat-note">Rejadagi imkoniyatlardan</span></article>
+    <article class="stat-card"><div class="stat-top"><span>REJADAGI IMKONIYAT</span></div><div class="stat-value"><strong>${stats.possible}</strong></div><span class="stat-note">Odat mavjud bo‘lgan kunlar</span></article>
+    <article class="stat-card"><div class="stat-top"><span>KUNLIK O‘RTACHA</span></div><div class="stat-value"><strong>${stats.average}</strong></div><span class="stat-note">Bajarilish / kun</span></article>
+    <article class="stat-card"><div class="stat-top"><span>ENG SAMARALI HAFTA KUNI</span></div><div class="stat-value"><strong class="text-stat">${stats.bestDay ? stats.bestDay.label : '—'}</strong></div><span class="stat-note">${stats.bestDay ? stats.bestDay.rate + '% bajarilish' : 'Ma’lumot yetarli emas'}</span></article>`;
+
   const monthRows = [];
   for (let m = months - 1; m >= 0; m--) {
-    const end = new Date(); end.setHours(0,0,0,0); end.setDate(1); end.setMonth(end.getMonth() - m);
-    const start = new Date(end); const next = new Date(end); next.setMonth(next.getMonth()+1);
-    const monthDays = Math.min(days, Math.max(0, Math.round((next-start)/86400000)));
-    let count = 0, possibleMonth = 0;
-    for (let d = new Date(start); d < next; d.setDate(d.getDate()+1)) {
-      const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      if (iso > today() || (Date.now() - d.getTime())/86400000 >= days) continue;
-      possibleMonth += habits.length;
-      count += habits.filter(h => isChecked(h.id, iso)).length;
+    const monthDate = parseDate(end);
+    monthDate.setDate(1);
+    monthDate.setMonth(monthDate.getMonth() - m);
+    const monthStart = localDateString(monthDate);
+    const nextMonth = new Date(monthDate);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const monthEnd = localDateString(new Date(nextMonth.getFullYear(), nextMonth.getMonth(), 0, 12));
+    const from = monthStart < stats.start ? stats.start : monthStart;
+    const to = monthEnd > stats.end ? stats.end : monthEnd;
+    let completed = 0, eligible = 0;
+    if (from <= to) {
+      for (let date = from; date <= to; date = shiftDate(date, 1)) {
+        stats.habits.forEach(item => {
+          if (date < item.habit.createdAt) return;
+          eligible++;
+          if (isChecked(item.habit.id, date)) completed++;
+        });
+      }
     }
-    const pct = possibleMonth ? Math.round(count/possibleMonth*100) : 0;
-    monthRows.push(`<div class="long-term-month-row"><span>${end.toLocaleDateString('uz-UZ',{month:'short',year:'numeric'})}</span><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div><strong>${pct}%</strong></div>`);
+    const pct = eligible ? Math.round(completed / eligible * 100) : 0;
+    monthRows.push(`<div class="long-term-month-row"><span>${dateLabel(monthStart,{month:'short',year:'numeric'})}</span><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div><strong>${pct}%</strong><small>${completed}/${eligible}</small></div>`);
   }
-  $('#longTermMonthChart').innerHTML = `<div class="eyebrow">OYMA-OY BAJARILISH</div>${monthRows.join('')}`;
+
+  const habitRows = sortedHabits.length ? sortedHabits.map(item => `
+    <div class="long-term-habit-row">
+      <div class="long-term-habit-head"><span>${escapeHTML(item.habit.icon || '◉')} ${escapeHTML(item.habit.title)}</span><strong>${item.rate}%</strong></div>
+      <div class="progress-track"><div class="progress-fill" style="width:${item.rate}%"></div></div>
+      <small>${item.completed} / ${item.eligible} kun bajarilgan</small>
+    </div>`).join('') : '<p class="long-term-empty">Hozircha faol odatlar mavjud emas.</p>';
+
+  const weekdayRows = stats.weekday.map(day => `
+    <div class="long-term-weekday-row"><span>${day.label}</span><div class="progress-track"><div class="progress-fill" style="width:${day.rate}%"></div></div><strong>${day.rate}%</strong></div>`).join('');
+
+  const dailyRows = stats.dailyRows.map(day => `
+    <div class="long-term-daily-row"><span>${dateLabel(day.date,{day:'numeric',month:'short'})}</span><div class="progress-track"><div class="progress-fill" style="width:${day.rate}%"></div></div><strong>${day.completed}/${day.eligible}</strong></div>`).join('');
+
+  $('#longTermMonthChart').innerHTML = `
+    <section class="long-term-breakdown"><div class="eyebrow">OYMA-OY NATIJA</div><h3>Har oy bo‘yicha bajarilish</h3>${monthRows.join('')}</section>
+    <div class="long-term-detail-columns">
+      <section class="long-term-breakdown"><div class="eyebrow">ODATLAR KESIMIDA</div><h3>Har bir odat natijasi</h3>${habitRows}</section>
+      <section class="long-term-breakdown"><div class="eyebrow">HAFTA KUNLARI</div><h3>Qaysi kun samaraliroq?</h3>${weekdayRows}</section>
+    </div>
+    <section class="long-term-breakdown"><div class="eyebrow">SO‘NGGI 14 KUN</div><h3>Kunlik bajarilish tarixi</h3>${dailyRows}</section>`;
   panel.hidden = false;
   panel.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
@@ -1168,15 +1255,10 @@ function renderAnalytics() {
   $('#totalCompletions').textContent = state.logs.length;
 
   // Uzoq muddatli statistika: 90, 180 va 365 kunlik alohida davrlar.
-  const longTermHabits = activeHabits();
   [90, 180, 365].forEach(days => {
-    let done = 0;
-    for (let i = 0; i < days; i++) {
-      const date = shiftDate(today(), -i);
-      done += longTermHabits.filter(habit => isChecked(habit.id, date)).length;
-    }
-    const possible = longTermHabits.length * days;
-    const rate = possible ? Math.round(done / possible * 100) : 0;
+    const period = longTermStats(days);
+    const done = period.done;
+    const rate = period.rate;
     const rateNode = document.getElementById(`analytics${days}Rate`);
     const doneNode = document.getElementById(`analytics${days}Done`);
     if (rateNode) rateNode.textContent = rate + '%';

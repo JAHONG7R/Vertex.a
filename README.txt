@@ -1,17 +1,23 @@
-VERTEX — 3/6/12 OYLIK STATISTIKA YANGILANISHI
+VERTEX — TO‘LIQ 3 / 6 / 12 OYLIK STATISTIKA
 
-Ushbu paket Vertex Phase 4 Smart Planner versiyasi asosida tayyorlangan.
+YANGILANISHLAR:
+- Davr bo‘yicha umumiy bajarilish foizi, bajarilgan va bajarilmaganlar soni.
+- Rejadagi haqiqiy imkoniyatlar (odat yaratilgan sanadan boshlab) hisoblanadi.
+- Kunlik o‘rtacha bajarilish.
+- Eng samarali hafta kuni.
+- Oyma-oy bajarilish foizi va bajarilgan/jami soni.
+- Har bir odat bo‘yicha alohida natija.
+- Hafta kunlari bo‘yicha samaradorlik.
+- So‘nggi 14 kunning kunlik bajarilish tarixi.
+- Mobil ekran uchun moslashuvchan ko‘rinish.
+- Uzoq statistika kartalaridagi rang o‘zgaruvchilari tuzatildi.
 
-YANGILIK:
-- Analytics sahifasiga alohida 3 oylik (90 kun), 6 oylik (180 kun) va 1 yillik (365 kun) statistika qo‘shildi.
-- Har bir davr uchun odat bajarilish foizi va bajarilishlar soni alohida ko‘rsatiladi.
-- Hisob-kitob bugundan orqaga qarab yuradigan kunlik loglarga asoslanadi.
-- Avvalgi ma’lumotlar va mavjud funksiyalar saqlanadi.
-
-GITHUB UPLOAD:
+GITHUB’GA YUKLASH:
 1. ZIP faylni oching.
-2. index.html, script.js va style.css fayllarini repozitoriydagi shu nomli fayllar bilan almashtiring.
-3. README.txt faqat yo‘riqnoma.
-4. supabase-config.js va supabase-auth.js fayllariga tegmang.
+2. Ichidagi script.js va style.css fayllarini GitHub repozitoriyingizning asosiy papkasiga yuklang.
+3. Shu nomli eski fayllarni almashtiring va Commit changes qiling.
+4. index.html, supabase-config.js va supabase-auth.js fayllariga tegmang.
 
-ESLATMA: JavaScript sintaksisi tekshirildi. Saytga yuklagandan so‘ng statistikani brauzerda tekshiring. Davrlar mavjud loglardan hisoblanadi; eski tarix bo‘lmasa, natija tabiiy ravishda past/0 bo‘lishi mumkin.
+ESLATMA:
+- Mavjud loglar asosida hisoblanadi. Ilova ishlatilmagan oldingi kunlar uchun bajarilishlar to‘qib chiqarilmaydi.
+- JavaScript sintaksisi node --check orqali tekshirildi. Brauzerda to‘liq qo‘lda sinov o‘tkazilmadi.

@@ -1972,12 +1972,33 @@ function bindEvents() {
   }
 }
 
+
+function bindVertexChat(){
+  const form=document.getElementById('vertexChatForm');
+  if(!form||form.dataset.bound)return;form.dataset.bound='1';
+  const box=document.getElementById('vertexChatMessages');
+  const input=document.getElementById('vertexChatInput');
+  const add=(text,who)=>{const el=document.createElement('div');el.className='chat-bubble '+who;el.textContent=text;box.appendChild(el);box.scrollTop=box.scrollHeight;};
+  const reply=(q)=>{const text=q.toLowerCase(),habits=activeHabits(),logs=state.logs||[],weekStart=shiftDate(today(),-6),weekLogs=logs.filter(x=>x.date>=weekStart&&x.date<=today()),ranked=habits.map(h=>({h,n:weekLogs.filter(x=>x.habitId===h.id).length,p:Math.round(weekLogs.filter(x=>x.habitId===h.id).length/7*100)})).sort((a,b)=>a.p-b.p);
+    if(!habits.length)return 'Hozircha faol odatlaringiz yo‘q. Avval bitta kichik odat qo‘shing, keyin men uning natijasini tahlil qilaman.';
+    if(/salom|hello|assalom/.test(text))return 'Salom! Bugun kichik bo‘lsa ham bir qadam tashlashga tayyormisiz? Odatlaringiz yoki natijalaringiz haqida so‘rashingiz mumkin.';
+    if(/qaysi|sust|yomon|e'tibor|etibor|qiyin/.test(text)){const x=ranked[0];return x?`Hozir ko‘proq e’tibor talab qilayotgan odat: “${x.h.title}”. So‘nggi 7 kunda ${x.n}/7 marta bajarilgansiz (${x.p}%). Uni bugun 2–5 daqiqalik kichik qadamga aylantirib ko‘ring.`:'Odatlaringiz bo‘yicha yetarli ma’lumot yo‘q.';}
+    if(/eng yaxshi|yaxshi|top|barqaror/.test(text)){const x=ranked[ranked.length-1];return x?`Eng yaxshi natija: “${x.h.title}” — so‘nggi 7 kunda ${x.n}/7 marta (${x.p}%). Shu odatni qaysi vaqtda bajarayotganingizni kuzating va shu usulni boshqalariga ham qo‘llang.`:'Hali tahlil uchun odatlar yo‘q.';}
+    if(/hafta|7 kun|natija|foiz|statistik/.test(text)){const possible=habits.length*7,rate=possible?Math.round(weekLogs.length/possible*100):0;return `So‘nggi 7 kun: ${weekLogs.length} ta bajarilish qayd etilgan. Faol odatlar: ${habits.length}. Umumiy bajarilish darajasi taxminan ${rate}%. Bu davrda eng muhimi — muntazamlikni saqlash.`;}
+    if(/xp|tajriba|ball|daraja|level/.test(text))return `Hozirgi XP: ${xpTotal()}. Har bir qayd etilgan bajarilish 10 XP beradi. Kichik odatlarni muntazam bajarish orqali XP yig‘ishda davom eting.`;
+    if(/reja|maslahat|nima qilay|boshlash|keyingi/.test(text)){const x=ranked[0];return x?`Bugungi tavsiyam: “${x.h.title}” odatini eng oson ko‘rinishda bajaring. Masalan, odat 20 daqiqa bo‘lsa, hozir 5 daqiqadan boshlang va Vertex’da belgilashni unutmang.`:'Avval bitta aniq va oson odat yarating.';}
+    return 'Men hozircha odatlar, haftalik natija, eng yaxshi yoki sust odat, XP va keyingi qadam haqida javob bera olaman. Savolingizni shu yo‘nalishlardan birida aniqroq yozing.';
+  };
+  form.addEventListener('submit',e=>{e.preventDefault();const q=input.value.trim();if(!q)return;add(q,'user');input.value='';add(reply(q),'coach');});
+}
+
 function init() {
   renderHabitPickers();
   state = loadState();
   restoreTimer();
   plannerDate = today();
   bindEvents();
+  bindVertexChat();
   if(!document.documentElement.dataset.coachReminderBound){document.documentElement.dataset.coachReminderBound='1';document.addEventListener('click',e=>{if(e.target.closest('#saveCoachReminder')){const i=document.getElementById('coachReminderTime');if(i&&i.value){localStorage.setItem('vertex_coach_reminder_time',i.value);updateCoachReminderStatus();}}});}
   // Delegated event handling: works even if analytics cards are re-rendered.
   if (!document.documentElement.dataset.longTermEventsBound) {

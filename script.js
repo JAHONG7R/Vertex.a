@@ -120,6 +120,7 @@ let plannerDate = today();
 let timerSeconds = 25 * 60;
 let timerInterval = null;
 let timerRunning = false;
+let timerEndsAt = null;
 let toastTimeout = null;
 
 let activeStorageKey = STORAGE_KEY;
@@ -448,11 +449,11 @@ window.VertexApp = {
     return activeStorageKey;
   },
   setState(raw, storageKey = STORAGE_KEY) {
+    pauseTimer();
     activeStorageKey = storageKey;
     state = normalizeState(raw);
-    pauseTimer();
-    timerSeconds = modeDuration(state.pomodoro.mode);
     plannerDate = today();
+    restoreTimer();
     try {
       // Bulutdan yuklangan holat qayta bulutga yuborilmasligi uchun
       // bu yerda saveState() yoki state-saved hodisasi chaqirilmaydi.
@@ -888,6 +889,54 @@ function renderPlanner() {
 }
 
 /* ==============================
+   POMODORO HOLATINI SAQLASH
+============================== */
+
+function timerStorageKey(storageKey = activeStorageKey) {
+  return `${storageKey}__pomodoro_timer_v1`;
+}
+
+function persistTimer() {
+  try {
+    localStorage.setItem(timerStorageKey(), JSON.stringify({
+      mode: state.pomodoro.mode,
+      seconds: timerSeconds,
+      running: timerRunning,
+      endsAt: timerRunning ? timerEndsAt : null
+    }));
+  } catch (error) {
+    console.warn('Taymer holatini saqlab bo‘lmadi:', error);
+  }
+}
+
+function restoreTimer() {
+  timerRunning = false;
+  timerEndsAt = null;
+  timerSeconds = modeDuration(state.pomodoro.mode);
+  try {
+    const raw = localStorage.getItem(timerStorageKey());
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (!saved || saved.mode !== state.pomodoro.mode) return;
+
+    if (saved.running && Number.isFinite(Number(saved.endsAt))) {
+      timerEndsAt = Number(saved.endsAt);
+      timerSeconds = Math.max(0, Math.ceil((timerEndsAt - Date.now()) / 1000));
+      if (timerSeconds > 0) {
+        timerRunning = true;
+        return;
+      }
+      timerSeconds = 0;
+    } else if (Number.isFinite(Number(saved.seconds))) {
+      timerSeconds = Math.max(0, Math.min(modeDuration(state.pomodoro.mode), Math.round(Number(saved.seconds))));
+    }
+  } catch (error) {
+    console.warn('Saqlangan taymer holatini o‘qib bo‘lmadi:', error);
+    timerSeconds = modeDuration(state.pomodoro.mode);
+  }
+}
+
+/* ==============================
    POMODORO TAYMERI
 ============================== */
 
@@ -909,6 +958,7 @@ function setTimerMode(mode) {
   pauseTimer();
   state.pomodoro.mode = mode;
   timerSeconds = modeDuration(mode);
+  persistTimer();
   saveState();
   renderTimer();
   renderDashboard();
@@ -937,11 +987,16 @@ function renderTimer() {
 }
 
 function pauseTimer() {
+  if (timerRunning && timerEndsAt) {
+    timerSeconds = Math.max(0, Math.ceil((timerEndsAt - Date.now()) / 1000));
+  }
   if (timerInterval) {
     clearInterval(timerInterval);
     timerInterval = null;
   }
   timerRunning = false;
+  timerEndsAt = null;
+  persistTimer();
 }
 
 function startTimer() {
@@ -952,9 +1007,11 @@ function startTimer() {
   }
   if (timerSeconds <= 0) timerSeconds = modeDuration(state.pomodoro.mode);
   timerRunning = true;
+  timerEndsAt = Date.now() + timerSeconds * 1000;
+  persistTimer();
   renderTimer();
   timerInterval = setInterval(() => {
-    timerSeconds--;
+    timerSeconds = Math.max(0, Math.ceil((timerEndsAt - Date.now()) / 1000));
     if (timerSeconds <= 0) {
       timerSeconds = 0;
       pauseTimer();
@@ -981,6 +1038,7 @@ function startTimer() {
 function resetTimer() {
   pauseTimer();
   timerSeconds = modeDuration(state.pomodoro.mode);
+  persistTimer();
   renderTimer();
   renderDashboard();
 }
@@ -1236,6 +1294,7 @@ function importData(file) {
       state = normalizeState(parsed);
       pauseTimer();
       timerSeconds = modeDuration(state.pomodoro.mode);
+      persistTimer();
       saveState();
       renderAll();
       notify('Ma’lumotlar muvaffaqiyatli tiklandi.');
@@ -1255,6 +1314,7 @@ function resetAll() {
   pauseTimer();
   state = DEFAULT_STATE();
   timerSeconds = state.settings.focusMinutes * 60;
+  persistTimer();
   saveState();
   renderAll();
   goTo('dashboard');
@@ -1422,6 +1482,7 @@ function bindEvents() {
     state.settings.longMinutes = clampInt($('#longMinutes').value, 1, 60, 15);
     pauseTimer();
     timerSeconds = modeDuration(state.pomodoro.mode);
+    persistTimer();
     saveState();
     renderTimer();
     renderDashboard();
@@ -1444,10 +1505,15 @@ function bindEvents() {
 function init() {
   renderHabitPickers();
   state = loadState();
-  timerSeconds = modeDuration(state.pomodoro.mode);
+  restoreTimer();
   plannerDate = today();
   bindEvents();
   renderAll();
+  // Qayta ochilganda faol sessiyani yangi interval bilan davom ettiramiz.
+  if (timerRunning) {
+    timerRunning = false;
+    startTimer();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);

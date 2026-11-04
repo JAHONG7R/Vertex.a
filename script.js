@@ -200,7 +200,10 @@ function normalizeState(raw) {
       const date = log.date ?? log.completed_date ?? log.day;
       if (habitId != null) pushLog(habitId, String(date ?? ''));
     });
-  } else if (raw.checks && typeof raw.checks === 'object') {
+  }
+  // Eski formatdagi checks faqat logs bo‘sh bo‘lsa ko‘chiriladi.
+  // pushLog takroriy yozuvlarni seen Set orqali cheklaydi.
+  if (next.logs.length === 0 && raw.checks && typeof raw.checks === 'object') {
     Object.entries(raw.checks).forEach(([key, value]) => {
       if (value !== true && value !== 1 && value !== 'true') return;
       const dateMatch = key.match(/\d{4}-\d{2}-\d{2}/);
@@ -797,6 +800,12 @@ function renderDashboard() {
   $('#dashTimerMode').textContent = state.pomodoro.mode === 'focus'
     ? 'FOCUS'
     : state.pomodoro.mode === 'short' ? 'SHORT BREAK' : 'LONG BREAK';
+  const sessionLabel = $('#dashSessionLabel');
+  if (sessionLabel) {
+    sessionLabel.textContent = state.pomodoro.mode === 'focus'
+      ? 'Bitta vazifaga e’tibor qarating.'
+      : 'Tanaffusdan unumli foydalaning.';
+  }
 }
 
 /* ==============================
@@ -1132,10 +1141,7 @@ function renderSettings() {
 
 function renderAll() {
   renderHeader();
-  renderStats();
-  renderWeekStrip();
-  renderDashboardHabits();
-  renderDashboardTasks();
+  renderDashboard();
   renderHabits();
   renderPlanner();
   renderTimer();

@@ -845,9 +845,53 @@ function renderSmartDashboard() {
       : 'Maqsadlar yo‘nalish beradi. Bugungi kichik qadamni bajaring.';
 }
 
+function renderSmartCoach() {
+  const habits = activeHabits();
+  const end = today();
+  const start = shiftDate(end, -6);
+  const totalPossible = habits.length * 7;
+  const totalDone = state.logs.filter(log => log.date >= start && log.date <= end && habits.some(h => h.id === log.habitId)).length;
+  const rate = totalPossible ? Math.round(totalDone / totalPossible * 100) : 0;
+  const rateNode = $('#coachWeekRate');
+  const headline = $('#coachHeadline');
+  const advice = $('#coachAdvice');
+  const insights = $('#coachInsights');
+  if (!rateNode || !headline || !advice || !insights) return;
+  rateNode.textContent = rate + '%';
+  if (!habits.length) {
+    headline.textContent = 'Avval odat qo‘shing';
+    advice.textContent = 'Birinchi odatingizni yarating. Vertex uning bajarilishini kuzatib, keyin shaxsiy tavsiyalar beradi.';
+    insights.innerHTML = '<span class="coach-chip">🎯 Boshlash uchun bitta kichik odat tanlang</span>';
+    return;
+  }
+  const ranked = habits.map(h => {
+    const count = getHabitLogs(h.id, start, end).length;
+    return { habit: h, count, pct: Math.round(count / 7 * 100) };
+  }).sort((a,b) => b.pct - a.pct);
+  const weakest = [...ranked].sort((a,b) => a.pct - b.pct)[0];
+  if (rate >= 80) {
+    headline.textContent = 'Barqarorlik yaxshi ketmoqda!';
+    advice.textContent = 'Mavjud tartibingizni saqlang. Yangi odat qo‘shishdan oldin hozirgilarini muntazam davom ettiring.';
+  } else if (rate >= 50) {
+    headline.textContent = 'Yaxshi poydevor bor — izchillikni oshiring.';
+    advice.textContent = `Keyingi qadam: “${weakest.habit.title}” odatini qulayroq vaqtga rejalashtiring va bugun uning eng kichik variantini bajaring.`;
+  } else {
+    headline.textContent = 'Kichik qadamdan qayta boshlang.';
+    advice.textContent = `Hozircha “${weakest.habit.title}” odatiga e’tibor qarating. Uni juda kichik vazifaga ajrating va bajarilgach belgilang.`;
+  }
+  const best = ranked[0];
+  const items = [
+    `<span class="coach-chip">🏅 Eng izchil: <b>${escapeHTML(best.habit.title)}</b> · ${best.pct}%</span>`,
+    `<span class="coach-chip">🌱 E’tibor kerak: <b>${escapeHTML(weakest.habit.title)}</b> · ${weakest.pct}%</span>`,
+    `<span class="coach-chip">📌 7 kunda: <b>${totalDone}</b> / ${totalPossible} bajarilish</span>`
+  ];
+  insights.innerHTML = items.join('');
+}
+
 function renderDashboard() {
   renderStats();
   renderSmartDashboard();
+  renderSmartCoach();
   renderWeekStrip();
   renderDashboardHabits();
   renderDashboardTasks();

@@ -1200,7 +1200,7 @@ function showLongTermDetail(days) {
 
   const monthRows = [];
   for (let m = months - 1; m >= 0; m--) {
-    const monthDate = parseDate(end);
+    const monthDate = parseDate(stats.end);
     monthDate.setDate(1);
     monthDate.setMonth(monthDate.getMonth() - m);
     const monthStart = localDateString(monthDate);

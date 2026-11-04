@@ -1788,13 +1788,45 @@ function init() {
   restoreTimer();
   plannerDate = today();
   bindEvents();
-  document.querySelectorAll('.long-term-select').forEach(card => {
-    const open = () => showLongTermDetail(Number(card.dataset.period));
-    card.addEventListener('click', open);
-    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
-  });
-  const closeLongTerm = document.getElementById('closeLongTermDetail');
-  if (closeLongTerm) closeLongTerm.addEventListener('click', () => { document.getElementById('longTermDetail').hidden = true; });
+  // Delegated event handling: works even if analytics cards are re-rendered.
+  if (!document.documentElement.dataset.longTermEventsBound) {
+    document.documentElement.dataset.longTermEventsBound = '1';
+    document.addEventListener('click', event => {
+      const card = event.target.closest('.long-term-select[data-period]');
+      if (card) {
+        event.preventDefault();
+        const period = Number(card.dataset.period);
+        if ([90, 180, 365].includes(period)) {
+          try {
+            showLongTermDetail(period);
+          } catch (error) {
+            console.error('Long-term analytics error:', error);
+            const panel = document.getElementById('longTermDetail');
+            if (panel) {
+              panel.hidden = false;
+              const title = document.getElementById('longTermDetailTitle');
+              if (title) title.textContent = 'Statistikani yuklashda xatolik';
+              const statsBox = document.getElementById('longTermDetailStats');
+              if (statsBox) statsBox.textContent = 'Iltimos, sahifani yangilang va qayta urinib ko‘ring.';
+            }
+          }
+        }
+        return;
+      }
+      if (event.target.closest('#closeLongTermDetail')) {
+        const panel = document.getElementById('longTermDetail');
+        if (panel) panel.hidden = true;
+      }
+    });
+    document.addEventListener('keydown', event => {
+      const card = event.target.closest?.('.long-term-select[data-period]');
+      if (card && (event.key === 'Enter' || event.key === ' ')) {
+        event.preventDefault();
+        const period = Number(card.dataset.period);
+        if ([90, 180, 365].includes(period)) showLongTermDetail(period);
+      }
+    });
+  }
   renderAll();
   // Saqlangan faol sessiyani mavjud tugash vaqtini o‘zgartirmasdan davom ettiramiz.
   if (timerRunning) runTimerInterval();

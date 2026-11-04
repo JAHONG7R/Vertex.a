@@ -144,9 +144,12 @@
 .month-detail-trigger .progress-fill{display:block;height:100%}
 
 /* Monthly detail analytics chart */
-.month-daily-chart{height:170px;display:flex;align-items:flex-end;gap:4px;padding:12px 4px 0;border-bottom:1px solid var(--line);overflow-x:auto}
-.month-day-bar{height:100%;min-width:12px;flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
-.month-day-bar span{display:block;width:100%;max-width:19px;min-height:2px;border-radius:5px 5px 2px 2px;background:linear-gradient(180deg,var(--lime),#789b3e);}
+.month-daily-chart{height:190px;display:flex;align-items:flex-end;gap:clamp(3px,.65vw,7px);padding:12px 4px 0;border-bottom:1px solid var(--line);overflow-x:auto}
+.month-day-bar{height:100%;min-width:13px;flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px}
+.month-day-value{font:7px var(--mono);color:#bac9a1;line-height:1;white-space:nowrap}
+.month-day-track{height:135px;width:min(22px,100%);position:relative;display:flex;align-items:flex-end;background:#252c1e;border-radius:5px 5px 2px 2px;overflow:hidden}
+.month-day-stack{position:absolute;left:0;right:0;bottom:0;width:100%;display:flex;flex-direction:column-reverse;overflow:hidden;border-radius:5px 5px 0 0;transition:height .35s ease;isolation:isolate}
+.month-day-segment{display:block;width:100%;min-height:1px;flex-shrink:0;border:0;margin:0;padding:0}
 .month-day-bar small{font:8px var(--mono);color:var(--muted-2)}
 .month-chart-legend{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;color:var(--muted);font-size:9px}
 .month-chart-legend strong{color:var(--lime);font-weight:600}

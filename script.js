@@ -1288,7 +1288,17 @@ function showCalendarMonthDetail(monthKey) {
     daily.push({date, completed, eligible:eligible.length, pct});
     if (eligible.length && (!bestDate || pct > bestDate.pct)) bestDate = {date,pct};
   }
-  const dailyBars = daily.map(d => `<div class="month-day-bar" title="${dateLabel(d.date,{day:'numeric',month:'long'})}: ${d.completed}/${d.eligible} (${d.pct}%)"><span style="height:${Math.max(d.pct,2)}%"></span><small>${Number(d.date.slice(-2))}</small></div>`).join('');
+  // Haftalik Analytics diagrammasidagi kabi: har bir bajarilgan odat o‘z rangli segmenti bilan ko‘rinadi.
+  // Segmentlar orasida bo‘shliq yoki chegara yo‘q — ranglar ustunda silliq tutashadi.
+  const dailyBars = daily.map(d => {
+    const completedHabits = habits.filter(habit => d.date >= habit.createdAt && isChecked(habit.id, d.date));
+    const segmentHeight = completedHabits.length ? 100 / completedHabits.length : 0;
+    const segments = completedHabits.map(habit => {
+      const color = normalizeHabitColor(habit.color);
+      return `<i class="month-day-segment" title="${escapeHTML(habit.title)}" style="height:${segmentHeight}%;background:${color};flex:0 0 ${segmentHeight}%"></i>`;
+    }).join('');
+    return `<div class="month-day-bar" title="${dateLabel(d.date,{day:'numeric',month:'long'})}: ${d.completed}/${d.eligible} (${d.pct}%)"><span class="month-day-value">${d.pct}%</span><div class="month-day-track"><div class="month-day-stack" style="height:${d.pct}%">${segments}</div></div><small>${Number(d.date.slice(-2))}</small></div>`;
+  }).join('');
   const weekdayStats = weekdayTotals.map(d => { const pct=d.possible?Math.round(d.done/d.possible*100):0; return `<div class="long-term-weekday-row"><span>${d.label}</span><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div><strong>${pct}%</strong></div>`; }).join('');
   $('#longTermMonthChart').innerHTML = `
     <section class="long-term-breakdown"><div class="eyebrow">OYLIK ANALITIKA</div><h3>Kunlar bo‘yicha bajarilish</h3><div class="month-daily-chart">${dailyBars}</div><div class="month-chart-legend"><span>Har bir ustun — bir kun</span><strong>${bestDate ? 'Eng yaxshi kun: '+dateLabel(bestDate.date,{day:'numeric',month:'long'})+' · '+bestDate.pct+'%' : 'Ma’lumot yetarli emas'}</strong></div></section>

@@ -1,0 +1,21 @@
+VERTEX AI COACH — SUPABASE AUTH INTEGRATION
+
+Bu paketda supabase-auth.js faylining to‘liq, birlashtirilgan nusxasi ham bor.
+
+NIMA QILINDI:
+- Vertex AI Coach uchun window.VertexSupabaseAuth.invokeCoach() bridge qo‘shildi.
+- Supabase client IIFE ichida private holatda qoladi; globalga chiqarilmaydi.
+- invokeCoach joriy login sessionni tekshiradi va `vertex-ai-coach` Edge Function'ga `message` hamda oxirgi 10 ta `history` xabarini yuboradi.
+- Edge Function xatolari foydalanuvchiga tushunarli ko‘rinishda qaytariladi.
+
+O‘RNATISH:
+1. Paketdagi `supabase-auth.js` faylini GitHub loyihangizdagi shu nomli fayl bilan almashtiring.
+2. `index.html`, `script.js` va `style.css` fayllarini ham paketdagilari bilan almashtiring.
+3. Mavjud `supabase-config.js` faylini saqlang. Undagi loyiha URL va anon/public key o‘zgarmasligi kerak.
+4. Supabase'da `vertex-ai-coach` Edge Function deploy qilingan bo‘lishi kerak.
+5. `OPENAI_API_KEY` faqat Supabase Edge Function Secrets ichida saqlansin. Uni frontend fayllariga yozmang.
+
+ESLATMA:
+- `supabase-auth.js` IIFE ichidagi `client` globalga chiqarilmaydi.
+- `window.VertexSupabaseAuth` faqat AI chaqirish uchun cheklangan metodni ochadi.
+- Supabase jadvali `user_data`, `user_id` ustuni va RLS siyosatlari avvalgi loyihangizdagi kabi sozlangan bo‘lishi kerak.

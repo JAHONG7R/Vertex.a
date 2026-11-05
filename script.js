@@ -1973,30 +1973,154 @@ function bindEvents() {
 }
 
 
-function bindVertexChat(){
-  const form=document.getElementById('vertexChatForm');
-  if(!form||form.dataset.bound)return;form.dataset.bound='1';
-  const box=document.getElementById('vertexChatMessages');
-  const input=document.getElementById('vertexChatInput');
-  const HISTORY_KEY='vertex_coach_chat_history_v1';
-  let history=[];
-  try{history=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');if(!Array.isArray(history))history=[];}catch(e){history=[];}
-  const add=(text,who,save=true)=>{const el=document.createElement('div');el.className='chat-bubble '+who;el.textContent=text;box.appendChild(el);box.scrollTop=box.scrollHeight;if(save){history.push({text,who});history=history.slice(-40);try{localStorage.setItem(HISTORY_KEY,JSON.stringify(history));}catch(e){}}};
-  history.forEach(item=>{if(item&&typeof item.text==='string'&&['user','coach'].includes(item.who))add(item.text,item.who,false);});
-  const clear=document.getElementById('clearVertexChat');if(clear)clear.addEventListener('click',()=>{history=[];try{localStorage.removeItem(HISTORY_KEY);}catch(e){}box.innerHTML='';add('Suhbat tarixi tozalandi. Yangi savol berishingiz mumkin.','coach');});
-  const reply=(q)=>{const text=q.toLowerCase(),habits=activeHabits(),logs=state.logs||[],weekStart=shiftDate(today(),-6),weekLogs=logs.filter(x=>x.date>=weekStart&&x.date<=today()),ranked=habits.map(h=>({h,n:weekLogs.filter(x=>x.habitId===h.id).length,p:Math.round(weekLogs.filter(x=>x.habitId===h.id).length/7*100)})).sort((a,b)=>a.p-b.p);
-    if(!habits.length)return 'Hozircha faol odatlaringiz yo‘q. Avval bitta kichik odat qo‘shing, keyin men uning natijasini tahlil qilaman.';
-    if(/salom|hello|assalom/.test(text))return 'Salom! Bugun kichik bo‘lsa ham bir qadam tashlashga tayyormisiz? Odatlaringiz yoki natijalaringiz haqida so‘rashingiz mumkin.';
-    if(/qaysi|sust|yomon|e'tibor|etibor|qiyin/.test(text)){const x=ranked[0];return x?`Hozir ko‘proq e’tibor talab qilayotgan odat: “${x.h.title}”. So‘nggi 7 kunda ${x.n}/7 marta bajarilgansiz (${x.p}%). Uni bugun 2–5 daqiqalik kichik qadamga aylantirib ko‘ring.`:'Odatlaringiz bo‘yicha yetarli ma’lumot yo‘q.';}
-    if(/eng yaxshi|yaxshi|top|barqaror/.test(text)){const x=ranked[ranked.length-1];return x?`Eng yaxshi natija: “${x.h.title}” — so‘nggi 7 kunda ${x.n}/7 marta (${x.p}%). Shu odatni qaysi vaqtda bajarayotganingizni kuzating va shu usulni boshqalariga ham qo‘llang.`:'Hali tahlil uchun odatlar yo‘q.';}
-    if(/hafta|7 kun|natija|foiz|statistik/.test(text)){const possible=habits.length*7,rate=possible?Math.round(weekLogs.length/possible*100):0;return `So‘nggi 7 kun: ${weekLogs.length} ta bajarilish qayd etilgan. Faol odatlar: ${habits.length}. Umumiy bajarilish darajasi taxminan ${rate}%. Bu davrda eng muhimi — muntazamlikni saqlash.`;}
-    if(/xp|tajriba|ball|daraja|level/.test(text))return `Hozirgi XP: ${xpTotal()}. Har bir qayd etilgan bajarilish 10 XP beradi. Kichik odatlarni muntazam bajarish orqali XP yig‘ishda davom eting.`;
-    if(/reja|maslahat|nima qilay|boshlash|keyingi/.test(text)){const x=ranked[0];return x?`Bugungi tavsiyam: “${x.h.title}” odatini eng oson ko‘rinishda bajaring. Masalan, odat 20 daqiqa bo‘lsa, hozir 5 daqiqadan boshlang va Vertex’da belgilashni unutmang.`:'Avval bitta aniq va oson odat yarating.';}
-    return 'Men hozircha odatlar, haftalik natija, eng yaxshi yoki sust odat, XP va keyingi qadam haqida javob bera olaman. Savolingizni shu yo‘nalishlardan birida aniqroq yozing.';
-  };
-  form.addEventListener('submit',e=>{e.preventDefault();const q=input.value.trim();if(!q)return;add(q,'user');input.value='';add(reply(q),'coach');});
-}
+function bindVertexChat() {
+  const form = document.getElementById('vertexChatForm');
+  if (!form || form.dataset.bound) return;
+  form.dataset.bound = '1';
 
+  const box = document.getElementById('vertexChatMessages');
+  const input = document.getElementById('vertexChatInput');
+  const sendButton = form.querySelector('button[type="submit"]');
+  const HISTORY_KEY = 'vertex_coach_chat_history_v1';
+  let history = [];
+  let requestInProgress = false;
+
+  try {
+    history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    if (!Array.isArray(history)) history = [];
+  } catch (error) {
+    history = [];
+  }
+
+  const persistHistory = () => {
+    history = history.slice(-40);
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    } catch (error) {
+      console.warn('Vertex chat tarixini saqlab bo‘lmadi:', error);
+    }
+  };
+
+  const addMessage = (message, who, save = true) => {
+    const element = document.createElement('div');
+    element.className = `chat-bubble ${who}`;
+    element.textContent = message;
+    box.appendChild(element);
+    box.scrollTop = box.scrollHeight;
+    if (save) {
+      history.push({ text: message, who });
+      persistHistory();
+    }
+    return element;
+  };
+
+  history.forEach(item => {
+    if (item && typeof item.text === 'string' && ['user', 'coach'].includes(item.who)) {
+      addMessage(item.text, item.who, false);
+    }
+  });
+
+  const clearButton = document.getElementById('clearVertexChat');
+  if (clearButton) {
+    clearButton.addEventListener('click', () => {
+      if (requestInProgress) return;
+      history = [];
+      try { localStorage.removeItem(HISTORY_KEY); } catch (error) {}
+      box.innerHTML = '';
+      addMessage('Suhbat tarixi tozalandi. Yangi savol berishingiz mumkin.', 'coach');
+    });
+  }
+
+  // AI ga faqat kerakli, umumlashtirilgan Vertex ko‘rsatkichlari yuboriladi.
+  // Odatlarning to‘liq loglari yoki boshqa ortiqcha shaxsiy ma’lumotlar yuborilmaydi.
+  const buildVertexContext = () => {
+    const endDate = today();
+    const startDate = shiftDate(endDate, -6);
+    const habits = activeHabits().map(habit => {
+      const count = getHabitLogs(habit.id, startDate, endDate).length;
+      return {
+        odat: habit.title,
+        kategoriya: categoryLabel(habit.category),
+        oxirgi_7_kun: `${count}/7`,
+        foiz: Math.round(count / 7 * 100),
+        seriya: streakForHabit(habit.id)
+      };
+    });
+    const possible = habits.length * 7;
+    const completed = habits.reduce((sum, habit) => sum + Number(habit.oxirgi_7_kun.split('/')[0]), 0);
+    const upcomingTasks = (state.tasks || [])
+      .filter(task => task.date >= endDate && task.date <= shiftDate(endDate, 7))
+      .slice(0, 8)
+      .map(task => ({ vazifa: task.title, sana: task.date, bajarilgan: Boolean(task.done) }));
+
+    return {
+      sana: endDate,
+      foydalanuvchi: state.userName || 'Foydalanuvchi',
+      faol_odatlar_soni: habits.length,
+      oxirgi_7_kun_bajarilish_foizi: possible ? Math.round(completed / possible * 100) : 0,
+      joriy_umumiy_seriya_kun: currentStreak(),
+      jami_xp: xpTotal(),
+      odatlar: habits,
+      yaqin_vazifalar: upcomingTasks
+    };
+  };
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (requestInProgress) return;
+
+    const question = input.value.trim();
+    if (!question) return;
+
+    const api = window.VertexSupabaseAuth;
+    if (!api || typeof api.invokeCoach !== 'function') {
+      addMessage('AI Coach hali Supabase autentifikatsiya moduliga ulanmagan. supabase-auth.js fayliga Vertex AI ulanish qismini qo‘shish kerak.', 'coach');
+      return;
+    }
+
+    // Edge Function o‘zi oxirgi xabarni qo‘shadi, shu sababli tarixga joriy savol kiritilmaydi.
+    const apiHistory = history
+      .filter(item => item && typeof item.text === 'string')
+      .slice(-10)
+      .map(item => ({ role: item.who === 'user' ? 'user' : 'assistant', content: item.text.slice(0, 4000) }));
+
+    addMessage(question, 'user');
+    input.value = '';
+    requestInProgress = true;
+    input.disabled = true;
+    if (sendButton) sendButton.disabled = true;
+    const typing = addMessage('Vertex AI Coach javob tayyorlamoqda…', 'coach', false);
+    typing.classList.add('is-typing');
+
+    try {
+      const context = buildVertexContext();
+      const contextualMessage = [
+        `Foydalanuvchining savoli: ${question}`,
+        'Quyidagi Vertex ilovasi ko‘rsatkichlarini javob berishda kontekst sifatida ishlat. Raqamlarni o‘zgartirma va ma’lumot yetishmasa, buni ochiq ayt.',
+        `VERTEX_CONTEXT: ${JSON.stringify(context)}`
+      ].join('\n\n').slice(0, 3900);
+
+      const result = await api.invokeCoach({
+        message: contextualMessage,
+        history: apiHistory
+      });
+      const answer = typeof result?.reply === 'string' ? result.reply.trim() : '';
+      if (!answer) throw new Error('AI xizmatidan bo‘sh javob qaytdi.');
+      typing.remove();
+      addMessage(answer, 'coach');
+    } catch (error) {
+      console.error('Vertex AI Coach xatosi:', error);
+      typing.remove();
+      const reason = error?.message || 'Noma’lum xatolik';
+      addMessage(`AI Coach bilan bog‘lanib bo‘lmadi: ${reason}. Internet va akkauntga kirganingizni tekshirib, qayta urinib ko‘ring.`, 'coach');
+    } finally {
+      requestInProgress = false;
+      input.disabled = false;
+      if (sendButton) sendButton.disabled = false;
+      input.focus();
+    }
+  });
+}
 function init() {
   renderHabitPickers();
   state = loadState();

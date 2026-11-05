@@ -9,6 +9,9 @@ on:
       - '.github/workflows/deploy-vertex-ai-coach.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -19,14 +22,34 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Check Supabase Secrets
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "ERROR: SUPABASE_ACCESS_TOKEN is missing"
+            exit 1
+          fi
+
+          if [ -z "$SUPABASE_PROJECT_ID" ]; then
+            echo "ERROR: SUPABASE_PROJECT_ID is missing"
+            exit 1
+          fi
+
+          echo "Supabase secrets are configured."
 
       - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
+        uses: supabase/setup-cli@v2
         with:
           version: latest
 
-      - name: Deploy Edge Function
+      - name: Check CLI
+        run: supabase --version
+
+      - name: Deploy AI Coach
         run: |
           supabase functions deploy vertex-ai-coach \
-            --project-ref "$SUPABASE_PROJECT_ID"
+            --project-ref "$SUPABASE_PROJECT_ID" \
+            --use-api \
+            --debug \
+            --yes

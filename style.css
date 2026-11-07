@@ -209,3 +209,20 @@
 
 /* Vertex Coach chat */
 
+
+/* Smart Dashboard: daily analysis */
+.daily-analysis-panel{margin:0 0 17px;background:linear-gradient(145deg,#1c2218,#171b14)}
+.daily-analysis-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.daily-analysis-metric{padding:13px 14px;border:1px solid #303a29;border-radius:10px;background:#1b2017;min-width:0}
+.daily-analysis-metric strong{display:block;font-family:var(--mono);font-size:22px;letter-spacing:-.6px;color:var(--lime);overflow-wrap:anywhere}
+.daily-analysis-metric span{display:block;margin-top:5px;color:var(--muted);font-size:9px}
+.daily-analysis-details{margin-top:12px}
+.daily-analysis-summary{margin:0 0 12px;color:#c4cbb8;font-size:10px;line-height:1.7}
+.daily-analysis-summary span{color:var(--lime)}
+.daily-analysis-habits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.daily-analysis-habits>div{padding:12px 13px;border:1px solid #2d3528;border-radius:10px;background:#191e16;min-width:0}
+.daily-analysis-habits small{display:block;color:var(--muted-2);font-family:var(--mono);font-size:8px;letter-spacing:.5px}
+.daily-analysis-habits strong{display:block;margin:7px 0 4px;font-size:11px;overflow-wrap:anywhere}
+.daily-analysis-habits span{display:block;color:var(--muted);font-size:9px}
+.daily-analysis-empty{margin:0;color:var(--muted);font-size:10px}
+@media(max-width:560px){.daily-analysis-metrics{gap:7px}.daily-analysis-metric{padding:11px 9px}.daily-analysis-metric strong{font-size:18px}.daily-analysis-metric span{font-size:8px}.daily-analysis-habits{grid-template-columns:1fr}}

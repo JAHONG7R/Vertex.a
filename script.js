@@ -845,6 +845,53 @@ function renderSmartDashboard() {
       : 'Maqsadlar yo‘nalish beradi. Bugungi kichik qadamni bajaring.';
 }
 
+function renderSmartDailyAnalysis() {
+  const metrics = $('#dailyAnalysisMetrics');
+  const details = $('#dailyAnalysisDetails');
+  if (!metrics || !details) return;
+
+  const habits = activeHabits();
+  if (!habits.length) {
+    metrics.innerHTML = [
+      ['0', 'Faol odatlar'], ['0%', 'Bugungi natija'], ['—', 'Kecha bilan farq']
+    ].map(([value, label]) => `<div class="daily-analysis-metric"><strong>${value}</strong><span>${label}</span></div>`).join('');
+    details.innerHTML = '<p class="daily-analysis-empty">Kunlik tahlilni boshlash uchun avval odat qo‘shing.</p>';
+    return;
+  }
+
+  const done = doneCountOn(today());
+  const remaining = Math.max(0, habits.length - done);
+  const todayPct = Math.round(done / habits.length * 100);
+  const yesterdayPct = Math.round(doneCountOn(shiftDate(today(), -1)) / habits.length * 100);
+  const difference = todayPct - yesterdayPct;
+  const differenceLabel = difference > 0 ? `+${difference}%` : difference < 0 ? `${difference}%` : '0%';
+  const differenceText = difference > 0 ? 'kechagidan yuqori' : difference < 0 ? 'kechagidan past' : 'kecha bilan bir xil';
+
+  metrics.innerHTML = [
+    [`${done}/${habits.length}`, 'Bajarilgan odatlar'],
+    [`${todayPct}%`, 'Bugungi natija'],
+    [differenceLabel, 'Kecha bilan farq']
+  ].map(([value, label]) => `<div class="daily-analysis-metric"><strong>${value}</strong><span>${label}</span></div>`).join('');
+
+  const ranked = habits.map(habit => ({
+    habit,
+    rate: Math.round(getHabitLogs(habit.id, shiftDate(today(), -6), today()).length / 7 * 100),
+    doneToday: isChecked(habit.id, today())
+  })).sort((a, b) => b.rate - a.rate);
+  const strongest = ranked[0];
+  const focus = [...ranked].reverse().find(item => !item.doneToday) || ranked[ranked.length - 1];
+  const status = remaining === 0
+    ? 'Bugungi odatlaringizning barchasi bajarildi. Natijani saqlab qolish uchun o‘zingizga vaqt ajrating.'
+    : `${remaining} ta odat hali bajarilmadi. Ulardan bittasini tanlab, kichik qadam bilan boshlang.`;
+
+  details.innerHTML = `
+    <p class="daily-analysis-summary">${status} <span>${differenceText}.</span></p>
+    <div class="daily-analysis-habits">
+      <div><small>ENG BARQAROR ODAT · 7 KUN</small><strong>${escapeHTML(strongest.habit.title)}</strong><span>${strongest.rate}% bajarilgan</span></div>
+      <div><small>E’TIBOR TALAB QILADI</small><strong>${escapeHTML(focus.habit.title)}</strong><span>${focus.doneToday ? 'Bugun bajarildi' : 'Bugun hali belgilanmagan'} · 7 kunlik natija ${focus.rate}%</span></div>
+    </div>`;
+}
+
 function renderSmartCoach() {
   const habits = activeHabits();
   const end = today();
@@ -945,6 +992,7 @@ function updateCoachReminderStatus(){const n=$('#coachReminderStatus');if(n)n.te
 function renderDashboard() {
   renderStats();
   renderSmartDashboard();
+  renderSmartDailyAnalysis();
   renderSmartCoach();
   renderPersonalCoach();
   renderProgressPrediction();

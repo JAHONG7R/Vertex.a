@@ -568,9 +568,32 @@ function showConfetti(options = {}) {
     if (milestone) piece.dataset.milestone = 'true';
     fragment.appendChild(piece);
   }
+
+  // Ikki yon tomondan favvora kabi otiladigan qo‘shimcha luxury konfetti.
+  const fountainPiecesPerSide = milestone ? 130 : 80;
+  for (let side = 0; side < 2; side += 1) {
+    for (let i = 0; i < fountainPiecesPerSide; i += 1) {
+      const piece = document.createElement('span');
+      piece.className = 'vertex-confetti-piece vertex-fountain-piece';
+      const outward = side === 0 ? 1 : -1;
+      const burstX = outward * (18 + Math.random() * 48);
+      const burstY = -(28 + Math.random() * (milestone ? 54 : 44));
+      piece.style.setProperty('--origin-x', side === 0 ? `${Math.random() * 5}vw` : `${95 + Math.random() * 5}vw`);
+      piece.style.setProperty('--burst-x', `${burstX}vw`);
+      piece.style.setProperty('--burst-y', `${burstY}vh`);
+      piece.style.setProperty('--fountain-delay', `${Math.random() * (milestone ? 0.7 : 0.45)}s`);
+      piece.style.setProperty('--fountain-duration', `${2.2 + Math.random() * 1.35}s`);
+      piece.style.setProperty('--spin', `${Math.round(Math.random() * 1800 - 900)}deg`);
+      piece.style.setProperty('--size', `${6 + Math.random() * (milestone ? 10 : 8)}px`);
+      piece.dataset.shape = ['round', 'strip', 'diamond', 'star', 'foil'][i % 5];
+      if (milestone) piece.dataset.milestone = 'true';
+      fragment.appendChild(piece);
+    }
+  }
+
   overlay.appendChild(fragment);
   document.body.appendChild(overlay);
-  window.setTimeout(() => overlay.remove(), milestone ? 7600 : 6800);
+  window.setTimeout(() => overlay.remove(), milestone ? 8500 : 7600);
 }
 
 function playMilestoneSound() {

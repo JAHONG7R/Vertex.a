@@ -243,6 +243,9 @@
 .vertex-confetti-piece[data-shape="star"]{clip-path:polygon(50% 0%,62% 35%,100% 38%,71% 61%,80% 100%,50% 77%,20% 100%,29% 61%,0 38%,38% 35%);filter:drop-shadow(0 0 5px #ffe28a)}
 .vertex-confetti-piece[data-shape="foil"]{border-radius:1px;background:linear-gradient(110deg,#fff 0%,#ffe18a 22%,#fff9df 43%,#d69a2e 62%,#fff2bb 80%,#fff 100%);box-shadow:0 0 12px #ffd76b,0 0 24px #ffc34d88}
 @keyframes vertex-confetti-fall{0%{opacity:0;transform:translate3d(0,-5vh,0) rotate(0) scale(.7)}8%{opacity:1}100%{opacity:.98;transform:translate3d(var(--drift),110vh,0) rotate(var(--spin)) scale(1.08)}}
+/* Side fountains: particles burst upward from both bottom corners, then arc down. */
+.vertex-fountain-piece{top:auto;bottom:-12px;left:var(--origin-x);opacity:0;z-index:2;animation:vertex-side-fountain var(--fountain-duration) cubic-bezier(.12,.68,.22,1) var(--fountain-delay) forwards;box-shadow:0 0 12px rgba(255,224,140,.95),0 0 24px rgba(255,184,65,.5)}
+@keyframes vertex-side-fountain{0%{opacity:0;transform:translate3d(0,0,0) rotate(0) scale(.55)}12%{opacity:1}48%{opacity:1;transform:translate3d(var(--burst-x),var(--burst-y),0) rotate(calc(var(--spin)*.55)) scale(1.12)}100%{opacity:0;transform:translate3d(calc(var(--burst-x)*1.28),calc(var(--burst-y) + 48vh),0) rotate(var(--spin)) scale(.8)}}
 @media(prefers-reduced-motion:reduce){.vertex-confetti-piece{animation-duration:1.2s;animation-timing-function:linear}}
 
 /* Milestone: extra-bright premium gold burst */

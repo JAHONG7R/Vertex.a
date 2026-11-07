@@ -497,6 +497,8 @@ function toggleCheck(habitId, date) {
     notify('Kelajakdagi kunni belgilab bo‘lmaydi.');
     return;
   }
+  // Seriya ko‘rsatkichini o‘zgarishdan oldin saqlaymiz — milestone faqat yangi bosqichga chiqqanda beriladi.
+  const previousStreak = date === today() ? currentStreak() : 0;
   const index = state.logs.findIndex(
     log => log.habitId === habitId && log.date === date
   );
@@ -505,7 +507,12 @@ function toggleCheck(habitId, date) {
   else state.logs.push({ habitId, date });
   saveState();
   renderAll();
-  if (newlyCompleted && date === today()) celebrateCompletion('Odat bajarildi!');
+  if (newlyCompleted && date === today()) {
+    const nextStreak = currentStreak();
+    const milestone = [3, 7, 14, 30, 100].find(value => previousStreak < value && nextStreak >= value);
+    if (milestone) celebrateStreakMilestone(milestone);
+    else celebrateCompletion('Odat bajarildi!');
+  }
 }
 
 /* ==============================
@@ -538,14 +545,15 @@ function playCompletionSound() {
   }
 }
 
-function showConfetti() {
+function showConfetti(options = {}) {
   const previous = document.querySelector('.vertex-celebration');
   if (previous) previous.remove();
+  const milestone = Boolean(options.milestone);
   const overlay = document.createElement('div');
-  overlay.className = 'vertex-celebration';
+  overlay.className = `vertex-celebration${milestone ? ' vertex-celebration-milestone' : ''}`;
   overlay.setAttribute('aria-hidden', 'true');
   const fragment = document.createDocumentFragment();
-  const pieces = 105;
+  const pieces = milestone ? 190 : 105;
   for (let i = 0; i < pieces; i += 1) {
     const piece = document.createElement('span');
     piece.className = 'vertex-confetti-piece';
@@ -556,11 +564,58 @@ function showConfetti() {
     piece.style.setProperty('--spin', `${Math.round(Math.random() * 900 - 450)}deg`);
     piece.style.setProperty('--size', `${6 + Math.random() * 7}px`);
     piece.dataset.shape = i % 4 === 0 ? 'round' : (i % 4 === 1 ? 'strip' : 'square');
+    if (milestone) piece.dataset.milestone = 'true';
     fragment.appendChild(piece);
   }
   overlay.appendChild(fragment);
   document.body.appendChild(overlay);
-  window.setTimeout(() => overlay.remove(), 5200);
+  window.setTimeout(() => overlay.remove(), milestone ? 6200 : 5200);
+}
+
+function playMilestoneSound() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  try {
+    const audio = new AudioContextClass();
+    const now = audio.currentTime;
+    // Kichik fanfar: ko‘tariluvchi notalar va yakuniy akkord.
+    [523.25, 659.25, 783.99, 1046.5].forEach((frequency, index) => {
+      const start = now + index * 0.13;
+      const oscillator = audio.createOscillator();
+      const gain = audio.createGain();
+      oscillator.type = 'triangle';
+      oscillator.frequency.setValueAtTime(frequency, start);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.16, start + 0.035);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.62);
+      oscillator.connect(gain);
+      gain.connect(audio.destination);
+      oscillator.start(start);
+      oscillator.stop(start + 0.65);
+    });
+    [659.25, 783.99, 987.77].forEach(frequency => {
+      const oscillator = audio.createOscillator();
+      const gain = audio.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.value = frequency;
+      gain.gain.setValueAtTime(0.0001, now + 0.62);
+      gain.gain.exponentialRampToValueAtTime(0.055, now + 0.69);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.35);
+      oscillator.connect(gain);
+      gain.connect(audio.destination);
+      oscillator.start(now + 0.62);
+      oscillator.stop(now + 1.38);
+    });
+    window.setTimeout(() => audio.close().catch(() => {}), 1900);
+  } catch (error) {
+    console.warn('Milestone sound could not play:', error);
+  }
+}
+
+function celebrateStreakMilestone(days) {
+  showConfetti({ milestone: true });
+  playMilestoneSound();
+  notify(`🏆 Ajoyib! ${days} kunlik seriyaga erishdingiz! Bu katta yutuq!`);
 }
 
 function celebrateCompletion(message = 'Ajoyib! Vazifa bajarildi!') {

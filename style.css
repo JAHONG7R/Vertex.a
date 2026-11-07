@@ -236,3 +236,11 @@
 .vertex-confetti-piece[data-shape="strip"]{width:calc(var(--size)*.45);height:calc(var(--size)*2.3);border-radius:2px}
 @keyframes vertex-confetti-fall{0%{opacity:0;transform:translate3d(0,-5vh,0) rotate(0)}8%{opacity:1}100%{opacity:.92;transform:translate3d(var(--drift),110vh,0) rotate(var(--spin))}}
 @media(prefers-reduced-motion:reduce){.vertex-confetti-piece{animation-duration:1.2s;animation-timing-function:linear}}
+
+/* Streak milestone celebration — yanada yorqin oltin konfetti */
+.vertex-celebration-milestone .vertex-confetti-piece{width:calc(var(--size)*1.12);height:calc(var(--size)*1.65);box-shadow:0 0 12px rgba(255,210,90,.55)}
+.vertex-celebration-milestone .vertex-confetti-piece:nth-child(5n){background:#fff7cf}
+.vertex-celebration-milestone .vertex-confetti-piece:nth-child(5n+1){background:#ffd65a}
+.vertex-celebration-milestone .vertex-confetti-piece:nth-child(5n+2){background:#f5a623}
+.vertex-celebration-milestone .vertex-confetti-piece:nth-child(5n+3){background:#fff0a6}
+.vertex-celebration-milestone .vertex-confetti-piece:nth-child(5n+4){background:#d4f34a}

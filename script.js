@@ -2228,23 +2228,38 @@ function updatePushPermissionStatus() {
    so changing app sections does not interrupt active layers. */
 const VertexFocusAudio = (() => {
   const KEY = 'vertex_focus_audio_v1';
-  const names = {rain:'Yomg‘ir',birds:'Qushlar',whale:'Kit',wind:'Shamol',binaural:'Binaural 10 Hz','hz40':'40 Hz'};
+  const names = {rain:'Yomg‘ir',roofrain:'Tomdagi yomg‘ir',birds:'Qushlar',forest:'O‘rmon',whale:'Kitlar',ocean:'Okean to‘lqini',stream:'Jilg‘a',waterfall:'Sharshara',wind:'Shamol',leaves:'Barglar shitiri',fire:'Gulxan',crickets:'Tungi hasharotlar',thunder:'Momaqaldiroq',brown:'Brown noise',pink:'Pink noise',white:'White noise',cafe:'Kafe shovqini',library:'Kutubxona',fan:'Ventilyator',binaural:'Binaural 10 Hz','hz40':'40 Hz'};
   let ctx = null, master = null, layers = new Map(), masterVolume = 0.20, presets = {};
   let collapsed = false;
   const clamp = (n,min,max)=>Math.max(min,Math.min(max,n));
   function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'{}');masterVolume=clamp(Number(d.master ?? 20),0,35)/100;presets=d.presets||{};}catch(_){}}
   function save(){try{localStorage.setItem(KEY,JSON.stringify({master:Math.round(masterVolume*100),presets}));}catch(_){}}
   function ensure(){if(ctx)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)throw new Error('Web Audio qo‘llab-quvvatlanmaydi');ctx=new AC();master=ctx.createGain();master.gain.value=masterVolume;master.connect(ctx.destination);}
-  function noiseSource(type){const size=ctx.sampleRate*3,buffer=ctx.createBuffer(1,size,ctx.sampleRate),data=buffer.getChannelData(0);let last=0;for(let i=0;i<size;i++){const white=Math.random()*2-1;if(type==='rain')data[i]=white*.55;else{last=(last+.025*white)/1.025;data[i]=last*3.5;}}const src=ctx.createBufferSource();src.buffer=buffer;src.loop=true;return src;}
+  function noiseSource(type){const size=ctx.sampleRate*3,buffer=ctx.createBuffer(1,size,ctx.sampleRate),data=buffer.getChannelData(0);let last=0,b0=0,b1=0,b2=0,b3=0,b4=0,b5=0;for(let i=0;i<size;i++){const white=Math.random()*2-1;if(type==='brown'||type==='wind'||type==='ocean'||type==='thunder'){last=(last+.018*white)/1.018;data[i]=last*3.2;}else if(type==='pink'||type==='rain'||type==='roofrain'||type==='stream'||type==='fire'||type==='leaves'){b0=.99886*b0+white*.0555179;b1=.99332*b1+white*.0750759;b2=.969*b2+white*.153852;b3=.8665*b3+white*.3104856;b4=.55*b4+white*.5329522;b5=-.7616*b5-white*.016898;data[i]=(b0+b1+b2+b3+b4+b5+white*.5362)*.11;}else{data[i]=white*.5;}}const src=ctx.createBufferSource();src.buffer=buffer;src.loop=true;return src;}
   function addOsc(freq,type='sine',detune=0){const o=ctx.createOscillator();o.type=type;o.frequency.value=freq;o.detune.value=detune;return o;}
-  function startLayer(id,volume=.16){ensure();if(ctx.state==='suspended')ctx.resume();if(layers.has(id))return;
+  function startLayer(id,volume=.13){ensure();if(ctx.state==='suspended')ctx.resume();if(layers.has(id))return;
     const gain=ctx.createGain();gain.gain.value=0;gain.connect(master);const nodes=[];
-    if(id==='rain'||id==='wind'){const src=noiseSource(id);const filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=id==='rain'?4200:750;src.connect(filter);filter.connect(gain);src.start();nodes.push(src,filter);}
-    else if(id==='birds'){for(let i=0;i<3;i++){const osc=addOsc(1600+i*430,'sine');const g=ctx.createGain();g.gain.value=0;const lfo=addOsc(.22+i*.13,'sine');const lfoGain=ctx.createGain();lfoGain.gain.value=.045; lfo.connect(lfoGain);lfoGain.connect(g.gain);osc.connect(g);g.connect(gain);osc.start();lfo.start();nodes.push(osc,g,lfo,lfoGain);}}
+    const addNoise=(kind,filterType,frequency,q=0.7,modulation=0)=>{const src=noiseSource(kind),filter=ctx.createBiquadFilter();filter.type=filterType;filter.frequency.value=frequency;filter.Q.value=q;src.connect(filter);filter.connect(gain);src.start();nodes.push(src,filter);if(modulation){const lfo=addOsc(modulation,'sine'),depth=ctx.createGain();depth.gain.value=frequency*.32;lfo.connect(depth);depth.connect(filter.frequency);lfo.start();nodes.push(lfo,depth);}};
+    if(id==='rain')addNoise('rain','lowpass',4300);
+    else if(id==='roofrain')addNoise('roofrain','bandpass',1700,0.55);
+    else if(id==='wind')addNoise('wind','lowpass',850,.5,.08);
+    else if(id==='ocean')addNoise('ocean','lowpass',1100,.7,.07);
+    else if(id==='stream')addNoise('stream','bandpass',2100,.45);
+    else if(id==='waterfall')addNoise('white','highpass',650,.4);
+    else if(id==='leaves')addNoise('leaves','highpass',1250,.7);
+    else if(id==='fire'){addNoise('fire','bandpass',950,.8);const crack=addOsc(42,'sawtooth');const cg=ctx.createGain();cg.gain.value=.012;crack.connect(cg);cg.connect(gain);crack.start();nodes.push(crack,cg);}
+    else if(id==='thunder'){addNoise('thunder','lowpass',180,.6,.035);}
+    else if(id==='brown'||id==='pink'||id==='white')addNoise(id,id==='brown'?'lowpass':id==='pink'?'bandpass':'highpass',id==='brown'?500:id==='pink'?1800:5000,.45);
+    else if(id==='fan')addNoise('brown','lowpass',620,.35);
+    else if(id==='cafe'){addNoise('pink','lowpass',1800,.35);}
+    else if(id==='library'){addNoise('pink','lowpass',850,.45);}
+    else if(id==='forest'){addNoise('wind','lowpass',650,.55,.06);for(let i=0;i<2;i++){const osc=addOsc(1900+i*500,'sine'),lfo=addOsc(.17+i*.11);const og=ctx.createGain();og.gain.value=.006;lfo.connect(og);og.connect(osc.frequency);osc.connect(gain);osc.start();lfo.start();nodes.push(osc,lfo,og);}}
+    else if(id==='crickets'){for(let i=0;i<3;i++){const osc=addOsc(3600+i*420,'sine'),pulse=addOsc(4.2+i*.8),pg=ctx.createGain(),tone=ctx.createGain();pg.gain.value=0.5; pulse.connect(pg.gain);tone.gain.value=.008;osc.connect(tone);tone.connect(gain);osc.start();pulse.start();nodes.push(osc,pulse,pg,tone);}}
+    else if(id==='birds'){for(let i=0;i<3;i++){const osc=addOsc(1600+i*430,'sine');const g=ctx.createGain();g.gain.value=0;const lfo=addOsc(.22+i*.13,'sine');const lfoGain=ctx.createGain();lfoGain.gain.value=.045;lfo.connect(lfoGain);lfoGain.connect(g.gain);osc.connect(g);g.connect(gain);osc.start();lfo.start();nodes.push(osc,g,lfo,lfoGain);}}
     else if(id==='whale'){const osc=addOsc(180,'sine');const lfo=addOsc(.055,'sine');const depth=ctx.createGain();depth.gain.value=75;lfo.connect(depth);depth.connect(osc.frequency);osc.connect(gain);osc.start();lfo.start();nodes.push(osc,lfo,depth);}
     else if(id==='binaural'){const left=addOsc(200),right=addOsc(210);const merger=ctx.createChannelMerger(2),gl=ctx.createGain(),gr=ctx.createGain();gl.gain.value=.5;gr.gain.value=.5;left.connect(gl);right.connect(gr);gl.connect(merger,0,0);gr.connect(merger,0,1);merger.connect(gain);left.start();right.start();nodes.push(left,right,gl,gr,merger);}
     else if(id==='hz40'){const osc=addOsc(40);osc.connect(gain);osc.start();nodes.push(osc);}
-    gain.gain.setTargetAtTime(volume,ctx.currentTime,.35);layers.set(id,{gain,nodes,volume});render();
+    gain.gain.setTargetAtTime(volume,ctx.currentTime,.45);layers.set(id,{gain,nodes,volume});render();
   }
   function stopLayer(id){const layer=layers.get(id);if(!layer)return;layer.gain.gain.setTargetAtTime(0,ctx.currentTime,.12);setTimeout(()=>{if(!layers.has(id))return;layer.nodes.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(_){}});layer.gain.disconnect();},500);layers.delete(id);render();}
   function setVolume(id,v){const l=layers.get(id);if(!l)return;l.volume=clamp(Number(v),0,35)/100;l.gain.gain.setTargetAtTime(l.volume,ctx.currentTime,.08);}

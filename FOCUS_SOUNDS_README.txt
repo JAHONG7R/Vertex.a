@@ -29,3 +29,18 @@ Files changed:
 - style.css
 
 All other project files from Vertex_Real_Time_Reminders.zip are retained.
+
+
+VOLUME UPDATE (2026-11-07)
+- Master and per-layer sliders now allow up to 70% software gain.
+- Default master level raised to 32%; new layers start at 22%.
+- A dynamics compressor is placed on the master output to reduce clipping when mixing layers.
+- The phone's physical media-volume control still determines final loudness. Do not raise it to an uncomfortable level; stop if listening becomes uncomfortable.
+
+AUTHENTIC RECORDINGS STATUS
+The existing nature and ambience layers in this package are synthesized Web Audio textures, not genuine field recordings. This update does NOT relabel them as real recordings. The project is ready for local recorded audio files, but authentic licensed WAV/MP3 assets have not been bundled because their source files and redistribution permissions must be verified before embedding them.
+
+
+NATURAL-STYLE AUDIO UPDATE
+--------------------------
+Eight locally bundled stereo WAV loops are connected to the mixer. They are original procedural audio designs, not real-world field recordings. The remaining sound types continue to use the existing Web Audio synthesis.

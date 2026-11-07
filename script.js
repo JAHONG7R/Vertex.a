@@ -2239,6 +2239,13 @@ const VertexFocusAudio = (() => {
   function addOsc(freq,type='sine',detune=0){const o=ctx.createOscillator();o.type=type;o.frequency.value=freq;o.detune.value=detune;return o;}
   function startLayer(id,volume=.22){ensure();if(ctx.state==='suspended')ctx.resume();if(layers.has(id))return;
     const gain=ctx.createGain();gain.gain.value=0;gain.connect(master);const nodes=[];
+    // Original natural-style stereo loops generated for Vertex. Remaining layers keep their synth engines.
+    const audioAssets={rain:'rain_soft_roof.wav',roofrain:'rain_soft_roof.wav',birds:'quiet_forest_birds.wav',forest:'quiet_forest_birds.wav',wind:'wind_in_trees.wav',ocean:'ocean_waves.wav',stream:'flowing_stream.wav',waterfall:'flowing_stream.wav',fire:'fireplace_crackle.wav',brown:'brown_noise.wav',pink:'pink_noise.wav'};
+    if(audioAssets[id]){
+      const audio=new Audio(`./assets/audio/${audioAssets[id]}`);audio.loop=true;audio.preload='auto';audio.crossOrigin='anonymous';
+      const source=ctx.createMediaElementSource(audio);source.connect(gain);nodes.push(source,audio);
+      audio.play().catch(err=>console.warn('Vertex audio playback:',err));
+    } else {
     const addNoise=(kind,filterType,frequency,q=0.7,modulation=0)=>{const src=noiseSource(kind),filter=ctx.createBiquadFilter();filter.type=filterType;filter.frequency.value=frequency;filter.Q.value=q;src.connect(filter);filter.connect(gain);src.start();nodes.push(src,filter);if(modulation){const lfo=addOsc(modulation,'sine'),depth=ctx.createGain();depth.gain.value=frequency*.32;lfo.connect(depth);depth.connect(filter.frequency);lfo.start();nodes.push(lfo,depth);}};
     if(id==='rain')addNoise('rain','lowpass',4300);
     else if(id==='roofrain')addNoise('roofrain','bandpass',1700,0.55);
@@ -2259,9 +2266,10 @@ const VertexFocusAudio = (() => {
     else if(id==='whale'){const osc=addOsc(180,'sine');const lfo=addOsc(.055,'sine');const depth=ctx.createGain();depth.gain.value=75;lfo.connect(depth);depth.connect(osc.frequency);osc.connect(gain);osc.start();lfo.start();nodes.push(osc,lfo,depth);}
     else if(id==='binaural'){const left=addOsc(200),right=addOsc(210);const merger=ctx.createChannelMerger(2),gl=ctx.createGain(),gr=ctx.createGain();gl.gain.value=.5;gr.gain.value=.5;left.connect(gl);right.connect(gr);gl.connect(merger,0,0);gr.connect(merger,0,1);merger.connect(gain);left.start();right.start();nodes.push(left,right,gl,gr,merger);}
     else if(id==='hz40'){const osc=addOsc(40);osc.connect(gain);osc.start();nodes.push(osc);}
+    }
     gain.gain.setTargetAtTime(volume,ctx.currentTime,.45);layers.set(id,{gain,nodes,volume});render();
   }
-  function stopLayer(id){const layer=layers.get(id);if(!layer)return;layer.gain.gain.setTargetAtTime(0,ctx.currentTime,.12);setTimeout(()=>{if(!layers.has(id))return;layer.nodes.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(_){}});layer.gain.disconnect();},500);layers.delete(id);render();}
+  function stopLayer(id){const layer=layers.get(id);if(!layer)return;layer.gain.gain.setTargetAtTime(0,ctx.currentTime,.12);setTimeout(()=>{if(!layers.has(id))return;layer.nodes.forEach(n=>{try{if(n instanceof HTMLAudioElement){n.pause();n.currentTime=0;}else{n.stop?.();n.disconnect?.();}}catch(_){}});layer.gain.disconnect();},500);layers.delete(id);render();}
   function setVolume(id,v){const l=layers.get(id);if(!l)return;l.volume=clamp(Number(v),0,70)/100;l.gain.gain.setTargetAtTime(l.volume,ctx.currentTime,.08);}
   function render(){document.querySelectorAll('.sound-layer').forEach(b=>{const on=layers.has(b.dataset.sound);b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});const list=document.getElementById('soundActiveList');if(list){if(!layers.size)list.innerHTML='<span>Ovoz tanlanmagan</span>';else list.innerHTML=[...layers.entries()].map(([id,l])=>`<label class="sound-active-row"><span>${names[id]}</span><input type="range" min="0" max="70" value="${Math.round(l.volume*100)}" data-layer-volume="${id}" aria-label="${names[id]} ovozi"><b>${Math.round(l.volume*100)}%</b></label>`).join('');}const m=document.getElementById('soundMaster');if(m)m.value=Math.round(masterVolume*100);const out=document.getElementById('soundMasterValue');if(out)out.textContent=`${Math.round(masterVolume*100)}%`;const sel=document.getElementById('soundPresetSelect');if(sel){const keep=sel.value;sel.innerHTML='<option value="">Preset tanlang</option>'+Object.keys(presets).map(k=>`<option value="${k.replace(/"/g,'&quot;')}">${k}</option>`).join('');sel.value=keep;}}
   function setMaster(v){masterVolume=clamp(Number(v),0,70)/100;if(master)master.gain.setTargetAtTime(masterVolume,ctx.currentTime,.08);save();render();}

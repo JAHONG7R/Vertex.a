@@ -553,23 +553,24 @@ function showConfetti(options = {}) {
   overlay.className = `vertex-celebration${milestone ? ' vertex-celebration-milestone' : ''}`;
   overlay.setAttribute('aria-hidden', 'true');
   const fragment = document.createDocumentFragment();
-  const pieces = milestone ? 190 : 105;
+  // Ko‘proq, ammo mobil qurilmalarda ham yengil ishlashi uchun chegaralangan zarrachalar.
+  const pieces = milestone ? 420 : 240;
   for (let i = 0; i < pieces; i += 1) {
     const piece = document.createElement('span');
     piece.className = 'vertex-confetti-piece';
     piece.style.setProperty('--x', `${Math.random() * 100}vw`);
-    piece.style.setProperty('--delay', `${Math.random() * 0.75}s`);
-    piece.style.setProperty('--duration', `${2.1 + Math.random() * 1.8}s`);
-    piece.style.setProperty('--drift', `${(Math.random() - 0.5) * 260}px`);
-    piece.style.setProperty('--spin', `${Math.round(Math.random() * 900 - 450)}deg`);
-    piece.style.setProperty('--size', `${6 + Math.random() * 7}px`);
-    piece.dataset.shape = i % 4 === 0 ? 'round' : (i % 4 === 1 ? 'strip' : 'square');
+    piece.style.setProperty('--delay', `${Math.random() * (milestone ? 1.05 : 0.85)}s`);
+    piece.style.setProperty('--duration', `${2.8 + Math.random() * 2.2}s`);
+    piece.style.setProperty('--drift', `${(Math.random() - 0.5) * 360}px`);
+    piece.style.setProperty('--spin', `${Math.round(Math.random() * 1440 - 720)}deg`);
+    piece.style.setProperty('--size', `${7 + Math.random() * (milestone ? 11 : 9)}px`);
+    piece.dataset.shape = ['round', 'strip', 'square', 'diamond', 'star', 'foil'][i % 6];
     if (milestone) piece.dataset.milestone = 'true';
     fragment.appendChild(piece);
   }
   overlay.appendChild(fragment);
   document.body.appendChild(overlay);
-  window.setTimeout(() => overlay.remove(), milestone ? 6200 : 5200);
+  window.setTimeout(() => overlay.remove(), milestone ? 7600 : 6800);
 }
 
 function playMilestoneSound() {

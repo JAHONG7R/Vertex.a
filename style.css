@@ -66,7 +66,7 @@
 .smart-insight-main p{font-size:10px;color:var(--muted);line-height:1.7;margin:0;max-width:540px}
 .smart-quote{border-top:1px solid #ffffff12;padding-top:12px}
 .smart-quote>span{font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--muted-2)}
-.smart-quote p{font-size:10px;color:#cbd5bd;margin:5px 0 0;font-style:italic}
+.smart-quote p{font-size:10px;color:#cbd5bd;margin:5px 0 0;font-style:italic;line-height:1.6}.smart-quote small{display:block;margin-top:7px;color:var(--muted-2);font-size:9px;text-align:right;letter-spacing:.3px}
 .goals-card{display:flex;flex-direction:column;justify-content:center;gap:17px}
 .goal-spark{color:var(--lime);font-size:20px}
 .goal-item{position:relative;z-index:1}

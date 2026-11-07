@@ -948,17 +948,26 @@ function renderSmartDashboard() {
   const weekPct = rateForDays(7);
   const monthPct = rateForDays(30);
   const incomplete = active.length - done;
+  // Iqtiboslar o‘zbekchaga mazmunan tarjima qilingan; har kuni bittasi ko‘rsatiladi.
   const quotes = [
-    'Muvaffaqiyat — har kuni takrorlangan kichik harakatlar yig‘indisi.',
-    'Mukammallikni emas, muntazamlikni tanlang.',
-    'Bugungi harakatingiz ertangi imkoniyatingizni yaratadi.',
-    'Kichik qadam ham oldinga qadamdir.',
-    'Intizom — maqsadlaringizga olib boradigan kundalik ko‘prik.',
-    'Boshlash uchun eng yaxshi vaqt — hozir.',
-    'Natija birdan kelmaydi, lekin har bir urinish hisobga kiradi.'
+    { text: 'Yaxshi bajarilgan ish, yaxshi aytilgan gapdan afzaldir.', author: 'Benjamin Franklin' },
+    { text: 'Qayerda bo‘lsang, o‘sha yerdan boshla. Bor narsangdan foydalan va qo‘lingdan kelganini qil.', author: 'Arthur Ashe' },
+    { text: 'Hech narsa harakat qilmaguningizcha amalga oshmaydi.', author: 'Maya Angelou' },
+    { text: 'Buyuk ishlar bir-biriga qo‘shilgan ko‘plab kichik ishlardan bunyod bo‘ladi.', author: 'Vincent van Gogh' },
+    { text: 'Ishonch bilan boshlang: yo‘lning yarmi bosib o‘tilgan bo‘ladi.', author: 'Theodore Roosevelt' },
+    { text: 'Energiya va qat’iyat har qanday to‘siqni yengadi.', author: 'Benjamin Franklin' },
+    { text: 'Muvaffaqiyat — kundan-kunga takrorlangan kichik sa’y-harakatlar yig‘indisi.', author: 'Robert Collier' },
+    { text: 'Kelajak bugun qilayotgan ishlaringizga bog‘liq.', author: 'Mahatma Gandhi' },
+    { text: 'Bilimning yagona manbai — tajriba.', author: 'Albert Einstein' },
+    { text: 'Sabr va qat’iyat bilan deyarli hamma narsaga erishish mumkin.', author: 'Benjamin Franklin' },
+    { text: 'Orzularingiz yo‘nalishini ishonch bilan tanlang va hayotingizni shunga mos yashang.', author: 'Henry David Thoreau' },
+    { text: 'Muvaffaqiyatli bo‘lishga emas, foydali bo‘lishga intiling.', author: 'Albert Einstein' }
   ];
   const dayIndex = Math.floor(parseDate(today()).getTime() / 86400000) % quotes.length;
-  $('#dailyQuote').textContent = quotes[(dayIndex + quotes.length) % quotes.length];
+  const dailyQuote = quotes[(dayIndex + quotes.length) % quotes.length];
+  $('#dailyQuote').textContent = '“' + dailyQuote.text + '”';
+  const quoteAuthor = $('#dailyQuoteAuthor');
+  if (quoteAuthor) quoteAuthor.textContent = '— ' + dailyQuote.author;
 
   let title = 'Bugun yangi imkoniyat.';
   let message = active.length

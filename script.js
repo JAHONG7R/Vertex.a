@@ -235,6 +235,8 @@ function normalizeState(raw) {
           .trim().slice(0, 120),
         date: validDate(taskDate) ? String(taskDate) : today(),
         priority: ['high', 'medium', 'low'].includes(task.priority) ? task.priority : 'medium',
+        time: /^([01]\d|2[0-3]):[0-5]\d$/.test(String(task.time || '')) ? String(task.time) : '',
+        reminderMinutes: clampInt(task.reminderMinutes ?? task.reminder_minutes, 0, 10080, 10),
         done: Boolean(task.done ?? task.completed ?? task.is_done)
       };
     })
@@ -792,6 +794,8 @@ function openHabitModal(habit = null) {
 function openTaskModal() {
   $('#taskForm').reset();
   $('#taskDateInput').value = plannerDate;
+  $('#taskTimeInput').value = '';
+  $('#taskReminderInput').value = '10';
   openModal('taskModalBackdrop');
 }
 
@@ -2072,6 +2076,7 @@ function bindEvents() {
       const item = state.tasks.find(t => t.id === delTask.dataset.deleteTask);
       if (item && confirm(`“${item.title}” vazifasini o‘chirasizmi?`)) {
         state.tasks = state.tasks.filter(t => t.id !== item.id);
+        window.VertexSupabaseAuth?.cancelTaskReminder?.(item.id);
         saveState();
         renderAll();
         notify('Vazifa o‘chirildi.');
@@ -2108,9 +2113,13 @@ function bindEvents() {
     const title = $('#taskTitleInput').value.trim();
     const date = $('#taskDateInput').value;
     if (!title || !validDate(date)) return;
-    state.tasks.push({ id: uid(), title, date, priority: $('#taskPriorityInput').value || 'medium', done: false });
+    const time = $('#taskTimeInput').value || '';
+    const reminderMinutes = Number($('#taskReminderInput').value || 0);
+    state.tasks.push({ id: uid(), title, date, time, reminderMinutes, priority: $('#taskPriorityInput').value || 'medium', done: false });
     plannerDate = date;
     saveState();
+    const createdTask = state.tasks[state.tasks.length - 1];
+    window.VertexSupabaseAuth?.scheduleTaskReminder?.(createdTask).catch(error => { console.warn('Reminder scheduling:', error); notify('Vazifa saqlandi, lekin server eslatmasi sozlanmadi.'); });
     renderAll();
     closeModals();
     goTo('planner');
@@ -2167,12 +2176,98 @@ function bindEvents() {
 }
 
 
+async function enableVertexPush() {
+  const status = document.getElementById('pushPermissionStatus');
+  const button = document.getElementById('enablePushBtn');
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+    if (status) status.textContent = 'Bu brauzer push bildirishnomalarini qo‘llab-quvvatlamaydi.';
+    return;
+  }
+  if (!window.VertexSupabaseAuth?.savePushSubscription) {
+    if (status) status.textContent = 'Push server integratsiyasi hali sozlanmagan. Supabase sozlamalarini tekshiring.';
+    return;
+  }
+  try {
+    if (button) button.disabled = true;
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') throw new Error('Bildirishnoma ruxsati berilmadi. Brauzer sozlamalaridan ruxsat bering.');
+    const registration = await navigator.serviceWorker.register('./service-worker.js');
+    const publicKey = window.VERTEX_VAPID_PUBLIC_KEY;
+    if (!publicKey) throw new Error('VAPID public key topilmadi. supabase-config.js ichiga VERTEX_VAPID_PUBLIC_KEY kiriting.');
+    const applicationServerKey = urlBase64ToUint8Array(publicKey);
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
+    await window.VertexSupabaseAuth.savePushSubscription(subscription.toJSON());
+    if (status) status.textContent = '✓ Push bildirishnomalar yoqildi. Endi belgilangan vaqtda eslatmalar kelishi mumkin.';
+    if (button) button.textContent = 'Yoqildi ✓';
+    notify('Bildirishnomalar muvaffaqiyatli yoqildi.');
+  } catch (error) {
+    console.error('Vertex push setup:', error);
+    if (status) status.textContent = error.message || 'Bildirishnomalarni yoqib bo‘lmadi.';
+    notify(error.message || 'Push sozlamasida xatolik.');
+  } finally { if (button) button.disabled = false; }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(char => char.charCodeAt(0)));
+}
+
+function updatePushPermissionStatus() {
+  const status = document.getElementById('pushPermissionStatus');
+  const button = document.getElementById('enablePushBtn');
+  if (!status || !('Notification' in window)) return;
+  status.textContent = Notification.permission === 'granted' ? 'Bildirishnomalarga ruxsat berilgan.' : Notification.permission === 'denied' ? 'Bildirishnomalar brauzer sozlamalarida bloklangan.' : 'Hozircha ruxsat berilmagan.';
+  if (button && Notification.permission === 'granted') button.textContent = 'Qayta ulash';
+}
+
+
+/* Vertex Focus Sounds — persistent Web Audio mixer. It lives outside page rendering,
+   so changing app sections does not interrupt active layers. */
+const VertexFocusAudio = (() => {
+  const KEY = 'vertex_focus_audio_v1';
+  const names = {rain:'Yomg‘ir',birds:'Qushlar',whale:'Kit',wind:'Shamol',binaural:'Binaural 10 Hz','hz40':'40 Hz'};
+  let ctx = null, master = null, layers = new Map(), masterVolume = 0.20, presets = {};
+  let collapsed = false;
+  const clamp = (n,min,max)=>Math.max(min,Math.min(max,n));
+  function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'{}');masterVolume=clamp(Number(d.master ?? 20),0,35)/100;presets=d.presets||{};}catch(_){}}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify({master:Math.round(masterVolume*100),presets}));}catch(_){}}
+  function ensure(){if(ctx)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)throw new Error('Web Audio qo‘llab-quvvatlanmaydi');ctx=new AC();master=ctx.createGain();master.gain.value=masterVolume;master.connect(ctx.destination);}
+  function noiseSource(type){const size=ctx.sampleRate*3,buffer=ctx.createBuffer(1,size,ctx.sampleRate),data=buffer.getChannelData(0);let last=0;for(let i=0;i<size;i++){const white=Math.random()*2-1;if(type==='rain')data[i]=white*.55;else{last=(last+.025*white)/1.025;data[i]=last*3.5;}}const src=ctx.createBufferSource();src.buffer=buffer;src.loop=true;return src;}
+  function addOsc(freq,type='sine',detune=0){const o=ctx.createOscillator();o.type=type;o.frequency.value=freq;o.detune.value=detune;return o;}
+  function startLayer(id,volume=.16){ensure();if(ctx.state==='suspended')ctx.resume();if(layers.has(id))return;
+    const gain=ctx.createGain();gain.gain.value=0;gain.connect(master);const nodes=[];
+    if(id==='rain'||id==='wind'){const src=noiseSource(id);const filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=id==='rain'?4200:750;src.connect(filter);filter.connect(gain);src.start();nodes.push(src,filter);}
+    else if(id==='birds'){for(let i=0;i<3;i++){const osc=addOsc(1600+i*430,'sine');const g=ctx.createGain();g.gain.value=0;const lfo=addOsc(.22+i*.13,'sine');const lfoGain=ctx.createGain();lfoGain.gain.value=.045; lfo.connect(lfoGain);lfoGain.connect(g.gain);osc.connect(g);g.connect(gain);osc.start();lfo.start();nodes.push(osc,g,lfo,lfoGain);}}
+    else if(id==='whale'){const osc=addOsc(180,'sine');const lfo=addOsc(.055,'sine');const depth=ctx.createGain();depth.gain.value=75;lfo.connect(depth);depth.connect(osc.frequency);osc.connect(gain);osc.start();lfo.start();nodes.push(osc,lfo,depth);}
+    else if(id==='binaural'){const left=addOsc(200),right=addOsc(210);const merger=ctx.createChannelMerger(2),gl=ctx.createGain(),gr=ctx.createGain();gl.gain.value=.5;gr.gain.value=.5;left.connect(gl);right.connect(gr);gl.connect(merger,0,0);gr.connect(merger,0,1);merger.connect(gain);left.start();right.start();nodes.push(left,right,gl,gr,merger);}
+    else if(id==='hz40'){const osc=addOsc(40);osc.connect(gain);osc.start();nodes.push(osc);}
+    gain.gain.setTargetAtTime(volume,ctx.currentTime,.35);layers.set(id,{gain,nodes,volume});render();
+  }
+  function stopLayer(id){const layer=layers.get(id);if(!layer)return;layer.gain.gain.setTargetAtTime(0,ctx.currentTime,.12);setTimeout(()=>{if(!layers.has(id))return;layer.nodes.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(_){}});layer.gain.disconnect();},500);layers.delete(id);render();}
+  function setVolume(id,v){const l=layers.get(id);if(!l)return;l.volume=clamp(Number(v),0,35)/100;l.gain.gain.setTargetAtTime(l.volume,ctx.currentTime,.08);}
+  function render(){document.querySelectorAll('.sound-layer').forEach(b=>{const on=layers.has(b.dataset.sound);b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});const list=document.getElementById('soundActiveList');if(list){if(!layers.size)list.innerHTML='<span>Ovoz tanlanmagan</span>';else list.innerHTML=[...layers.entries()].map(([id,l])=>`<label class="sound-active-row"><span>${names[id]}</span><input type="range" min="0" max="35" value="${Math.round(l.volume*100)}" data-layer-volume="${id}" aria-label="${names[id]} ovozi"><b>${Math.round(l.volume*100)}%</b></label>`).join('');}const m=document.getElementById('soundMaster');if(m)m.value=Math.round(masterVolume*100);const out=document.getElementById('soundMasterValue');if(out)out.textContent=`${Math.round(masterVolume*100)}%`;const sel=document.getElementById('soundPresetSelect');if(sel){const keep=sel.value;sel.innerHTML='<option value="">Preset tanlang</option>'+Object.keys(presets).map(k=>`<option value="${k.replace(/"/g,'&quot;')}">${k}</option>`).join('');sel.value=keep;}}
+  function setMaster(v){masterVolume=clamp(Number(v),0,35)/100;if(master)master.gain.setTargetAtTime(masterVolume,ctx.currentTime,.08);save();render();}
+  function stopAll(){[...layers.keys()].forEach(stopLayer);}
+  function applyPreset(name){const ids=presets[name];if(!Array.isArray(ids))return;stopAll();ids.forEach(id=>{if(names[id])startLayer(id,.13);});}
+  function init(){load();const masterInput=document.getElementById('soundMaster');if(masterInput){masterInput.value=Math.round(masterVolume*100);masterInput.addEventListener('input',e=>setMaster(e.target.value));}document.getElementById('soundMasterValue')?.replaceChildren(document.createTextNode(`${Math.round(masterVolume*100)}%`));
+    document.addEventListener('click',e=>{const b=e.target.closest('.sound-layer');if(b){const id=b.dataset.sound;try{layers.has(id)?stopLayer(id):startLayer(id);}catch(err){console.warn(err);alert('Ushbu brauzer audio funksiyasini qo‘llab-quvvatlamaydi.');}return;}if(e.target.closest('#stopAllSounds')){stopAll();return;}if(e.target.closest('#soundCollapse')){collapsed=!collapsed;document.getElementById('vertexSoundDock')?.classList.toggle('collapsed',collapsed);e.target.textContent=collapsed?'+':'−';return;}if(e.target.closest('#saveSoundPreset')){if(!layers.size){alert('Avval kamida bitta ovozni yoqing.');return;}const name=prompt('Preset nomi:');if(name&&name.trim()){presets[name.trim().slice(0,24)]=[...layers.keys()];save();render();}return;}});
+    document.addEventListener('change',e=>{if(e.target.id==='soundPresetSelect'&&e.target.value)applyPreset(e.target.value);});
+    document.addEventListener('input',e=>{const el=e.target.closest('[data-layer-volume]');if(el){setVolume(el.dataset.layerVolume,el.value);const row=el.closest('.sound-active-row');if(row)row.querySelector('b').textContent=`${el.value}%`;}});render();}
+  return {init,stopAll};
+})();
+
 function init() {
   renderHabitPickers();
   state = loadState();
   restoreTimer();
   plannerDate = today();
   bindEvents();
+  updatePushPermissionStatus();
+  document.getElementById('enablePushBtn')?.addEventListener('click', enableVertexPush);
+  if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('./service-worker.js').catch(error => console.warn('SW registration:', error));
   if(!document.documentElement.dataset.coachReminderBound){document.documentElement.dataset.coachReminderBound='1';document.addEventListener('click',e=>{if(e.target.closest('#saveCoachReminder')){const i=document.getElementById('coachReminderTime');if(i&&i.value){localStorage.setItem('vertex_coach_reminder_time',i.value);updateCoachReminderStatus();}}});}
   // Delegated event handling: works even if analytics cards are re-rendered.
   if (!document.documentElement.dataset.longTermEventsBound) {
@@ -2218,6 +2313,7 @@ function init() {
     });
   }
   renderAll();
+  VertexFocusAudio.init();
   // Saqlangan faol sessiyani mavjud tugash vaqtini o‘zgartirmasdan davom ettiramiz.
   if (timerRunning) runTimerInterval();
 }

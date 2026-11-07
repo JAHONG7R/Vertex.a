@@ -226,3 +226,13 @@
 .daily-analysis-habits span{display:block;color:var(--muted);font-size:9px}
 .daily-analysis-empty{margin:0;color:var(--muted);font-size:10px}
 @media(max-width:560px){.daily-analysis-metrics{gap:7px}.daily-analysis-metric{padding:11px 9px}.daily-analysis-metric strong{font-size:18px}.daily-analysis-metric span{font-size:8px}.daily-analysis-habits{grid-template-columns:1fr}}
+
+
+/* Vertex completion celebration: full-screen golden confetti */
+.vertex-celebration{position:fixed;inset:0;z-index:99999;overflow:hidden;pointer-events:none;contain:strict}
+.vertex-confetti-piece{position:absolute;top:-24px;left:var(--x);width:var(--size);height:calc(var(--size)*1.45);border-radius:2px;background:#f5c84b;opacity:0;transform:translate3d(0,-20px,0) rotate(0);animation:vertex-confetti-fall var(--duration) cubic-bezier(.18,.62,.35,1) var(--delay) forwards;box-shadow:0 0 7px rgba(255,205,75,.25)}
+.vertex-confetti-piece:nth-child(4n){background:#ffe28a}.vertex-confetti-piece:nth-child(4n+1){background:#d4f34a}.vertex-confetti-piece:nth-child(4n+2){background:#f0a83c}.vertex-confetti-piece:nth-child(4n+3){background:#fff1c2}
+.vertex-confetti-piece[data-shape="round"]{border-radius:50%;width:calc(var(--size)*.85);height:calc(var(--size)*.85)}
+.vertex-confetti-piece[data-shape="strip"]{width:calc(var(--size)*.45);height:calc(var(--size)*2.3);border-radius:2px}
+@keyframes vertex-confetti-fall{0%{opacity:0;transform:translate3d(0,-5vh,0) rotate(0)}8%{opacity:1}100%{opacity:.92;transform:translate3d(var(--drift),110vh,0) rotate(var(--spin))}}
+@media(prefers-reduced-motion:reduce){.vertex-confetti-piece{animation-duration:1.2s;animation-timing-function:linear}}

@@ -500,10 +500,73 @@ function toggleCheck(habitId, date) {
   const index = state.logs.findIndex(
     log => log.habitId === habitId && log.date === date
   );
+  const newlyCompleted = index < 0;
   if (index >= 0) state.logs.splice(index, 1);
   else state.logs.push({ habitId, date });
   saveState();
   renderAll();
+  if (newlyCompleted && date === today()) celebrateCompletion('Odat bajarildi!');
+}
+
+/* ==============================
+   COMPLETION CELEBRATION
+============================== */
+function playCompletionSound() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  try {
+    const audio = new AudioContextClass();
+    const now = audio.currentTime;
+    // Qisqa, yumshoq uch notali tabrik jiringlashi.
+    [523.25, 659.25, 783.99].forEach((frequency, index) => {
+      const start = now + index * 0.105;
+      const oscillator = audio.createOscillator();
+      const gain = audio.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequency, start);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.12, start + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.42);
+      oscillator.connect(gain);
+      gain.connect(audio.destination);
+      oscillator.start(start);
+      oscillator.stop(start + 0.44);
+    });
+    window.setTimeout(() => audio.close().catch(() => {}), 1100);
+  } catch (error) {
+    console.warn('Celebration sound could not play:', error);
+  }
+}
+
+function showConfetti() {
+  const previous = document.querySelector('.vertex-celebration');
+  if (previous) previous.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'vertex-celebration';
+  overlay.setAttribute('aria-hidden', 'true');
+  const fragment = document.createDocumentFragment();
+  const pieces = 105;
+  for (let i = 0; i < pieces; i += 1) {
+    const piece = document.createElement('span');
+    piece.className = 'vertex-confetti-piece';
+    piece.style.setProperty('--x', `${Math.random() * 100}vw`);
+    piece.style.setProperty('--delay', `${Math.random() * 0.75}s`);
+    piece.style.setProperty('--duration', `${2.1 + Math.random() * 1.8}s`);
+    piece.style.setProperty('--drift', `${(Math.random() - 0.5) * 260}px`);
+    piece.style.setProperty('--spin', `${Math.round(Math.random() * 900 - 450)}deg`);
+    piece.style.setProperty('--size', `${6 + Math.random() * 7}px`);
+    piece.dataset.shape = i % 4 === 0 ? 'round' : (i % 4 === 1 ? 'strip' : 'square');
+    fragment.appendChild(piece);
+  }
+  overlay.appendChild(fragment);
+  document.body.appendChild(overlay);
+  window.setTimeout(() => overlay.remove(), 5200);
+}
+
+function celebrateCompletion(message = 'Ajoyib! Vazifa bajarildi!') {
+  showConfetti();
+  playCompletionSound();
+  notify(message);
 }
 
 function getHabitLogs(habitId, from, to) {
@@ -1897,8 +1960,12 @@ function bindEvents() {
       const item = state.tasks.find(t => t.id === task.dataset.toggleTask);
       if (item) {
         item.done = !item.done;
+        const newlyCompleted = item.done;
         saveState();
         renderAll();
+        if (newlyCompleted && item.date === today()) {
+          celebrateCompletion('Zo‘r! Vazifani bajardingiz!');
+        }
       }
       return;
     }

@@ -280,9 +280,14 @@
   const target=e.target.closest('button,.button,.nav-item,.sound-layer,[role="button"]');
   if(!target||target.disabled)return;
   if(prefs.ripple&&!reduced){
-   target.classList.add('vertex-ripple');const rect=target.getBoundingClientRect(),wave=document.createElement('span');
-   wave.className='vertex-ripple-wave';wave.style.setProperty('--rx',(e.clientX-rect.left)+'px');
-   wave.style.setProperty('--ry',(e.clientY-rect.top)+'px');target.appendChild(wave);setTimeout(()=>wave.remove(),750);
+   const ripple=document.createElement('span');
+   ripple.className='vertex-water-ripple';
+   ripple.setAttribute('aria-hidden','true');
+   ripple.style.left=e.clientX+'px';
+   ripple.style.top=e.clientY+'px';
+   ripple.innerHTML='<i></i><i></i><i></i><b></b>';
+   document.body.appendChild(ripple);
+   window.setTimeout(()=>ripple.remove(),1150);
   }
   if(prefs.clickSound)try{
    const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;

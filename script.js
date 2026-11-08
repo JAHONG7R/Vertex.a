@@ -563,11 +563,11 @@ function showConfetti(options = {}) {
     const foil=Math.random()<0.19;
     piece.className='vertex-confetti-piece';
     piece.style.setProperty('--x',`${Math.random()*100}vw`);
-    piece.style.setProperty('--delay',`${Math.random()*(milestone?1.15:0.8)}s`);
-    piece.style.setProperty('--duration',`${5.8+Math.random()*5.8}s`);
-    piece.style.setProperty('--drift',`${(Math.random()-0.5)*360}px`);
-    piece.style.setProperty('--sway',`${35+Math.random()*105}px`);
-    piece.style.setProperty('--spin',`${Math.round(Math.random()*1800-900)}deg`);
+    piece.style.setProperty('--delay',`${Math.random()*(milestone?1.8:1.25)}s`);
+    piece.style.setProperty('--duration',`${14+Math.random()*8}s`);
+    piece.style.setProperty('--drift',`${(Math.random()-0.5)*150}px`);
+    piece.style.setProperty('--sway',`${10+Math.random()*35}px`);
+    piece.style.setProperty('--spin',`${Math.round(Math.random()*1080-540)}deg`);
     piece.style.setProperty('--size',`${5+Math.random()*(milestone?9:7)}px`);
     piece.style.setProperty('--c1',foil?'#ffffff':colors[0]);
     piece.style.setProperty('--c2',colors[1]);
@@ -578,7 +578,7 @@ function showConfetti(options = {}) {
   }
   overlay.appendChild(fragment);
   document.body.appendChild(overlay);
-  window.setTimeout(() => overlay.remove(), milestone ? 13500 : 12500);
+  window.setTimeout(() => overlay.remove(), milestone ? 24500 : 23500);
 }
 
 function playMilestoneSound() {

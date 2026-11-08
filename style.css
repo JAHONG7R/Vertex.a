@@ -442,3 +442,28 @@ html[data-vertex-theme="amoled"] .panel,html[data-vertex-theme="amoled"] .stat-c
 }
 .vertex-celebration-milestone .vertex-confetti-piece{filter:saturate(1.25) brightness(1.12)}
 @media(prefers-reduced-motion:reduce){.vertex-ripple-wave{display:none}.vertex-confetti-piece{animation-duration:2s!important}}
+
+/* Natural gravity + gentle air resistance: slow, mostly vertical confetti fall */
+.vertex-confetti-piece{
+ top:-42px;opacity:0;animation:vertex-confetti-natural-fall var(--duration) linear var(--delay) forwards;
+ transform-origin:50% 50%;will-change:transform,opacity;
+ box-shadow:0 1px 2px #0005,0 0 5px color-mix(in srgb,var(--c1) 45%,transparent);
+}
+@keyframes vertex-confetti-natural-fall{
+ 0%{opacity:0;transform:translate3d(0,-4vh,0) rotateX(0deg) rotateZ(0deg) scale(.92)}
+ 5%{opacity:1}
+ 18%{transform:translate3d(calc(var(--drift)*.08 + var(--sway)*.3),15vh,0) rotateX(95deg) rotateZ(calc(var(--spin)*.12)) scale(1)}
+ 36%{transform:translate3d(calc(var(--drift)*.22 - var(--sway)*.45),36vh,0) rotateX(210deg) rotateZ(calc(var(--spin)*.29)) scale(.98)}
+ 58%{transform:translate3d(calc(var(--drift)*.48 + var(--sway)*.35),62vh,0) rotateX(365deg) rotateZ(calc(var(--spin)*.53)) scale(.96)}
+ 78%{transform:translate3d(calc(var(--drift)*.76 - var(--sway)*.2),86vh,0) rotateX(520deg) rotateZ(calc(var(--spin)*.76)) scale(.94)}
+ 100%{opacity:.98;transform:translate3d(var(--drift),116vh,0) rotateX(690deg) rotateZ(var(--spin)) scale(.9)}
+}
+/* Water-drop ripple at the exact tap coordinate, not clipped by the button */
+.vertex-water-ripple{position:fixed;z-index:1000000;left:0;top:0;width:1px;height:1px;pointer-events:none;overflow:visible;transform:translate(-50%,-50%)}
+.vertex-water-ripple i{position:absolute;left:0;top:0;display:block;width:14px;height:14px;border:1.5px solid rgba(212,243,74,.68);border-radius:50%;transform:translate(-50%,-50%) scale(.15);box-shadow:0 0 8px rgba(212,243,74,.16),inset 0 0 5px rgba(212,243,74,.1);animation:vertex-water-ring 1.02s cubic-bezier(.12,.62,.22,1) forwards}
+.vertex-water-ripple i:nth-child(2){animation-delay:.11s;border-color:rgba(212,243,74,.48)}
+.vertex-water-ripple i:nth-child(3){animation-delay:.22s;border-color:rgba(255,255,255,.32)}
+.vertex-water-ripple b{position:absolute;left:0;top:0;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.8),rgba(212,243,74,.35) 48%,transparent 76%);transform:translate(-50%,-50%) scale(.2);animation:vertex-water-drop .42s ease-out forwards}
+@keyframes vertex-water-ring{0%{opacity:.85;transform:translate(-50%,-50%) scale(.15)}65%{opacity:.4}100%{opacity:0;transform:translate(-50%,-50%) scale(10)}}
+@keyframes vertex-water-drop{0%{opacity:.9;transform:translate(-50%,-50%) scale(.2)}35%{opacity:.75;transform:translate(-50%,-50%) scale(1.7)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.4)}}
+@media(prefers-reduced-motion:reduce){.vertex-water-ripple{display:none}.vertex-confetti-piece{animation-duration:4s!important}}

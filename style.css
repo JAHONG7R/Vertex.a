@@ -467,3 +467,20 @@ html[data-vertex-theme="amoled"] .panel,html[data-vertex-theme="amoled"] .stat-c
 @keyframes vertex-water-ring{0%{opacity:.85;transform:translate(-50%,-50%) scale(.15)}65%{opacity:.4}100%{opacity:0;transform:translate(-50%,-50%) scale(10)}}
 @keyframes vertex-water-drop{0%{opacity:.9;transform:translate(-50%,-50%) scale(.2)}35%{opacity:.75;transform:translate(-50%,-50%) scale(1.7)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.4)}}
 @media(prefers-reduced-motion:reduce){.vertex-water-ripple{display:none}.vertex-confetti-piece{animation-duration:4s!important}}
+
+
+/* V3: continuous fall, moderate flutter, no premature overlay cleanup */
+.vertex-confetti-piece{
+  animation-name:vertex-confetti-natural-fall-v3;
+  animation-timing-function:linear;
+}
+@keyframes vertex-confetti-natural-fall-v3{
+  0%{opacity:0;transform:translate3d(0,-5vh,0) rotateX(0deg) rotateZ(0deg) scale(.94)}
+  4%{opacity:1}
+  16%{transform:translate3d(calc(var(--sway)*.42),14vh,0) rotateX(115deg) rotateZ(calc(var(--spin)*.16)) scale(1)}
+  32%{transform:translate3d(calc(var(--drift)*.24 - var(--sway)*.55),32vh,0) rotateX(250deg) rotateZ(calc(var(--spin)*.34)) scale(.97)}
+  49%{transform:translate3d(calc(var(--drift)*.52 + var(--sway)*.62),51vh,0) rotateX(390deg) rotateZ(calc(var(--spin)*.52)) scale(1.02)}
+  66%{transform:translate3d(calc(var(--drift)*.72 - var(--sway)*.38),70vh,0) rotateX(535deg) rotateZ(calc(var(--spin)*.69)) scale(.96)}
+  83%{transform:translate3d(calc(var(--drift)*.9 + var(--sway)*.3),89vh,0) rotateX(680deg) rotateZ(calc(var(--spin)*.85)) scale(1)}
+  100%{opacity:.98;transform:translate3d(var(--drift),118vh,0) rotateX(820deg) rotateZ(var(--spin)) scale(.94)}
+}

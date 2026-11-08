@@ -629,3 +629,53 @@ html[data-vertex-theme="light"] .vertex-skeleton-heading,html[data-vertex-theme=
 html[data-vertex-theme="amoled"] .vertex-loading-screen{background:#000}
 @media(max-width:700px){.vertex-skeleton-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.vertex-skeleton-stats i{height:86px}.vertex-skeleton-main{grid-template-columns:1fr}.vertex-skeleton-main i{height:130px}.vertex-skeleton-main i:nth-child(2){display:none}}
 @media(prefers-reduced-motion:reduce){.vertex-skeleton-heading,.vertex-skeleton-stats i,.vertex-skeleton-main i,.vertex-skeleton-row,.vertex-loading-caption{animation:none!important}.progress-fill:after,.level-fill:after,.habit-stat-track i:after,.prediction-track span:after{animation:none!important;display:none}}
+
+
+/* V9 — Amir Temur statue backdrop */
+body{
+  position:relative;
+  isolation:isolate;
+  background-color:var(--bg);
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb,var(--bg) 99%,transparent) 0%,
+      color-mix(in srgb,var(--bg) 95%,transparent) 38%,
+      color-mix(in srgb,var(--bg) 76%,transparent) 64%,
+      color-mix(in srgb,var(--bg) 54%,transparent) 100%),
+    url("amir-temur-background.png") right center / auto 100vh no-repeat;
+  opacity:.92;
+}
+.app-shell{position:relative;z-index:1}
+@media(max-width:850px){
+  body::before{
+    background:
+      linear-gradient(90deg,
+        color-mix(in srgb,var(--bg) 97%,transparent) 0%,
+        color-mix(in srgb,var(--bg) 87%,transparent) 52%,
+        color-mix(in srgb,var(--bg) 72%,transparent) 100%),
+      url("amir-temur-background.png") right center / auto 82vh no-repeat;
+    opacity:.55;
+  }
+}
+html[data-vertex-theme="light"] body::before{
+  background:
+    linear-gradient(90deg,rgba(244,245,239,.98) 0%,rgba(244,245,239,.94) 48%,rgba(244,245,239,.78) 100%),
+    url("amir-temur-background.png") right center / auto 100vh no-repeat;
+  opacity:.20;
+}
+html[data-vertex-theme="amoled"] body::before{
+  background:
+    linear-gradient(90deg,rgba(0,0,0,.99) 0%,rgba(0,0,0,.94) 45%,rgba(0,0,0,.66) 100%),
+    url("amir-temur-background.png") right center / auto 100vh no-repeat;
+  opacity:.82;
+}
+@media(prefers-reduced-motion:reduce){
+  body::before{background-attachment:scroll}
+}

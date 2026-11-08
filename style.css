@@ -879,3 +879,39 @@ html[data-vertex-theme="light"] .entry-reminder{
   .entry-reminder-actions .button{flex:1 1 auto}
 }
 @media(prefers-reduced-motion:reduce){.entry-reminder{animation:none}}
+
+
+/* V13 — Light Mode text color choice */
+html[data-vertex-theme="light"][data-light-text="black"]{
+  --text:#171717;
+  --muted:#555b55;
+  --muted-2:#707770;
+}
+html[data-vertex-theme="light"][data-light-text="rose"]{
+  --text:#842b3c;
+  --muted:#92505b;
+  --muted-2:#a36d75;
+}
+html[data-vertex-theme="light"][data-light-text="rose"] body,
+html[data-vertex-theme="light"][data-light-text="rose"] .main-content,
+html[data-vertex-theme="light"][data-light-text="rose"] .main-content h1,
+html[data-vertex-theme="light"][data-light-text="rose"] .main-content h2,
+html[data-vertex-theme="light"][data-light-text="rose"] .main-content h3,
+html[data-vertex-theme="light"][data-light-text="rose"] .main-content h4,
+html[data-vertex-theme="light"][data-light-text="rose"] .main-content strong,
+html[data-vertex-theme="light"][data-light-text="rose"] .main-content label,
+html[data-vertex-theme="light"][data-light-text="rose"] .main-content .stat-value,
+html[data-vertex-theme="light"][data-light-text="rose"] .main-content .panel-heading,
+html[data-vertex-theme="light"][data-light-text="rose"] .main-content .page-heading{
+  color:var(--text);
+}
+html[data-vertex-theme="light"][data-light-text="rose"] .nav-item,
+html[data-vertex-theme="light"][data-light-text="rose"] .breadcrumb,
+html[data-vertex-theme="light"][data-light-text="rose"] .today-chip{
+  color:#92505b;
+}
+html[data-vertex-theme="light"][data-light-text="rose"] .nav-item.active{
+  color:#842b3c;
+  background:rgba(132,43,60,.09);
+}
+#vertexLightTextRow[hidden]{display:none!important}

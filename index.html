@@ -180,6 +180,7 @@
             <div class="settings-section-head"><div class="settings-icon">✦</div><div><h2>Ko‘rinish va effektlar</h2><p>Vertex interfeysini o‘zingizga moslang.</p></div></div>
             <div class="setting-action"><div><strong>Rang mavzusi</strong><p>Dark, Light yoki AMOLED ko‘rinishini tanlang.</p></div><select id="vertexThemeSelect" aria-label="Rang mavzusi"><option value="dark">Dark</option><option value="light">Light</option><option value="amoled">AMOLED</option></select></div>
             <div class="setting-action"><div><strong>Accent color</strong><p>Tugmalar, belgilar va faol elementlarning asosiy rangini tanlang.</p></div><select id="vertexAccentSelect" aria-label="Accent color"><option value="lime">Lime</option><option value="blue">Ocean Blue</option><option value="violet">Violet</option><option value="rose">Rose</option><option value="amber">Amber</option><option value="cyan">Cyan</option></select></div>
+            <div class="setting-action" id="vertexLightTextRow" hidden><div><strong>Light Mode yozuv rangi</strong><p>Yorug‘ mavzuda matn rangini tanlang.</p></div><select id="vertexLightTextSelect" aria-label="Light Mode yozuv rangi"><option value="black">Qora</option><option value="rose">To‘q qizg‘ish</option></select></div>
             <div class="setting-action"><div><strong>Click Sound</strong><p>Tugma bosilganda qisqa, mayin signal.</p></div><label class="vertex-switch"><input type="checkbox" id="vertexClickSound" checked><span></span></label></div>
             <div class="setting-action"><div><strong>Success Sound</strong><p>Odat yoki vazifa bajarilganda eshitiladi.</p></div><label class="vertex-switch"><input type="checkbox" id="vertexSuccessSound" checked><span></span></label></div>
             <div class="setting-action"><div><strong>Achievement Sound</strong><p>Yutuq va muhim marralarda alohida signal.</p></div><label class="vertex-switch"><input type="checkbox" id="vertexAchievementSound" checked><span></span></label></div>
@@ -255,15 +256,16 @@
 <script>
 (function(){
  const root=document.documentElement,key='vertex-ui-preferences';
- let prefs={theme:'dark',accent:'lime',clickSound:true,successSound:true,achievementSound:true,clickVolume:14,ripple:true,reducedMotion:false};
+ let prefs={theme:'dark',accent:'lime',lightText:'black',clickSound:true,successSound:true,achievementSound:true,clickVolume:14,ripple:true,reducedMotion:false};
  try{prefs={...prefs,...JSON.parse(localStorage.getItem(key)||'{}')}}catch(e){}
  function apply(){
   root.dataset.vertexTheme=['dark','light','amoled'].includes(prefs.theme)?prefs.theme:'dark';
   root.dataset.vertexAccent=['lime','blue','violet','rose','amber','cyan'].includes(prefs.accent)?prefs.accent:'lime';
-  const t=document.getElementById('vertexThemeSelect'),a=document.getElementById('vertexAccentSelect'),s=document.getElementById('vertexClickSound'),
+  root.dataset.lightText=['black','rose'].includes(prefs.lightText)?prefs.lightText:'black';
+  const t=document.getElementById('vertexThemeSelect'),a=document.getElementById('vertexAccentSelect'),lt=document.getElementById('vertexLightTextSelect'),lr=document.getElementById('vertexLightTextRow'),s=document.getElementById('vertexClickSound'),
    v=document.getElementById('vertexClickVolume'),o=document.getElementById('vertexClickVolumeValue'),
    r=document.getElementById('vertexRippleToggle'),ss=document.getElementById('vertexSuccessSound'),as=document.getElementById('vertexAchievementSound'),rm=document.getElementById('vertexReducedMotion');
-  if(t)t.value=prefs.theme;if(a)a.value=prefs.accent||'lime';if(s)s.checked=!!prefs.clickSound;if(v)v.value=prefs.clickVolume;
+  if(t)t.value=prefs.theme;if(a)a.value=prefs.accent||'lime';if(lt)lt.value=prefs.lightText||'black';if(lr)lr.hidden=prefs.theme!=='light';if(s)s.checked=!!prefs.clickSound;if(v)v.value=prefs.clickVolume;
   if(o)o.textContent=prefs.clickVolume+'%';if(r)r.checked=!!prefs.ripple;if(ss)ss.checked=prefs.successSound!==false;if(as)as.checked=prefs.achievementSound!==false;if(rm)rm.checked=!!prefs.reducedMotion;root.classList.toggle('vertex-reduced-motion',!!prefs.reducedMotion);
  }
  function save(){try{localStorage.setItem(key,JSON.stringify(prefs))}catch(e){}}
@@ -272,6 +274,7 @@
   const t=e.target;
   if(t.id==='vertexThemeSelect')prefs.theme=t.value;
   else if(t.id==='vertexAccentSelect')prefs.accent=t.value;
+  else if(t.id==='vertexLightTextSelect')prefs.lightText=t.value;
   else if(t.id==='vertexClickSound')prefs.clickSound=t.checked;
   else if(t.id==='vertexSuccessSound')prefs.successSound=t.checked;
   else if(t.id==='vertexAchievementSound')prefs.achievementSound=t.checked;

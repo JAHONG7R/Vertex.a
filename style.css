@@ -679,3 +679,144 @@ html[data-vertex-theme="amoled"] body::before{
 @media(prefers-reduced-motion:reduce){
   body::before{background-attachment:scroll}
 }
+
+
+/* V10 — cinematic Amir Temur backdrop + premium glassmorphism */
+body::before{
+  background:
+    linear-gradient(90deg,
+      rgba(8,10,12,.88) 0%,
+      rgba(8,10,12,.72) 34%,
+      rgba(8,10,12,.38) 62%,
+      rgba(8,10,12,.12) 100%),
+    linear-gradient(0deg,rgba(5,7,9,.48),transparent 34%,rgba(5,7,9,.12)),
+    url("amir-temur-background.png") right center / auto 112vh no-repeat;
+  opacity:1;
+}
+@media(max-width:850px){
+  body::before{
+    background:
+      linear-gradient(90deg,rgba(7,9,12,.72) 0%,rgba(7,9,12,.46) 48%,rgba(7,9,12,.20) 100%),
+      linear-gradient(0deg,rgba(5,7,9,.55),transparent 45%),
+      url("amir-temur-background.png") 72% center / auto 96vh no-repeat;
+    opacity:.88;
+  }
+}
+
+/* Glass panels inspired by the supplied translucent-glass references */
+.stat-card,
+.panel,
+.task-panel,
+.smart-card,
+.prediction-card,
+.personal-coach-card,
+.coach-plan-card,
+.achievement-card,
+.long-term-select,
+.quote-banner{
+  background:linear-gradient(135deg,
+    rgba(255,255,255,.105) 0%,
+    rgba(255,255,255,.045) 42%,
+    rgba(255,255,255,.025) 100%) !important;
+  border:1px solid rgba(255,255,255,.19) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    inset 0 -1px 0 rgba(255,255,255,.035),
+    0 18px 48px rgba(0,0,0,.24),
+    0 0 24px rgba(120,170,255,.035) !important;
+  -webkit-backdrop-filter:blur(22px) saturate(145%);
+  backdrop-filter:blur(22px) saturate(145%);
+}
+.stat-card,
+.panel,
+.task-panel,
+.smart-card,
+.prediction-card,
+.personal-coach-card,
+.coach-plan-card,
+.achievement-card,
+.quote-banner{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+}
+.stat-card::before,
+.panel::before,
+.task-panel::before,
+.smart-card::before,
+.prediction-card::before,
+.personal-coach-card::before,
+.coach-plan-card::before,
+.achievement-card::before,
+.quote-banner::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  border-radius:inherit;
+  background:
+    radial-gradient(ellipse at 8% 0%,rgba(255,255,255,.14),transparent 42%),
+    linear-gradient(115deg,rgba(255,255,255,.055),transparent 36%,transparent 72%,rgba(135,180,255,.045));
+}
+.stat-card:hover,
+.panel:hover,
+.achievement-card:hover{
+  border-color:rgba(255,255,255,.27) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.2),
+    0 22px 55px rgba(0,0,0,.3),
+    0 0 28px rgba(150,190,255,.07) !important;
+}
+.sidebar{
+  background:rgba(10,13,12,.78) !important;
+  border-right-color:rgba(255,255,255,.13) !important;
+  -webkit-backdrop-filter:blur(24px) saturate(140%);
+  backdrop-filter:blur(24px) saturate(140%);
+}
+.topbar{
+  background:rgba(10,13,12,.30);
+  border-bottom:1px solid rgba(255,255,255,.09);
+  -webkit-backdrop-filter:blur(16px);
+  backdrop-filter:blur(16px);
+}
+
+/* Keep text and controls legible over the stronger artwork */
+.stat-card,.panel,.task-panel,.smart-card,.prediction-card,
+.personal-coach-card,.coach-plan-card,.achievement-card{color:var(--text)}
+.stat-card > *, .panel > *, .task-panel > *, .smart-card > *,
+.prediction-card > *, .personal-coach-card > *,
+.coach-plan-card > *, .achievement-card > *{position:relative;z-index:1}
+
+/* Light theme uses a pale frosted-glass treatment */
+html[data-vertex-theme="light"] body::before{
+  background:
+    linear-gradient(90deg,rgba(244,246,241,.88) 0%,rgba(244,246,241,.66) 45%,rgba(244,246,241,.30) 100%),
+    url("amir-temur-background.png") right center / auto 112vh no-repeat;
+  opacity:.52;
+}
+html[data-vertex-theme="light"] .stat-card,
+html[data-vertex-theme="light"] .panel,
+html[data-vertex-theme="light"] .task-panel,
+html[data-vertex-theme="light"] .smart-card,
+html[data-vertex-theme="light"] .prediction-card,
+html[data-vertex-theme="light"] .personal-coach-card,
+html[data-vertex-theme="light"] .coach-plan-card,
+html[data-vertex-theme="light"] .achievement-card,
+html[data-vertex-theme="light"] .long-term-select,
+html[data-vertex-theme="light"] .quote-banner{
+  background:linear-gradient(135deg,rgba(255,255,255,.72),rgba(255,255,255,.42)) !important;
+  border-color:rgba(255,255,255,.78) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 16px 42px rgba(35,45,30,.12) !important;
+}
+
+/* AMOLED keeps deep blacks with the same glass edge treatment */
+html[data-vertex-theme="amoled"] body::before{
+  background:
+    linear-gradient(90deg,rgba(0,0,0,.91) 0%,rgba(0,0,0,.72) 42%,rgba(0,0,0,.24) 100%),
+    url("amir-temur-background.png") right center / auto 112vh no-repeat;
+  opacity:.92;
+}
+@media(prefers-reduced-motion:reduce){
+  .stat-card,.panel,.achievement-card{transition:none!important}
+}

@@ -179,9 +179,12 @@
             <div class="settings-section-head"><div class="settings-icon">✦</div><div><h2>Ko‘rinish va effektlar</h2><p>Vertex interfeysini o‘zingizga moslang.</p></div></div>
             <div class="setting-action"><div><strong>Rang mavzusi</strong><p>Dark, Light yoki AMOLED ko‘rinishini tanlang.</p></div><select id="vertexThemeSelect" aria-label="Rang mavzusi"><option value="dark">Dark</option><option value="light">Light</option><option value="amoled">AMOLED</option></select></div>
             <div class="setting-action"><div><strong>Accent color</strong><p>Tugmalar, belgilar va faol elementlarning asosiy rangini tanlang.</p></div><select id="vertexAccentSelect" aria-label="Accent color"><option value="lime">Lime</option><option value="blue">Ocean Blue</option><option value="violet">Violet</option><option value="rose">Rose</option><option value="amber">Amber</option><option value="cyan">Cyan</option></select></div>
-            <div class="setting-action"><div><strong>Tugma tovushlari</strong><p>Interfeys bilan ishlaganda yengil audio signal.</p></div><label class="vertex-switch"><input type="checkbox" id="vertexClickSound" checked><span></span></label></div>
-            <div class="setting-action"><div><strong>Tovush balandligi</strong><p>Faqat tugma tovushlariga ta’sir qiladi.</p></div><div class="vertex-volume-control"><input id="vertexClickVolume" type="range" min="0" max="40" value="14"><output id="vertexClickVolumeValue">14%</output></div></div>
-            <div class="setting-action"><div><strong>Ripple va touch glow</strong><p>Bosilgan joyda mayin to‘lqin effekti.</p></div><label class="vertex-switch"><input type="checkbox" id="vertexRippleToggle" checked><span></span></label></div>
+            <div class="setting-action"><div><strong>Click Sound</strong><p>Tugma bosilganda qisqa, mayin signal.</p></div><label class="vertex-switch"><input type="checkbox" id="vertexClickSound" checked><span></span></label></div>
+            <div class="setting-action"><div><strong>Success Sound</strong><p>Odat yoki vazifa bajarilganda eshitiladi.</p></div><label class="vertex-switch"><input type="checkbox" id="vertexSuccessSound" checked><span></span></label></div>
+            <div class="setting-action"><div><strong>Achievement Sound</strong><p>Yutuq va muhim marralarda alohida signal.</p></div><label class="vertex-switch"><input type="checkbox" id="vertexAchievementSound" checked><span></span></label></div>
+            <div class="setting-action"><div><strong>Volume Control</strong><p>Interfeys va muvaffaqiyat tovushlari balandligi.</p></div><div class="vertex-volume-control"><input id="vertexClickVolume" type="range" min="0" max="40" value="14"><output id="vertexClickVolumeValue">14%</output></div></div>
+            <div class="setting-action"><div><strong>Ripple Animation & Touch Glow</strong><p>Bosilgan nuqtada suv halqasi va yorug‘lik effekti.</p></div><label class="vertex-switch"><input type="checkbox" id="vertexRippleToggle" checked><span></span></label></div>
+            <div class="setting-action"><div><strong>Reduced Motion</strong><p>Harakat animatsiyalarini kamaytirish (tizim sozlamasiga mos).</p></div><label class="vertex-switch"><input type="checkbox" id="vertexReducedMotion"><span></span></label></div>
           </section>
           <section class="panel settings-panel">
             <div class="settings-section-head"><div class="settings-icon">◎</div><div><h2>Profil</h2><p>Ilovada ko‘rinadigan ismingiz.</p></div></div>
@@ -251,16 +254,16 @@
 <script>
 (function(){
  const root=document.documentElement,key='vertex-ui-preferences';
- let prefs={theme:'dark',accent:'lime',clickSound:true,clickVolume:14,ripple:true};
+ let prefs={theme:'dark',accent:'lime',clickSound:true,successSound:true,achievementSound:true,clickVolume:14,ripple:true,reducedMotion:false};
  try{prefs={...prefs,...JSON.parse(localStorage.getItem(key)||'{}')}}catch(e){}
  function apply(){
   root.dataset.vertexTheme=['dark','light','amoled'].includes(prefs.theme)?prefs.theme:'dark';
   root.dataset.vertexAccent=['lime','blue','violet','rose','amber','cyan'].includes(prefs.accent)?prefs.accent:'lime';
   const t=document.getElementById('vertexThemeSelect'),a=document.getElementById('vertexAccentSelect'),s=document.getElementById('vertexClickSound'),
    v=document.getElementById('vertexClickVolume'),o=document.getElementById('vertexClickVolumeValue'),
-   r=document.getElementById('vertexRippleToggle');
+   r=document.getElementById('vertexRippleToggle'),ss=document.getElementById('vertexSuccessSound'),as=document.getElementById('vertexAchievementSound'),rm=document.getElementById('vertexReducedMotion');
   if(t)t.value=prefs.theme;if(a)a.value=prefs.accent||'lime';if(s)s.checked=!!prefs.clickSound;if(v)v.value=prefs.clickVolume;
-  if(o)o.textContent=prefs.clickVolume+'%';if(r)r.checked=!!prefs.ripple;
+  if(o)o.textContent=prefs.clickVolume+'%';if(r)r.checked=!!prefs.ripple;if(ss)ss.checked=prefs.successSound!==false;if(as)as.checked=prefs.achievementSound!==false;if(rm)rm.checked=!!prefs.reducedMotion;root.classList.toggle('vertex-reduced-motion',!!prefs.reducedMotion);
  }
  function save(){try{localStorage.setItem(key,JSON.stringify(prefs))}catch(e){}}
  apply();
@@ -269,6 +272,9 @@
   if(t.id==='vertexThemeSelect')prefs.theme=t.value;
   else if(t.id==='vertexAccentSelect')prefs.accent=t.value;
   else if(t.id==='vertexClickSound')prefs.clickSound=t.checked;
+  else if(t.id==='vertexSuccessSound')prefs.successSound=t.checked;
+  else if(t.id==='vertexAchievementSound')prefs.achievementSound=t.checked;
+  else if(t.id==='vertexReducedMotion')prefs.reducedMotion=t.checked;
   else if(t.id==='vertexClickVolume')prefs.clickVolume=Number(t.value);
   else if(t.id==='vertexRippleToggle')prefs.ripple=t.checked;else return;
   save();apply();
@@ -277,12 +283,14 @@
   prefs.clickVolume=Number(e.target.value);const o=document.getElementById('vertexClickVolumeValue');
   if(o)o.textContent=prefs.clickVolume+'%';save();
  }});
- const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const systemReduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const reduced=()=>systemReduced||!!prefs.reducedMotion;
+ window.VertexUIPrefs={get:()=>({...prefs}),playSuccess:()=>prefs.successSound,playAchievement:()=>prefs.achievementSound,getVolume:()=>Math.max(0,Math.min(1,prefs.clickVolume/40))};
  let ctx;
  document.addEventListener('pointerdown',e=>{
   const target=e.target.closest('button,.button,.nav-item,.sound-layer,[role="button"]');
   if(!target||target.disabled)return;
-  if(prefs.ripple&&!reduced){
+  if(prefs.ripple&&!reduced()){
    const ripple=document.createElement('span');
    ripple.className='vertex-water-ripple';
    ripple.setAttribute('aria-hidden','true');
@@ -290,9 +298,10 @@
    ripple.style.top=e.clientY+'px';
    ripple.innerHTML='<i></i><i></i><i></i><b></b>';
    document.body.appendChild(ripple);
+   const glow=document.createElement('span');glow.className='vertex-touch-glow';glow.setAttribute('aria-hidden','true');glow.style.left=e.clientX+'px';glow.style.top=e.clientY+'px';document.body.appendChild(glow);window.setTimeout(()=>glow.remove(),720);
    window.setTimeout(()=>ripple.remove(),1150);
   }
-  if(prefs.clickSound)try{
+  if(prefs.clickSound&&!reduced())try{
    const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
    ctx=ctx||new AC();if(ctx.state==='suspended')ctx.resume();
    const osc=ctx.createOscillator(),gain=ctx.createGain(),now=ctx.currentTime;

@@ -562,3 +562,32 @@ html[data-vertex-accent="cyan"]{--lime:#63e4e8;--lime-dark:#299da5}
 @media(prefers-reduced-motion:reduce){
  .vertex-celebration .vertex-confetti-piece{animation-duration:6s!important}
 }
+
+/* V7 — Premium interaction polish */
+:root{--vertex-ease:cubic-bezier(.2,.75,.25,1)}
+button,.button,.nav-item,.stat-card,.panel,.sound-layer{transition-duration:.22s;transition-timing-function:var(--vertex-ease)}
+button:active,.button:active,.nav-item:active,.sound-layer:active{transform:scale(.975);filter:brightness(1.08)}
+.nav-item{position:relative;overflow:hidden}
+.nav-item.active{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--lime) 20%,transparent),0 5px 18px color-mix(in srgb,var(--lime) 8%,transparent)}
+.nav-item.active:before{content:"";position:absolute;left:0;top:22%;bottom:22%;width:3px;border-radius:0 4px 4px 0;background:var(--lime);box-shadow:0 0 12px var(--lime)}
+.nav-item[aria-current="page"] .nav-icon{filter:drop-shadow(0 0 5px color-mix(in srgb,var(--lime) 55%,transparent))}
+/* Gentle glass finish: retain readable solid surfaces on browsers without backdrop-filter. */
+.panel,.stat-card,.vertex-sound-dock,.toast,.modal{box-shadow:var(--shadow)}
+@supports ((backdrop-filter:blur(8px)) or (-webkit-backdrop-filter:blur(8px))){
+ .panel,.stat-card{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+ .vertex-sound-dock{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+}
+.stat-card{position:relative;overflow:hidden;transition:transform .28s var(--vertex-ease),border-color .28s,box-shadow .28s}
+.stat-card:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--lime) 32%,var(--line));box-shadow:0 12px 30px #0002}
+.stat-value>strong{animation:vertex-stat-enter .48s var(--vertex-ease) both}
+@keyframes vertex-stat-enter{from{opacity:.35;transform:translateY(7px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+.vertex-touch-glow{position:fixed;z-index:999998;width:24px;height:24px;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);background:radial-gradient(circle,color-mix(in srgb,var(--lime) 32%,transparent),transparent 72%);animation:vertex-touch-glow .68s ease-out forwards}
+@keyframes vertex-touch-glow{0%{opacity:.9;transform:translate(-50%,-50%) scale(.35)}100%{opacity:0;transform:translate(-50%,-50%) scale(7)}}
+.vertex-water-ripple i{border-color:color-mix(in srgb,var(--lime) 78%,white)}
+html.vertex-reduced-motion *,html.vertex-reduced-motion *:before,html.vertex-reduced-motion *:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.vertex-touch-glow,.vertex-water-ripple{display:none!important}}
+.vertex-stat-updated .stat-value>strong{animation:vertex-stat-refresh .52s var(--vertex-ease) both}
+@keyframes vertex-stat-refresh{0%{opacity:.55;transform:translateY(5px) scale(.985);filter:blur(1px)}65%{opacity:1;transform:translateY(-1px) scale(1.015);filter:blur(0)}100%{transform:translateY(0) scale(1)}}
+@supports (background:color-mix(in srgb,black 90%,transparent)){
+ .panel,.stat-card{background:color-mix(in srgb,var(--surface) 91%,transparent)}
+}

@@ -520,10 +520,12 @@ function toggleCheck(habitId, date) {
 /* ==============================
    COMPLETION CELEBRATION
 ============================== */
-function playCelebrationAudio(volume = 0.58) {
+function playCelebrationAudio(volume = 0.58, kind = 'success') {
+  const uiPrefs = window.VertexUIPrefs;
+  if (uiPrefs && (kind === 'achievement' ? !uiPrefs.playAchievement() : !uiPrefs.playSuccess())) return;
   try {
     const sound = new Audio('./celebration.wav');
-    sound.volume = volume;
+    sound.volume = Math.min(1, volume * (uiPrefs ? uiPrefs.getVolume() : 0.35));
     sound.preload = 'auto';
     const playback = sound.play();
     if (playback && typeof playback.catch === 'function') {
@@ -539,6 +541,7 @@ function playCompletionSound() {
 }
 
 function showConfetti(options = {}) {
+  if (document.documentElement.classList.contains('vertex-reduced-motion') || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
   const previous = document.querySelector('.vertex-celebration');
   if (previous) previous.remove();
 
@@ -585,7 +588,7 @@ function showConfetti(options = {}) {
 }
 
 function playMilestoneSound() {
-  playCelebrationAudio(0.68);
+  playCelebrationAudio(0.68, 'achievement');
 }
 
 function celebrateCompletion(message = 'Ajoyib! Vazifa bajarildi!') {
@@ -677,7 +680,9 @@ function goTo(page) {
     element.classList.toggle('active', element.id === `page-${page}`);
   });
   $$('.nav-item[data-page]').forEach(button => {
-    button.classList.toggle('active', button.dataset.page === page);
+    const isActive = button.dataset.page === page;
+    button.classList.toggle('active', isActive);
+    if (isActive) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current');
   });
   const names = {
     dashboard: 'UMUMIY KO‘RINISH',
@@ -836,6 +841,14 @@ function renderStats() {
   const adherence = rateForDays(30);
   $('#adherenceValue').textContent = adherence + '%';
   $('#adherenceProgress').style.width = adherence + '%';
+  ['todayPercent','currentStreak','xpValue','adherenceValue'].forEach(id => {
+    const value = $('#' + id);
+    const card = value?.closest('.stat-card');
+    if (!card) return;
+    card.classList.remove('vertex-stat-updated');
+    void card.offsetWidth;
+    card.classList.add('vertex-stat-updated');
+  });
 }
 
 function renderWeekStrip() {
@@ -1861,6 +1874,11 @@ function renderAchievements() {
     { icon: '👑', name: 'Tajriba yig‘uvchi', desc: '500 XP to‘plang.', value: xp, goal: 500, unit: 'XP' }
   ];
   const unlocked = badges.filter(b => b.value >= b.goal).length;
+  try {
+    const previousUnlocked = Number(localStorage.getItem('vertex_unlocked_badges_v1'));
+    if (Number.isFinite(previousUnlocked) && unlocked > previousUnlocked) playMilestoneSound();
+    localStorage.setItem('vertex_unlocked_badges_v1', String(unlocked));
+  } catch (_) {}
   setText('achievementUnlocked', `${unlocked} / ${badges.length}`);
   const overall = $('#achievementOverall'); if (overall) overall.style.width = `${unlocked / badges.length * 100}%`;
   const grid = $('#achievementGrid');

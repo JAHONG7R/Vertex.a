@@ -820,3 +820,62 @@ html[data-vertex-theme="amoled"] body::before{
 @media(prefers-reduced-motion:reduce){
   .stat-card,.panel,.achievement-card{transition:none!important}
 }
+
+
+/* V12 — actionable missed-habit / pending-task entry reminder */
+.entry-reminder{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin:0 0 22px;
+  padding:18px 54px 18px 18px;
+  border:1px solid rgba(212,243,74,.34);
+  border-radius:20px;
+  background:
+    radial-gradient(ellipse at 0% 0%,rgba(212,243,74,.13),transparent 48%),
+    linear-gradient(125deg,rgba(255,255,255,.105),rgba(255,255,255,.035));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 14px 38px rgba(0,0,0,.22);
+  -webkit-backdrop-filter:blur(22px) saturate(145%);
+  backdrop-filter:blur(22px) saturate(145%);
+  animation:vertex-reminder-in .42s cubic-bezier(.2,.8,.2,1) both;
+}
+.entry-reminder-icon{
+  flex:0 0 44px;
+  width:44px;height:44px;
+  display:grid;place-items:center;
+  border-radius:14px;
+  color:var(--accent,#d4f34a);
+  background:rgba(212,243,74,.12);
+  border:1px solid rgba(212,243,74,.24);
+  font-size:25px;
+}
+.entry-reminder-copy{min-width:0;flex:1}
+.entry-reminder-kicker{font-size:10px;letter-spacing:.16em;font-weight:800;color:var(--accent,#d4f34a);margin-bottom:5px}
+.entry-reminder-copy h2{font-size:16px;line-height:1.3;margin:0 0 6px;color:var(--text)}
+.entry-reminder-details{display:grid;gap:4px;color:var(--muted);font-size:12px;line-height:1.5}
+.entry-reminder-details b{color:var(--text);font-weight:700}
+.entry-reminder-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.entry-reminder-actions .button{min-height:38px;padding:8px 13px;font-size:12px;white-space:nowrap}
+.entry-reminder-close{
+  position:absolute;right:12px;top:10px;width:30px;height:30px;
+  display:grid;place-items:center;border:0;border-radius:10px;
+  background:rgba(255,255,255,.07);color:var(--muted);font-size:21px;cursor:pointer
+}
+.entry-reminder-close:hover{background:rgba(255,255,255,.14);color:var(--text)}
+html[data-vertex-theme="light"] .entry-reminder{
+  background:linear-gradient(125deg,rgba(255,255,255,.82),rgba(255,255,255,.56));
+  border-color:rgba(120,145,70,.3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 14px 38px rgba(35,45,30,.10)
+}
+@keyframes vertex-reminder-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:700px){
+  .entry-reminder{align-items:flex-start;gap:11px;padding:15px 42px 15px 13px;flex-wrap:wrap}
+  .entry-reminder-icon{width:38px;height:38px;flex-basis:38px;font-size:22px}
+  .entry-reminder-copy{flex:1 1 calc(100% - 52px)}
+  .entry-reminder-copy h2{font-size:14px}
+  .entry-reminder-details{font-size:11px}
+  .entry-reminder-actions{width:100%;padding-left:49px}
+  .entry-reminder-actions .button{flex:1 1 auto}
+}
+@media(prefers-reduced-motion:reduce){.entry-reminder{animation:none}}

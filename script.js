@@ -1184,7 +1184,88 @@ function renderProgressPrediction() {
 function renderCoachPlan(){const list=$('#coachPlanList'),summary=$('#coachPlanSummary');if(!list||!summary)return;const ranked=activeHabits().map(h=>({habit:h,pct:Math.round(getHabitLogs(h.id,shiftDate(today(),-6),today()).length/7*100)})).sort((a,b)=>a.pct-b.pct);if(!ranked.length){summary.textContent='Avval odat qo‘shing — shunda Vertex reja tuzadi.';list.innerHTML='<p>Hozircha reja tuzish uchun odatlar yo‘q.</p>';}else{const focus=ranked[0].habit;summary.textContent=`Reja eng ko‘p e’tibor talab qilayotgan “${focus.title}” odatiga asoslangan.`;const steps=['Qulay vaqtni tanlang.','Odatning kichik variantini bajaring.','Bajarilgach, Vertex’da belgilang.','Nima xalaqit berganini aniqlang.','Odatni kundalik ishga bog‘lang.','Natijani tekshirib, vaqtini moslang.','Haftani yakunlab, yangi maqsad belgilang.'];list.innerHTML=steps.map((s,i)=>`<div class="coach-plan-row"><b>${['Du','Se','Ch','Pa','Ju','Sh','Ya'][i]}</b><span>${s}</span><small>${escapeHTML(focus.title)}</small></div>`).join('');}const t=localStorage.getItem('vertex_coach_reminder_time')||'19:00';const input=$('#coachReminderTime');if(input)input.value=t;updateCoachReminderStatus();}
 function updateCoachReminderStatus(){const n=$('#coachReminderStatus');if(n)n.textContent=`Eslatma ${localStorage.getItem('vertex_coach_reminder_time')||'19:00'} ga saqlangan. Vertex ochiq bo‘lganda ko‘rinadi.`;}
 
+
+/* ==============================
+   KUNLIK E'TIBOR ESLATMASI
+============================== */
+const ENTRY_REMINDER_KEY = 'vertex_entry_reminder_dismissed_v1';
+
+function renderEntryReminder() {
+  const dashboard = $('#page-dashboard');
+  if (!dashboard) return;
+
+  let panel = $('#entryReminder');
+  const dismissed = (() => {
+    try { return sessionStorage.getItem(ENTRY_REMINDER_KEY) === today(); }
+    catch (_) { return false; }
+  })();
+
+  const missedHabits = activeHabits().filter(habit => !isChecked(habit.id, today()));
+  const overdueTasks = state.tasks.filter(task => !task.done && task.date < today());
+  const todayTasks = state.tasks.filter(task => !task.done && task.date === today());
+  const pendingTasks = [...overdueTasks, ...todayTasks];
+
+  if (dismissed || (!missedHabits.length && !pendingTasks.length)) {
+    panel?.remove();
+    return;
+  }
+
+  const habitNames = missedHabits.slice(0, 3).map(h => escapeHTML(h.title));
+  const taskNames = pendingTasks.slice(0, 3).map(t => escapeHTML(t.title));
+  const moreHabits = missedHabits.length > 3 ? ` va yana ${missedHabits.length - 3} ta` : '';
+  const moreTasks = pendingTasks.length > 3 ? ` va yana ${pendingTasks.length - 3} ta` : '';
+
+  const detailParts = [];
+  if (missedHabits.length) {
+    detailParts.push(`<span><b>${missedHabits.length} ta odat</b> bajarilmagan: ${habitNames.join(', ')}${moreHabits}</span>`);
+  }
+  if (pendingTasks.length) {
+    detailParts.push(`<span><b>${pendingTasks.length} ta vazifa</b> kutilmoqda: ${taskNames.join(', ')}${moreTasks}</span>`);
+  }
+
+  if (!panel) {
+    panel = document.createElement('section');
+    panel.id = 'entryReminder';
+    panel.className = 'entry-reminder';
+    panel.setAttribute('role', 'status');
+    panel.setAttribute('aria-live', 'polite');
+    const quote = dashboard.querySelector('.quote-banner');
+    if (quote) quote.insertAdjacentElement('afterend', panel);
+    else dashboard.prepend(panel);
+  }
+
+  panel.innerHTML = `
+    <div class="entry-reminder-icon" aria-hidden="true">◷</div>
+    <div class="entry-reminder-copy">
+      <div class="entry-reminder-kicker">VERTEX · ESLATMA</div>
+      <h2>${overdueTasks.length ? 'Tugallanmagan ishlaringiz bor' : 'Bugungi rejangiz sizni kutmoqda'}</h2>
+      <div class="entry-reminder-details">${detailParts.join('')}</div>
+    </div>
+    <div class="entry-reminder-actions">
+      ${missedHabits.length ? '<button type="button" class="button secondary" data-entry-reminder-goto="habits">Odatlarni ko‘rish</button>' : ''}
+      ${pendingTasks.length ? '<button type="button" class="button primary" data-entry-reminder-goto="planner">Vazifalarga o‘tish</button>' : ''}
+    </div>
+    <button type="button" class="entry-reminder-close" data-entry-reminder-dismiss aria-label="Eslatmani yopish">×</button>
+  `;
+}
+
+function bindEntryReminderEvents() {
+  if (document.documentElement.dataset.entryReminderBound === '1') return;
+  document.documentElement.dataset.entryReminderBound = '1';
+  document.addEventListener('click', event => {
+    const dismiss = event.target.closest('[data-entry-reminder-dismiss]');
+    if (dismiss) {
+      try { sessionStorage.setItem(ENTRY_REMINDER_KEY, today()); } catch (_) {}
+      $('#entryReminder')?.remove();
+      return;
+    }
+    const goto = event.target.closest('[data-entry-reminder-goto]');
+    if (goto) goTo(goto.dataset.entryReminderGoto);
+  });
+}
+
 function renderDashboard() {
+  renderEntryReminder();
   renderStats();
   renderSmartDashboard();
   renderSmartDailyAnalysis();
@@ -2342,6 +2423,7 @@ function init() {
   restoreTimer();
   plannerDate = today();
   bindEvents();
+  bindEntryReminderEvents();
   updatePushPermissionStatus();
   document.getElementById('enablePushBtn')?.addEventListener('click', enableVertexPush);
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('./service-worker.js').catch(error => console.warn('SW registration:', error));

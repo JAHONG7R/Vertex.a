@@ -520,169 +520,72 @@ function toggleCheck(habitId, date) {
 /* ==============================
    COMPLETION CELEBRATION
 ============================== */
-function playCompletionSound() {
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContextClass) return;
-
+function playCelebrationAudio(volume = 0.58) {
   try {
-    const audio = new AudioContextClass();
-    const startAt = audio.currentTime + 0.03;
-    const master = audio.createGain();
-    master.gain.setValueAtTime(0.72, startAt);
-    master.connect(audio.destination);
-
-    // Jarangdor, mayin qo‘ng‘iroq ohangi: ko‘tariluvchi to‘rt nota va yengil aks-sado.
-    const notes = [
-      { frequency: 659.25, offset: 0.00, duration: 0.72 },
-      { frequency: 783.99, offset: 0.17, duration: 0.78 },
-      { frequency: 987.77, offset: 0.34, duration: 0.86 },
-      { frequency: 1318.51, offset: 0.53, duration: 1.08 }
-    ];
-
-    notes.forEach(({ frequency, offset, duration }, index) => {
-      const noteStart = startAt + offset;
-
-      // Asosiy tovush — yumshoq, ammo aniq eshitiladigan qo‘ng‘iroq tembri.
-      const fundamental = audio.createOscillator();
-      const body = audio.createGain();
-      fundamental.type = 'sine';
-      fundamental.frequency.setValueAtTime(frequency, noteStart);
-      body.gain.setValueAtTime(0.0001, noteStart);
-      body.gain.exponentialRampToValueAtTime(index === 3 ? 0.105 : 0.085, noteStart + 0.025);
-      body.gain.exponentialRampToValueAtTime(0.0001, noteStart + duration);
-      fundamental.connect(body);
-      body.connect(master);
-      fundamental.start(noteStart);
-      fundamental.stop(noteStart + duration + 0.02);
-
-      // Yuqori garmonik tovushga kristalldek jarang beradi.
-      const shimmer = audio.createOscillator();
-      const shimmerGain = audio.createGain();
-      shimmer.type = 'sine';
-      shimmer.frequency.setValueAtTime(frequency * 2.01, noteStart);
-      shimmerGain.gain.setValueAtTime(0.0001, noteStart);
-      shimmerGain.gain.exponentialRampToValueAtTime(0.018, noteStart + 0.018);
-      shimmerGain.gain.exponentialRampToValueAtTime(0.0001, noteStart + duration * 0.72);
-      shimmer.connect(shimmerGain);
-      shimmerGain.connect(master);
-      shimmer.start(noteStart);
-      shimmer.stop(noteStart + duration * 0.72 + 0.02);
-    });
-
-    // Yakuniy mayin aks-sado — ovozni keskin tugab qolishidan saqlaydi.
-    const echo = audio.createOscillator();
-    const echoGain = audio.createGain();
-    echo.type = 'sine';
-    echo.frequency.setValueAtTime(1318.51, startAt + 0.78);
-    echoGain.gain.setValueAtTime(0.0001, startAt + 0.78);
-    echoGain.gain.exponentialRampToValueAtTime(0.022, startAt + 0.83);
-    echoGain.gain.exponentialRampToValueAtTime(0.0001, startAt + 1.65);
-    echo.connect(echoGain);
-    echoGain.connect(master);
-    echo.start(startAt + 0.78);
-    echo.stop(startAt + 1.68);
-
-    window.setTimeout(() => audio.close().catch(() => {}), 2300);
+    const sound = new Audio('./celebration.wav');
+    sound.volume = volume;
+    sound.preload = 'auto';
+    const playback = sound.play();
+    if (playback && typeof playback.catch === 'function') {
+      playback.catch(error => console.warn('Celebration sound could not play:', error));
+    }
   } catch (error) {
     console.warn('Celebration sound could not play:', error);
   }
 }
 
+function playCompletionSound() {
+  playCelebrationAudio(0.58);
+}
+
 function showConfetti(options = {}) {
   const previous = document.querySelector('.vertex-celebration');
   if (previous) previous.remove();
+
   const milestone = Boolean(options.milestone);
   const overlay = document.createElement('div');
   overlay.className = `vertex-celebration${milestone ? ' vertex-celebration-milestone' : ''}`;
   overlay.setAttribute('aria-hidden', 'true');
+
   const fragment = document.createDocumentFragment();
-  // Ko‘proq, ammo mobil qurilmalarda ham yengil ishlashi uchun chegaralangan zarrachalar.
-  const pieces = milestone ? 420 : 240;
+  const palette = [
+    ['#d9a7a7', '#b97980', '#f0d5d0'], // dusty rose
+    ['#9fb7a1', '#6f927d', '#dce8d8'], // sage
+    ['#a8b4d0', '#7486ad', '#e0e5f1'], // muted periwinkle
+    ['#d8c49a', '#b69a68', '#f0e6ce'], // champagne
+    ['#8fb8b2', '#5e918a', '#d8e9e5'], // soft teal
+    ['#d6a98e', '#b77e62', '#f0d8c9']  // muted coral
+  ];
+  const shapes = ['rectangle', 'strip', 'circle', 'triangle', 'diamond'];
+
+  // Kamroq, lekin kattaroq va alohida ko‘rinadigan qog‘oz bo‘laklari.
+  const pieces = milestone ? 190 : 125;
   for (let i = 0; i < pieces; i += 1) {
     const piece = document.createElement('span');
+    const colors = palette[Math.floor(Math.random() * palette.length)];
     piece.className = 'vertex-confetti-piece';
     piece.style.setProperty('--x', `${Math.random() * 100}vw`);
-    piece.style.setProperty('--delay', `${Math.random() * (milestone ? 1.05 : 0.85)}s`);
-    piece.style.setProperty('--duration', `${2.8 + Math.random() * 2.2}s`);
-    piece.style.setProperty('--drift', `${(Math.random() - 0.5) * 360}px`);
-    piece.style.setProperty('--spin', `${Math.round(Math.random() * 1440 - 720)}deg`);
-    piece.style.setProperty('--size', `${7 + Math.random() * (milestone ? 11 : 9)}px`);
-    piece.dataset.shape = ['round', 'strip', 'square', 'diamond', 'star', 'foil'][i % 6];
+    piece.style.setProperty('--delay', `${Math.random() * (milestone ? 0.8 : 0.55)}s`);
+    piece.style.setProperty('--duration', `${7.5 + Math.random() * 4.5}s`);
+    piece.style.setProperty('--drift', `${(Math.random() - 0.5) * 230}px`);
+    piece.style.setProperty('--spin', `${Math.round(Math.random() * 1080 - 540)}deg`);
+    piece.style.setProperty('--size', `${8 + Math.random() * (milestone ? 8 : 6)}px`);
+    piece.style.setProperty('--paper-light', colors[0]);
+    piece.style.setProperty('--paper-dark', colors[1]);
+    piece.style.setProperty('--paper-edge', colors[2]);
+    piece.style.setProperty('--flutter', `${1.5 + Math.random() * 2.5}s`);
+    piece.dataset.shape = shapes[Math.floor(Math.random() * shapes.length)];
     if (milestone) piece.dataset.milestone = 'true';
     fragment.appendChild(piece);
   }
 
-  // Ikki yon tomondan favvora kabi otiladigan qo‘shimcha luxury konfetti.
-  const fountainPiecesPerSide = milestone ? 130 : 80;
-  for (let side = 0; side < 2; side += 1) {
-    for (let i = 0; i < fountainPiecesPerSide; i += 1) {
-      const piece = document.createElement('span');
-      piece.className = 'vertex-confetti-piece vertex-fountain-piece';
-      const outward = side === 0 ? 1 : -1;
-      const burstX = outward * (18 + Math.random() * 48);
-      const burstY = -(28 + Math.random() * (milestone ? 54 : 44));
-      piece.style.setProperty('--origin-x', side === 0 ? `${Math.random() * 5}vw` : `${95 + Math.random() * 5}vw`);
-      piece.style.setProperty('--burst-x', `${burstX}vw`);
-      piece.style.setProperty('--burst-y', `${burstY}vh`);
-      piece.style.setProperty('--fountain-delay', `${Math.random() * (milestone ? 0.7 : 0.45)}s`);
-      piece.style.setProperty('--fountain-duration', `${2.2 + Math.random() * 1.35}s`);
-      piece.style.setProperty('--spin', `${Math.round(Math.random() * 1800 - 900)}deg`);
-      piece.style.setProperty('--size', `${6 + Math.random() * (milestone ? 10 : 8)}px`);
-      piece.dataset.shape = ['round', 'strip', 'diamond', 'star', 'foil'][i % 5];
-      if (milestone) piece.dataset.milestone = 'true';
-      fragment.appendChild(piece);
-    }
-  }
-
   overlay.appendChild(fragment);
   document.body.appendChild(overlay);
-  window.setTimeout(() => overlay.remove(), milestone ? 8500 : 7600);
+  window.setTimeout(() => overlay.remove(), milestone ? 13500 : 12500);
 }
 
 function playMilestoneSound() {
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContextClass) return;
-  try {
-    const audio = new AudioContextClass();
-    const now = audio.currentTime;
-    // Kichik fanfar: ko‘tariluvchi notalar va yakuniy akkord.
-    [523.25, 659.25, 783.99, 1046.5].forEach((frequency, index) => {
-      const start = now + index * 0.13;
-      const oscillator = audio.createOscillator();
-      const gain = audio.createGain();
-      oscillator.type = 'triangle';
-      oscillator.frequency.setValueAtTime(frequency, start);
-      gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.16, start + 0.035);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.62);
-      oscillator.connect(gain);
-      gain.connect(audio.destination);
-      oscillator.start(start);
-      oscillator.stop(start + 0.65);
-    });
-    [659.25, 783.99, 987.77].forEach(frequency => {
-      const oscillator = audio.createOscillator();
-      const gain = audio.createGain();
-      oscillator.type = 'sine';
-      oscillator.frequency.value = frequency;
-      gain.gain.setValueAtTime(0.0001, now + 0.62);
-      gain.gain.exponentialRampToValueAtTime(0.055, now + 0.69);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.35);
-      oscillator.connect(gain);
-      gain.connect(audio.destination);
-      oscillator.start(now + 0.62);
-      oscillator.stop(now + 1.38);
-    });
-    window.setTimeout(() => audio.close().catch(() => {}), 1900);
-  } catch (error) {
-    console.warn('Milestone sound could not play:', error);
-  }
-}
-
-function celebrateStreakMilestone(days) {
-  showConfetti({ milestone: true });
-  playMilestoneSound();
-  notify(`🏆 Ajoyib! ${days} kunlik seriyaga erishdingiz! Bu katta yutuq!`);
+  playCelebrationAudio(0.68);
 }
 
 function celebrateCompletion(message = 'Ajoyib! Vazifa bajarildi!') {

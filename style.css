@@ -519,3 +519,46 @@ html[data-vertex-accent="violet"]{--lime:#b99aff;--lime-dark:#8260c8}
 html[data-vertex-accent="rose"]{--lime:#ff8eae;--lime-dark:#d6537a}
 html[data-vertex-accent="amber"]{--lime:#ffc45e;--lime-dark:#ce8d27}
 html[data-vertex-accent="cyan"]{--lime:#63e4e8;--lime-dark:#299da5}
+
+
+/* V6 — party-popper burst, then a steady natural fall across almost the full viewport */
+.vertex-celebration{
+ position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;
+ z-index:99999!important;overflow:hidden!important;pointer-events:none!important;
+ contain:layout paint!important;isolation:isolate!important;
+}
+.vertex-celebration .vertex-confetti-piece{
+ position:absolute!important;display:block!important;
+ left:50vw!important;top:53vh!important;
+ opacity:0;visibility:visible!important;will-change:auto!important;
+ backface-visibility:visible!important;
+ animation:vertex-popper-burst-fall var(--duration) linear var(--delay) both!important;
+}
+@keyframes vertex-popper-burst-fall{
+ 0%{
+  opacity:0;
+  transform:translate3d(0,0,0) rotate(0deg) scale(.18);
+  animation-timing-function:cubic-bezier(.12,.78,.2,1);
+ }
+ 4%{opacity:1;transform:translate3d(0,0,0) rotate(35deg) scale(.75)}
+ 16%{
+  opacity:1;
+  transform:translate3d(var(--burst-x),var(--burst-y),0) rotate(calc(var(--spin)*.34)) scale(1.08);
+  animation-timing-function:cubic-bezier(.2,.62,.32,1);
+ }
+ 27%{
+  opacity:1;
+  transform:translate3d(calc(var(--burst-x) + var(--air-x)),calc(var(--burst-y) + 5vh),0) rotate(calc(var(--spin)*.56)) scale(1);
+  animation-timing-function:linear;
+ }
+ 100%{
+  opacity:.98;
+  transform:translate3d(calc(var(--burst-x) + var(--air-x) + var(--drift)),calc(var(--burst-y) + 112vh),0) rotate(var(--spin)) scale(.94);
+ }
+}
+@media(max-width:600px){
+ .vertex-celebration .vertex-confetti-piece{animation-duration:var(--duration)!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .vertex-celebration .vertex-confetti-piece{animation-duration:6s!important}
+}

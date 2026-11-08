@@ -556,17 +556,20 @@ function showConfetti(options = {}) {
     ['#ffffff','#e9f2ff','#9aa9bd'],['#d8a84e','#fff0a6','#8d5d16']
   ];
   const shapes=['paper','strip','circle','triangle','diamond','foil'];
-  const pieces=milestone?240:180;
+  const isSmallDevice = window.matchMedia && window.matchMedia('(max-width: 600px)').matches;
+  const pieces = milestone ? (isSmallDevice ? 360 : 480) : (isSmallDevice ? 280 : 380);
   for(let i=0;i<pieces;i+=1){
     const piece=document.createElement('span');
     const colors=palette[Math.floor(Math.random()*palette.length)];
     const foil=Math.random()<0.19;
     piece.className='vertex-confetti-piece';
-    piece.style.setProperty('--x',`${Math.random()*100}vw`);
-    piece.style.setProperty('--delay',`${Math.random()*(milestone?0.75:0.55)}s`);
-    piece.style.setProperty('--duration',`${12.5+Math.random()*2.5}s`);
-    piece.style.setProperty('--drift',`${(Math.random()-0.5)*180}px`);
-    piece.style.setProperty('--sway',`${45+Math.random()*55}px`);
+    piece.style.setProperty('--burst-x',`${(Math.random()-0.5)*(isSmallDevice?94:112)}vw`);
+    piece.style.setProperty('--burst-y',`${-55+Math.random()*78}vh`);
+    piece.style.setProperty('--air-x',`${(Math.random()-0.5)*110}px`);
+    piece.style.setProperty('--delay',`${Math.random()*(milestone?0.42:0.32)}s`);
+    piece.style.setProperty('--duration',`${11.5+Math.random()*2}s`);
+    piece.style.setProperty('--drift',`${(Math.random()-0.5)*130}px`);
+    piece.style.setProperty('--sway',`${35+Math.random()*55}px`);
     piece.style.setProperty('--spin',`${Math.round(Math.random()*1440-720)}deg`);
     piece.style.setProperty('--size',`${5+Math.random()*(milestone?9:7)}px`);
     piece.style.setProperty('--c1',foil?'#ffffff':colors[0]);
@@ -578,7 +581,7 @@ function showConfetti(options = {}) {
   }
   overlay.appendChild(fragment);
   document.body.appendChild(overlay);
-  window.setTimeout(() => { if (overlay.isConnected) overlay.remove(); }, milestone ? 19000 : 18000);
+  window.setTimeout(() => { if (overlay.isConnected) overlay.remove(); }, milestone ? 17500 : 16500);
 }
 
 function playMilestoneSound() {
@@ -882,6 +885,8 @@ function renderDashboardTasks() {
 }
 
 
+let vertexQuoteIndexForLoad = null;
+
 function renderSmartDashboard() {
   const active = activeHabits();
   const done = doneCountOn(today());
@@ -904,8 +909,19 @@ function renderSmartDashboard() {
     { text: 'Orzularingiz yo‘nalishini ishonch bilan tanlang va hayotingizni shunga mos yashang.', author: 'Henry David Thoreau' },
     { text: 'Muvaffaqiyatli bo‘lishga emas, foydali bo‘lishga intiling.', author: 'Albert Einstein' }
   ];
-  const dayIndex = Math.floor(parseDate(today()).getTime() / 86400000) % quotes.length;
-  const dailyQuote = quotes[(dayIndex + quotes.length) % quotes.length];
+  // Har bir sahifa yuklanishida bitta tasodifiy iqtibos tanlanadi.
+  // Dashboard qayta chizilganda iqtibos o‘zgarmaydi; refresh bo‘lganda yangisi tanlanadi.
+  if (vertexQuoteIndexForLoad === null) {
+    let previousIndex = -1;
+    try { previousIndex = Number(sessionStorage.getItem('vertex:last-quote-index')); } catch (error) {}
+    let nextIndex = Math.floor(Math.random() * quotes.length);
+    if (quotes.length > 1 && nextIndex === previousIndex) {
+      nextIndex = (nextIndex + 1 + Math.floor(Math.random() * (quotes.length - 1))) % quotes.length;
+    }
+    vertexQuoteIndexForLoad = nextIndex;
+    try { sessionStorage.setItem('vertex:last-quote-index', String(nextIndex)); } catch (error) {}
+  }
+  const dailyQuote = quotes[vertexQuoteIndexForLoad % quotes.length];
   $('#dailyQuote').textContent = '“' + dailyQuote.text + '”';
   const quoteAuthor = $('#dailyQuoteAuthor');
   if (quoteAuthor) quoteAuthor.textContent = '— ' + dailyQuote.author;

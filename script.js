@@ -549,36 +549,33 @@ function showConfetti(options = {}) {
 
   const fragment = document.createDocumentFragment();
   const palette = [
-    ['#d9a7a7', '#b97980', '#f0d5d0'], // dusty rose
-    ['#9fb7a1', '#6f927d', '#dce8d8'], // sage
-    ['#a8b4d0', '#7486ad', '#e0e5f1'], // muted periwinkle
-    ['#d8c49a', '#b69a68', '#f0e6ce'], // champagne
-    ['#8fb8b2', '#5e918a', '#d8e9e5'], // soft teal
-    ['#d6a98e', '#b77e62', '#f0d8c9']  // muted coral
+    ['#ff304f','#ff8a9b','#b90d35'],['#ff8c00','#ffd166','#c65300'],
+    ['#ffe600','#fff4a3','#c49a00'],['#35d07f','#a4ffd0','#087c49'],
+    ['#00c8ff','#a4efff','#087ca8'],['#4169ff','#b9c8ff','#1e319c'],
+    ['#9b5de5','#e0b8ff','#55249a'],['#f72585','#ffc1df','#a90d55'],
+    ['#ffffff','#e9f2ff','#9aa9bd'],['#d8a84e','#fff0a6','#8d5d16']
   ];
-  const shapes = ['rectangle', 'strip', 'circle', 'triangle', 'diamond'];
-
-  // Kamroq, lekin kattaroq va alohida ko‘rinadigan qog‘oz bo‘laklari.
-  const pieces = milestone ? 190 : 125;
-  for (let i = 0; i < pieces; i += 1) {
-    const piece = document.createElement('span');
-    const colors = palette[Math.floor(Math.random() * palette.length)];
-    piece.className = 'vertex-confetti-piece';
-    piece.style.setProperty('--x', `${Math.random() * 100}vw`);
-    piece.style.setProperty('--delay', `${Math.random() * (milestone ? 0.8 : 0.55)}s`);
-    piece.style.setProperty('--duration', `${7.5 + Math.random() * 4.5}s`);
-    piece.style.setProperty('--drift', `${(Math.random() - 0.5) * 230}px`);
-    piece.style.setProperty('--spin', `${Math.round(Math.random() * 1080 - 540)}deg`);
-    piece.style.setProperty('--size', `${8 + Math.random() * (milestone ? 8 : 6)}px`);
-    piece.style.setProperty('--paper-light', colors[0]);
-    piece.style.setProperty('--paper-dark', colors[1]);
-    piece.style.setProperty('--paper-edge', colors[2]);
-    piece.style.setProperty('--flutter', `${1.5 + Math.random() * 2.5}s`);
-    piece.dataset.shape = shapes[Math.floor(Math.random() * shapes.length)];
-    if (milestone) piece.dataset.milestone = 'true';
+  const shapes=['paper','strip','circle','triangle','diamond','foil'];
+  const pieces=milestone?520:340;
+  for(let i=0;i<pieces;i+=1){
+    const piece=document.createElement('span');
+    const colors=palette[Math.floor(Math.random()*palette.length)];
+    const foil=Math.random()<0.19;
+    piece.className='vertex-confetti-piece';
+    piece.style.setProperty('--x',`${Math.random()*100}vw`);
+    piece.style.setProperty('--delay',`${Math.random()*(milestone?1.15:0.8)}s`);
+    piece.style.setProperty('--duration',`${5.8+Math.random()*5.8}s`);
+    piece.style.setProperty('--drift',`${(Math.random()-0.5)*360}px`);
+    piece.style.setProperty('--sway',`${35+Math.random()*105}px`);
+    piece.style.setProperty('--spin',`${Math.round(Math.random()*1800-900)}deg`);
+    piece.style.setProperty('--size',`${5+Math.random()*(milestone?9:7)}px`);
+    piece.style.setProperty('--c1',foil?'#ffffff':colors[0]);
+    piece.style.setProperty('--c2',colors[1]);
+    piece.style.setProperty('--c3',foil?'#fff8d6':colors[2]);
+    piece.dataset.shape=foil?'foil':shapes[Math.floor(Math.random()*(shapes.length-1))];
+    if(milestone)piece.dataset.milestone='true';
     fragment.appendChild(piece);
   }
-
   overlay.appendChild(fragment);
   document.body.appendChild(overlay);
   window.setTimeout(() => overlay.remove(), milestone ? 13500 : 12500);

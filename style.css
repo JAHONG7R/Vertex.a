@@ -591,3 +591,41 @@ html.vertex-reduced-motion *,html.vertex-reduced-motion *:before,html.vertex-red
 @supports (background:color-mix(in srgb,black 90%,transparent)){
  .panel,.stat-card{background:color-mix(in srgb,var(--surface) 91%,transparent)}
 }
+
+
+/* V8 — Glass surfaces, animated progress and smooth skeleton loading */
+:root{--vertex-glass:rgba(255,255,255,.035);--vertex-glass-border:rgba(255,255,255,.105)}
+/* Selected surfaces get a restrained glass finish; high-contrast content stays readable. */
+.stat-card,.dashboard-grid>.panel,.task-panel,.smart-card,.prediction-card,.personal-coach-card,.coach-plan-card{
+ background:linear-gradient(145deg,color-mix(in srgb,var(--surface) 88%,transparent),color-mix(in srgb,var(--surface) 96%,transparent));
+ border:1px solid var(--vertex-glass-border);box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 12px 32px rgba(0,0,0,.10);
+}
+@supports ((backdrop-filter:blur(12px)) or (-webkit-backdrop-filter:blur(12px))){
+ .stat-card,.dashboard-grid>.panel,.task-panel,.smart-card,.prediction-card,.personal-coach-card,.coach-plan-card{backdrop-filter:blur(14px) saturate(1.08);-webkit-backdrop-filter:blur(14px) saturate(1.08)}
+}
+.stat-card:after,.dashboard-grid>.panel:after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(125deg,rgba(255,255,255,.045),transparent 38%);opacity:.7}
+.stat-card,.dashboard-grid>.panel{position:relative;isolation:isolate}
+.progress-fill,.level-fill,.habit-stat-track i,.prediction-track span{transition:width .85s cubic-bezier(.2,.75,.25,1)!important;will-change:width}
+.progress-track,.level-track,.habit-stat-track,.prediction-track{position:relative;overflow:hidden}
+.progress-fill:after,.level-fill:after,.habit-stat-track i:after,.prediction-track span:after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 15%,rgba(255,255,255,.35) 48%,transparent 78%);transform:translateX(-120%);animation:vertex-progress-sheen 1.25s ease-out .18s 1}
+@keyframes vertex-progress-sheen{to{transform:translateX(120%)}}
+.vertex-loading .app-shell{opacity:0;visibility:hidden}
+.vertex-loading-screen{display:none}
+.vertex-loading .vertex-loading-screen{display:block;position:fixed;z-index:1000000;inset:0;padding:clamp(22px,5vw,56px);background:var(--bg,#0e0e0e);color:var(--text,#eee);overflow:hidden}
+.vertex-loading-brand{display:flex;align-items:center;gap:11px;font:700 13px var(--mono,monospace);letter-spacing:2px;margin-bottom:clamp(42px,8vh,78px)}
+.vertex-loading-brand span{width:36px;height:36px;display:grid;place-items:center;border-radius:11px;background:var(--lime,#d4f34a);color:#15190f;font-size:21px}
+.vertex-skeleton-heading,.vertex-skeleton-stats i,.vertex-skeleton-main i,.vertex-skeleton-row{display:block;border-radius:13px;background:linear-gradient(100deg,rgba(255,255,255,.045) 20%,rgba(255,255,255,.105) 42%,rgba(255,255,255,.045) 64%);background-size:220% 100%;animation:vertex-shimmer 1.25s ease-in-out infinite}
+.vertex-skeleton-heading{height:30px;width:min(280px,65%);margin-bottom:25px}
+.vertex-skeleton-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:16px}
+.vertex-skeleton-stats i{height:118px}
+.vertex-skeleton-main{display:grid;grid-template-columns:1.4fr .8fr;gap:14px;margin-bottom:14px}
+.vertex-skeleton-main i{height:220px}
+.vertex-skeleton-row{height:90px}
+.vertex-loading-caption{margin-top:25px;text-align:center;font:9px var(--mono,monospace);letter-spacing:1.7px;color:var(--muted,#929987);animation:vertex-caption-pulse 1.4s ease-in-out infinite}
+@keyframes vertex-shimmer{to{background-position-x:-220%}}
+@keyframes vertex-caption-pulse{50%{opacity:.45}}
+html[data-vertex-theme="light"] .vertex-loading-screen{background:#f4f5ef;color:#20251b}
+html[data-vertex-theme="light"] .vertex-skeleton-heading,html[data-vertex-theme="light"] .vertex-skeleton-stats i,html[data-vertex-theme="light"] .vertex-skeleton-main i,html[data-vertex-theme="light"] .vertex-skeleton-row{background-image:linear-gradient(100deg,rgba(30,40,20,.05) 20%,rgba(30,40,20,.12) 42%,rgba(30,40,20,.05) 64%)}
+html[data-vertex-theme="amoled"] .vertex-loading-screen{background:#000}
+@media(max-width:700px){.vertex-skeleton-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.vertex-skeleton-stats i{height:86px}.vertex-skeleton-main{grid-template-columns:1fr}.vertex-skeleton-main i{height:130px}.vertex-skeleton-main i:nth-child(2){display:none}}
+@media(prefers-reduced-motion:reduce){.vertex-skeleton-heading,.vertex-skeleton-stats i,.vertex-skeleton-main i,.vertex-skeleton-row,.vertex-loading-caption{animation:none!important}.progress-fill:after,.level-fill:after,.habit-stat-track i:after,.prediction-track span:after{animation:none!important;display:none}}

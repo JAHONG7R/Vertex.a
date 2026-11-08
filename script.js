@@ -825,13 +825,33 @@ function renderHeader() {
       : 'Xayrli kech, ' + name + '!';
 }
 
+function animateVertexPercent(element, target) {
+  if (!element) return;
+  const previous = Number.parseInt(element.textContent, 10);
+  const start = Number.isFinite(previous) ? previous : 0;
+  const end = Math.max(0, Math.min(100, Number(target) || 0));
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('vertex-reduced-motion')) {
+    element.textContent = end + '%';
+    return;
+  }
+  const duration = 650;
+  const started = performance.now();
+  const tick = now => {
+    const progress = Math.min(1, (now - started) / duration);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    element.textContent = Math.round(start + (end - start) * eased) + '%';
+    if (progress < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
 function renderStats() {
   const active = activeHabits();
   const done = doneCountOn(today());
   const percent = todayRate();
   const xp = xpTotal();
   const level = Math.floor(xp / 100) + 1;
-  $('#todayPercent').textContent = percent + '%';
+  animateVertexPercent($('#todayPercent'), percent);
   $('#todayDoneText').textContent = `${done} / ${active.length} bajarildi`;
   $('#todayProgress').style.width = percent + '%';
   $('#currentStreak').innerHTML = `${currentStreak()} <small>kun</small>`;
@@ -839,7 +859,7 @@ function renderStats() {
   $('#levelLabel').textContent = `${level}-daraja · keyingi darajagacha ${100 - (xp % 100)} XP`;
   $('#levelProgress').style.width = (xp % 100) + '%';
   const adherence = rateForDays(30);
-  $('#adherenceValue').textContent = adherence + '%';
+  animateVertexPercent($('#adherenceValue'), adherence);
   $('#adherenceProgress').style.width = adherence + '%';
   ['todayPercent','currentStreak','xpValue','adherenceValue'].forEach(id => {
     const value = $('#' + id);
@@ -2320,6 +2340,12 @@ function init() {
     });
   }
   renderAll();
+  requestAnimationFrame(() => {
+    window.setTimeout(() => {
+      document.body.classList.remove('vertex-loading');
+      document.getElementById('vertexLoadingScreen')?.remove();
+    }, 220);
+  });
   VertexFocusAudio.init();
   // Saqlangan faol sessiyani mavjud tugash vaqtini o‘zgartirmasdan davom ettiramiz.
   if (timerRunning) runTimerInterval();

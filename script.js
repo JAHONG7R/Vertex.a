@@ -523,25 +523,66 @@ function toggleCheck(habitId, date) {
 function playCompletionSound() {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) return;
+
   try {
     const audio = new AudioContextClass();
-    const now = audio.currentTime;
-    // Qisqa, yumshoq uch notali tabrik jiringlashi.
-    [523.25, 659.25, 783.99].forEach((frequency, index) => {
-      const start = now + index * 0.105;
-      const oscillator = audio.createOscillator();
-      const gain = audio.createGain();
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(frequency, start);
-      gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.12, start + 0.025);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.42);
-      oscillator.connect(gain);
-      gain.connect(audio.destination);
-      oscillator.start(start);
-      oscillator.stop(start + 0.44);
+    const startAt = audio.currentTime + 0.03;
+    const master = audio.createGain();
+    master.gain.setValueAtTime(0.72, startAt);
+    master.connect(audio.destination);
+
+    // Jarangdor, mayin qo‘ng‘iroq ohangi: ko‘tariluvchi to‘rt nota va yengil aks-sado.
+    const notes = [
+      { frequency: 659.25, offset: 0.00, duration: 0.72 },
+      { frequency: 783.99, offset: 0.17, duration: 0.78 },
+      { frequency: 987.77, offset: 0.34, duration: 0.86 },
+      { frequency: 1318.51, offset: 0.53, duration: 1.08 }
+    ];
+
+    notes.forEach(({ frequency, offset, duration }, index) => {
+      const noteStart = startAt + offset;
+
+      // Asosiy tovush — yumshoq, ammo aniq eshitiladigan qo‘ng‘iroq tembri.
+      const fundamental = audio.createOscillator();
+      const body = audio.createGain();
+      fundamental.type = 'sine';
+      fundamental.frequency.setValueAtTime(frequency, noteStart);
+      body.gain.setValueAtTime(0.0001, noteStart);
+      body.gain.exponentialRampToValueAtTime(index === 3 ? 0.105 : 0.085, noteStart + 0.025);
+      body.gain.exponentialRampToValueAtTime(0.0001, noteStart + duration);
+      fundamental.connect(body);
+      body.connect(master);
+      fundamental.start(noteStart);
+      fundamental.stop(noteStart + duration + 0.02);
+
+      // Yuqori garmonik tovushga kristalldek jarang beradi.
+      const shimmer = audio.createOscillator();
+      const shimmerGain = audio.createGain();
+      shimmer.type = 'sine';
+      shimmer.frequency.setValueAtTime(frequency * 2.01, noteStart);
+      shimmerGain.gain.setValueAtTime(0.0001, noteStart);
+      shimmerGain.gain.exponentialRampToValueAtTime(0.018, noteStart + 0.018);
+      shimmerGain.gain.exponentialRampToValueAtTime(0.0001, noteStart + duration * 0.72);
+      shimmer.connect(shimmerGain);
+      shimmerGain.connect(master);
+      shimmer.start(noteStart);
+      shimmer.stop(noteStart + duration * 0.72 + 0.02);
     });
-    window.setTimeout(() => audio.close().catch(() => {}), 1100);
+
+    // Yakuniy mayin aks-sado — ovozni keskin tugab qolishidan saqlaydi.
+    const echo = audio.createOscillator();
+    const echoGain = audio.createGain();
+    echo.type = 'sine';
+    echo.frequency.setValueAtTime(1318.51, startAt + 0.78);
+    echoGain.gain.setValueAtTime(0.0001, startAt + 0.78);
+    echoGain.gain.exponentialRampToValueAtTime(0.022, startAt + 0.83);
+    echoGain.gain.exponentialRampToValueAtTime(0.0001, startAt + 1.65);
+    echo.connect(echoGain);
+    echoGain.connect(master);
+    echo.start(startAt + 0.78);
+    echo.stop(startAt + 1.68);
+
+    window.setTimeout(() => audio.close().catch(() => {}), 2300);
   } catch (error) {
     console.warn('Celebration sound could not play:', error);
   }

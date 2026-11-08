@@ -556,7 +556,7 @@ function showConfetti(options = {}) {
     ['#ffffff','#e9f2ff','#9aa9bd'],['#d8a84e','#fff0a6','#8d5d16']
   ];
   const shapes=['paper','strip','circle','triangle','diamond','foil'];
-  const pieces=milestone?520:340;
+  const pieces=milestone?240:180;
   for(let i=0;i<pieces;i+=1){
     const piece=document.createElement('span');
     const colors=palette[Math.floor(Math.random()*palette.length)];
@@ -578,7 +578,7 @@ function showConfetti(options = {}) {
   }
   overlay.appendChild(fragment);
   document.body.appendChild(overlay);
-  window.setTimeout(() => overlay.remove(), milestone ? 18500 : 17500);
+  window.setTimeout(() => { if (overlay.isConnected) overlay.remove(); }, milestone ? 19000 : 18000);
 }
 
 function playMilestoneSound() {

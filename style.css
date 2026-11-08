@@ -484,3 +484,38 @@ html[data-vertex-theme="amoled"] .panel,html[data-vertex-theme="amoled"] .stat-c
   83%{transform:translate3d(calc(var(--drift)*.9 + var(--sway)*.3),89vh,0) rotateX(680deg) rotateZ(calc(var(--spin)*.85)) scale(1)}
   100%{opacity:.98;transform:translate3d(var(--drift),118vh,0) rotateX(820deg) rotateZ(var(--spin)) scale(.94)}
 }
+
+
+/* V4 stability patch: prevent hundreds of promoted layers from blanking/flickering the page */
+.vertex-celebration{
+ position:fixed!important;inset:0!important;width:100vw;height:100vh;
+ z-index:99999;overflow:hidden;pointer-events:none;
+ contain:layout paint!important;isolation:isolate;
+}
+.vertex-celebration .vertex-confetti-piece{
+ position:absolute!important;display:block!important;
+ top:-42px!important;left:var(--x)!important;
+ opacity:0;visibility:visible!important;
+ will-change:auto!important;backface-visibility:visible!important;
+ animation:vertex-confetti-stable-fall var(--duration) linear var(--delay) both!important;
+}
+@keyframes vertex-confetti-stable-fall{
+ 0%{opacity:0;transform:translate(0,-4vh) rotate(0deg)}
+ 4%{opacity:1}
+ 20%{transform:translate(calc(var(--sway)*.35),18vh) rotate(calc(var(--spin)*.18))}
+ 40%{transform:translate(calc(var(--drift)*.28 - var(--sway)*.45),40vh) rotate(calc(var(--spin)*.4))}
+ 60%{transform:translate(calc(var(--drift)*.58 + var(--sway)*.4),63vh) rotate(calc(var(--spin)*.62))}
+ 80%{transform:translate(calc(var(--drift)*.82 - var(--sway)*.2),87vh) rotate(calc(var(--spin)*.82))}
+ 100%{opacity:1;transform:translate(var(--drift),116vh) rotate(var(--spin))}
+}
+@media(prefers-reduced-motion:reduce){
+ .vertex-celebration .vertex-confetti-piece{animation-duration:5s!important}
+}
+
+/* Accent palette — shared by Dark, Light and AMOLED themes */
+html[data-vertex-accent="lime"]{--lime:#c5f36b;--lime-dark:#8db83f}
+html[data-vertex-accent="blue"]{--lime:#66aaff;--lime-dark:#3479ce}
+html[data-vertex-accent="violet"]{--lime:#b99aff;--lime-dark:#8260c8}
+html[data-vertex-accent="rose"]{--lime:#ff8eae;--lime-dark:#d6537a}
+html[data-vertex-accent="amber"]{--lime:#ffc45e;--lime-dark:#ce8d27}
+html[data-vertex-accent="cyan"]{--lime:#63e4e8;--lime-dark:#299da5}

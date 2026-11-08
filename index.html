@@ -178,6 +178,7 @@
           <section class="panel settings-panel appearance-settings-panel">
             <div class="settings-section-head"><div class="settings-icon">✦</div><div><h2>Ko‘rinish va effektlar</h2><p>Vertex interfeysini o‘zingizga moslang.</p></div></div>
             <div class="setting-action"><div><strong>Rang mavzusi</strong><p>Dark, Light yoki AMOLED ko‘rinishini tanlang.</p></div><select id="vertexThemeSelect" aria-label="Rang mavzusi"><option value="dark">Dark</option><option value="light">Light</option><option value="amoled">AMOLED</option></select></div>
+            <div class="setting-action"><div><strong>Accent color</strong><p>Tugmalar, belgilar va faol elementlarning asosiy rangini tanlang.</p></div><select id="vertexAccentSelect" aria-label="Accent color"><option value="lime">Lime</option><option value="blue">Ocean Blue</option><option value="violet">Violet</option><option value="rose">Rose</option><option value="amber">Amber</option><option value="cyan">Cyan</option></select></div>
             <div class="setting-action"><div><strong>Tugma tovushlari</strong><p>Interfeys bilan ishlaganda yengil audio signal.</p></div><label class="vertex-switch"><input type="checkbox" id="vertexClickSound" checked><span></span></label></div>
             <div class="setting-action"><div><strong>Tovush balandligi</strong><p>Faqat tugma tovushlariga ta’sir qiladi.</p></div><div class="vertex-volume-control"><input id="vertexClickVolume" type="range" min="0" max="40" value="14"><output id="vertexClickVolumeValue">14%</output></div></div>
             <div class="setting-action"><div><strong>Ripple va touch glow</strong><p>Bosilgan joyda mayin to‘lqin effekti.</p></div><label class="vertex-switch"><input type="checkbox" id="vertexRippleToggle" checked><span></span></label></div>
@@ -250,14 +251,15 @@
 <script>
 (function(){
  const root=document.documentElement,key='vertex-ui-preferences';
- let prefs={theme:'dark',clickSound:true,clickVolume:14,ripple:true};
+ let prefs={theme:'dark',accent:'lime',clickSound:true,clickVolume:14,ripple:true};
  try{prefs={...prefs,...JSON.parse(localStorage.getItem(key)||'{}')}}catch(e){}
  function apply(){
   root.dataset.vertexTheme=['dark','light','amoled'].includes(prefs.theme)?prefs.theme:'dark';
-  const t=document.getElementById('vertexThemeSelect'),s=document.getElementById('vertexClickSound'),
+  root.dataset.vertexAccent=['lime','blue','violet','rose','amber','cyan'].includes(prefs.accent)?prefs.accent:'lime';
+  const t=document.getElementById('vertexThemeSelect'),a=document.getElementById('vertexAccentSelect'),s=document.getElementById('vertexClickSound'),
    v=document.getElementById('vertexClickVolume'),o=document.getElementById('vertexClickVolumeValue'),
    r=document.getElementById('vertexRippleToggle');
-  if(t)t.value=prefs.theme;if(s)s.checked=!!prefs.clickSound;if(v)v.value=prefs.clickVolume;
+  if(t)t.value=prefs.theme;if(a)a.value=prefs.accent||'lime';if(s)s.checked=!!prefs.clickSound;if(v)v.value=prefs.clickVolume;
   if(o)o.textContent=prefs.clickVolume+'%';if(r)r.checked=!!prefs.ripple;
  }
  function save(){try{localStorage.setItem(key,JSON.stringify(prefs))}catch(e){}}
@@ -265,6 +267,7 @@
  document.addEventListener('change',e=>{
   const t=e.target;
   if(t.id==='vertexThemeSelect')prefs.theme=t.value;
+  else if(t.id==='vertexAccentSelect')prefs.accent=t.value;
   else if(t.id==='vertexClickSound')prefs.clickSound=t.checked;
   else if(t.id==='vertexClickVolume')prefs.clickVolume=Number(t.value);
   else if(t.id==='vertexRippleToggle')prefs.ripple=t.checked;else return;

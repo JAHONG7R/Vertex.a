@@ -2375,9 +2375,9 @@ const VertexFocusAudio = (() => {
   function startLayer(id,volume=.22){ensure();if(ctx.state==='suspended')ctx.resume();if(layers.has(id))return;
     const gain=ctx.createGain();gain.gain.value=0;gain.connect(master);const nodes=[];
     // Original natural-style stereo loops generated for Vertex. Remaining layers keep their synth engines.
-    const audioAssets={rain:'rain_soft_roof.wav',roofrain:'rain_soft_roof.wav',birds:'quiet_forest_birds.wav',forest:'quiet_forest_birds.wav',wind:'wind_in_trees.wav',ocean:'ocean_waves.wav',stream:'flowing_stream.wav',waterfall:'flowing_stream.wav',fire:'fireplace_crackle.wav',brown:'brown_noise.wav',pink:'pink_noise.wav'};
+    const audioAssets={whale:'https://upload.wikimedia.org/wikipedia/commons/1/13/Humpbackwhale2.ogg'};
     if(audioAssets[id]){
-      const audio=new Audio(`./assets/audio/${audioAssets[id]}`);audio.loop=true;audio.preload='auto';audio.crossOrigin='anonymous';
+      const audio=new Audio(audioAssets[id].startsWith('http')?audioAssets[id]:`./assets/audio/${audioAssets[id]}`);audio.loop=true;audio.preload='auto';audio.crossOrigin='anonymous';
       const source=ctx.createMediaElementSource(audio);source.connect(gain);nodes.push(source,audio);
       audio.play().catch(err=>console.warn('Vertex audio playback:',err));
     } else {

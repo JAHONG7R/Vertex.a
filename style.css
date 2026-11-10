@@ -915,3 +915,29 @@ html[data-vertex-theme="light"][data-light-text="rose"] .nav-item.active{
   background:rgba(132,43,60,.09);
 }
 #vertexLightTextRow[hidden]{display:none!important}
+
+/* V14 — Focus mixer is part of the Pomodoro page, not a floating corner dock. */
+#page-pomodoro .vertex-sound-dock{
+  position:relative;right:auto;bottom:auto;z-index:1;
+  width:100%;max-width:none;margin:22px 0 0;padding:18px;
+  border:1px solid rgba(212,243,74,.22);
+  border-radius:20px;background:rgba(19,23,16,.72);
+  box-shadow:0 16px 42px rgba(0,0,0,.22);
+  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+}
+#page-pomodoro .vertex-sound-dock.collapsed{width:100%}
+#page-pomodoro .sound-dock-body{display:block}
+#page-pomodoro .vertex-sound-dock.collapsed .sound-dock-body{display:none}
+#page-pomodoro .sound-layer-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+#page-pomodoro .sound-layer{padding:12px 10px;min-height:82px;transition:transform .2s ease,border-color .2s ease,background .2s ease}
+#page-pomodoro .sound-layer:active{transform:scale(.97)}
+#page-pomodoro .sound-dock-head{margin-bottom:15px}
+#page-pomodoro .sound-dock-head strong{font-size:17px}
+@media(max-width:760px){
+  #page-pomodoro .sound-layer-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:480px){
+  #page-pomodoro .vertex-sound-dock{padding:13px;margin-top:16px}
+  #page-pomodoro .sound-layer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #page-pomodoro .sound-layer{min-height:74px}
+}

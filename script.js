@@ -2348,6 +2348,7 @@ const VertexFocusAudio = (() => {
   let localMusicUrl = null;
   let localMusicSource = null;
   let localMusicGain = null;
+  let musicSeeking = false;
   function openMusicDB(){
     return new Promise((resolve,reject)=>{
       if(!('indexedDB' in window)){reject(new Error('IndexedDB mavjud emas'));return;}
@@ -2370,8 +2371,12 @@ const VertexFocusAudio = (() => {
   async function refreshLocalTracks(){
     const list=document.getElementById('vertexLocalAudioList');if(!list)return;
     try{localTracks=await musicDB('getAll');}catch(err){list.innerHTML='<span>Qurilmada audio saqlash qo‘llab-quvvatlanmaydi.</span>';return;}
-    if(!localTracks.length){list.innerHTML='<span>Hozircha qo‘shiq qo‘shilmagan.</span>';return;}
-    list.innerHTML=localTracks.map(t=>`<div class="sound-device-track"><span title="${escapeHTML(safeTrackName(t.name))}">${escapeHTML(safeTrackName(t.name))}</span><button type="button" data-local-play="${t.id}">${currentTrackId===t.id?'⏸':'▶'}</button><button type="button" data-local-delete="${t.id}" aria-label="O‘chirish">×</button></div>`).join('');
+    const status=document.getElementById('vertexPlayerStatus');
+    if(!localTracks.length){list.innerHTML='<span>Hozircha tanlangan qo‘shiqlar yo‘q.</span>';if(status)status.textContent='Kutubxonani ochib, qo‘shiqlarni tanlang';return;}
+    list.innerHTML=localTracks.map((t,i)=>`<div class="sound-device-track ${currentTrackId===t.id?'is-playing':''}"><span title="${escapeHTML(safeTrackName(t.name))}">${i+1}. ${escapeHTML(safeTrackName(t.name))}</span><button type="button" data-local-play="${t.id}" aria-label="Ijro etish">${currentTrackId===t.id&&localMusicAudio&&!localMusicAudio.paused?'⏸':'▶'}</button><button type="button" data-local-delete="${t.id}" aria-label="O‘chirish">×</button></div>`).join('');
+    const current=localTracks.find(t=>t.id===currentTrackId);
+    const title=document.getElementById('vertexNowPlaying');if(title&&current)title.textContent=safeTrackName(current.name);
+    const play=document.getElementById('vertexMusicPlay');if(play)play.textContent=localMusicAudio&&!localMusicAudio.paused?'Ⅱ':'▶';
   }
   async function addLocalFiles(files){
     for(const file of [...files]){
@@ -2395,13 +2400,27 @@ const VertexFocusAudio = (() => {
     const audio=new Audio(url);audio.preload='auto';
     const source=ctx.createMediaElementSource(audio),gain=ctx.createGain();gain.gain.value=.8;
     source.connect(gain);gain.connect(master);
-    audio.addEventListener('ended',()=>{URL.revokeObjectURL(url);if(currentTrackId===id){stopLocalMusic();refreshLocalTracks();}},{once:true});
     localMusicAudio=audio;localMusicUrl=url;localMusicSource=source;localMusicGain=gain;currentTrackId=id;
-    try{await audio.play();}catch(err){stopLocalMusic();URL.revokeObjectURL(url);alert('Bu audio formatini brauzer ijro eta olmadi. MP3 yoki M4A faylini sinab ko‘ring.');}
-    refreshLocalTracks();
+    audio.addEventListener('loadedmetadata',updatePlayerProgress);
+    audio.addEventListener('timeupdate',updatePlayerProgress);
+    audio.addEventListener('ended',()=>{const idx=localTracks.findIndex(t=>t.id===id);if(idx>=0&&idx<localTracks.length-1)playLocalTrack(localTracks[idx+1].id);else{stopLocalMusic();updatePlayerProgress();refreshLocalTracks();}},{once:true});
+    const title=document.getElementById('vertexNowPlaying');if(title)title.textContent=safeTrackName(track.name);
+    const status=document.getElementById('vertexPlayerStatus');if(status)status.textContent='Hozir ijro etilmoqda';
+    try{await audio.play();}catch(err){stopLocalMusic();URL.revokeObjectURL(url);if(status)status.textContent='Ijro etib bo‘lmadi — boshqa formatni sinab ko‘ring';alert('Bu audio formatini brauzer ijro eta olmadi. MP3 yoki M4A faylini sinab ko‘ring.');}
+    refreshLocalTracks();updatePlayerProgress();
   }
+  function formatMusicTime(value){if(!Number.isFinite(value)||value<0)return '0:00';const m=Math.floor(value/60),sec=Math.floor(value%60);return `${m}:${String(sec).padStart(2,'0')}`;}
+  function updatePlayerProgress(){const a=localMusicAudio;const seek=document.getElementById('vertexMusicSeek');const cur=document.getElementById('vertexCurrentTime');const dur=document.getElementById('vertexDuration');if(cur)cur.textContent=formatMusicTime(a?.currentTime||0);if(dur)dur.textContent=formatMusicTime(a?.duration||0);if(seek&&!musicSeeking){seek.value=a&&Number.isFinite(a.duration)&&a.duration>0?Math.round(a.currentTime/a.duration*1000):0;}const play=document.getElementById('vertexMusicPlay');if(play)play.textContent=a&&!a.paused?'Ⅱ':'▶';}
+  function playNextTrack(direction){if(!localTracks.length)return;let i=localTracks.findIndex(t=>t.id===currentTrackId);i=i<0?(direction>0?0:localTracks.length-1):(i+direction+localTracks.length)%localTracks.length;playLocalTrack(localTracks[i].id);}
   function init(){load();const masterInput=document.getElementById('soundMaster');if(masterInput){masterInput.max='70';masterInput.value=Math.round(masterVolume*100);masterInput.addEventListener('input',e=>setMaster(e.target.value));}document.getElementById('soundMasterValue')?.replaceChildren(document.createTextNode(`${Math.round(masterVolume*100)}%`));
-    document.getElementById('vertexLocalAudioFiles')?.addEventListener('change',async e=>{try{await addLocalFiles(e.target.files);}catch(err){console.error('Local audio import:',err);alert('Qo‘shiqlarni qurilmada saqlashda xatolik yuz berdi.');}e.target.value='';});
+    document.getElementById('vertexGrantMusicAccess')?.addEventListener('click',()=>document.getElementById('vertexLocalAudioFiles')?.click());
+    document.getElementById('vertexLocalAudioFiles')?.addEventListener('change',async e=>{try{await addLocalFiles(e.target.files);const status=document.getElementById('vertexPlayerStatus');if(status)status.textContent=`${e.target.files.length} ta audio fayl kutubxonaga qo‘shildi`;if(!currentTrackId&&localTracks.length)playLocalTrack(localTracks[0].id);}catch(err){console.error('Local audio import:',err);alert('Qo‘shiqlarni qurilmada saqlashda xatolik yuz berdi.');}e.target.value='';});
+    document.getElementById('vertexMusicPlay')?.addEventListener('click',async()=>{if(!localMusicAudio){if(localTracks.length)await playLocalTrack(localTracks[0].id);else document.getElementById('vertexLocalAudioFiles')?.click();return;}if(localMusicAudio.paused){try{await localMusicAudio.play();}catch(e){console.warn(e);}}else localMusicAudio.pause();updatePlayerProgress();refreshLocalTracks();});
+    document.getElementById('vertexMusicPrev')?.addEventListener('click',()=>playNextTrack(-1));
+    document.getElementById('vertexMusicNext')?.addEventListener('click',()=>playNextTrack(1));
+    document.getElementById('vertexMusicSeek')?.addEventListener('input',e=>{musicSeeking=true;if(localMusicAudio&&Number.isFinite(localMusicAudio.duration)){localMusicAudio.currentTime=Number(e.target.value)/1000*localMusicAudio.duration;updatePlayerProgress();}});
+    document.getElementById('vertexMusicSeek')?.addEventListener('change',()=>{musicSeeking=false;updatePlayerProgress();});
+    document.getElementById('vertexMusicVolume')?.addEventListener('input',e=>{const v=Number(e.target.value)/100;if(localMusicGain)localMusicGain.gain.setTargetAtTime(v,ctx.currentTime,.04);});
     document.addEventListener('click',e=>{const play=e.target.closest('[data-local-play]');if(play){playLocalTrack(play.dataset.localPlay);return;}const del=e.target.closest('[data-local-delete]');if(del){if(currentTrackId===del.dataset.localDelete)stopLocalMusic();musicDB('delete',del.dataset.localDelete).then(refreshLocalTracks).catch(console.error);return;}const b=e.target.closest('.sound-layer');if(b){const id=b.dataset.sound;try{layers.has(id)?stopLayer(id):startLayer(id);}catch(err){console.warn(err);alert('Ushbu brauzer audio funksiyasini qo‘llab-quvvatlamaydi.');}return;}if(e.target.closest('#stopAllSounds')){stopAll();return;}if(e.target.closest('#soundCollapse')){collapsed=!collapsed;document.getElementById('vertexSoundDock')?.classList.toggle('collapsed',collapsed);e.target.textContent=collapsed?'+':'−';return;}if(e.target.closest('#saveSoundPreset')){if(!layers.size){alert('Avval kamida bitta ovozni yoqing.');return;}const name=prompt('Preset nomi:');if(name&&name.trim()){presets[name.trim().slice(0,24)]=[...layers.keys()];save();render();}return;}});
     document.addEventListener('change',e=>{if(e.target.id==='soundPresetSelect'&&e.target.value)applyPreset(e.target.value);});
     refreshLocalTracks();

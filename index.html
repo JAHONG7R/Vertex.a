@@ -170,11 +170,14 @@
         <button type="button" class="sound-layer" data-sound="binaural"><span>🎧</span><b>Binaural 10 Hz</b><small>Stereo tone</small></button>
         <button type="button" class="sound-layer" data-sound="hz40"><span>〰️</span><b>40 Hz</b><small>Low tone</small></button>
       </div>
-      <section class="sound-device-music" aria-label="Qurilmadagi musiqalar">
-        <div class="sound-device-head"><div><b>Qurilmangizdagi qo‘shiqlar</b><small>Audio fayllarni tanlang va offline tinglang.</small></div><label class="sound-upload-button" for="vertexLocalAudioFiles">＋ Qo‘shiq qo‘shish</label></div>
+      <section class="sound-device-music vertex-device-player" aria-label="Qurilma musiqa playeri">
+        <div class="sound-device-head"><div><b>Qurilma musiqa playeri</b><small>Ruxsat berganingizdan so‘ng qurilmangizdagi audio fayllarni tanlang.</small></div><button type="button" class="sound-upload-button" id="vertexGrantMusicAccess">♬ Kutubxonani ochish</button></div>
         <input id="vertexLocalAudioFiles" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac,.flac" multiple hidden>
-        <div id="vertexLocalAudioList" class="sound-device-list"><span>Hozircha qo‘shiq qo‘shilmagan.</span></div>
-        <p class="sound-device-hint">Tanlangan fayllar ushbu qurilmada saqlanadi. Boshqa qurilmalarga avtomatik ko‘chirilmaydi.</p>
+        <div class="vertex-player-now"><div class="vertex-player-art" aria-hidden="true">♫</div><div class="vertex-player-track"><b id="vertexNowPlaying">Hozir qo‘shiq tanlanmagan</b><small id="vertexPlayerStatus">Kutubxonani ochish tugmasini bosing</small></div></div>
+        <div class="vertex-player-seek"><span id="vertexCurrentTime">0:00</span><input id="vertexMusicSeek" type="range" min="0" max="1000" value="0" aria-label="Qo‘shiq holati"><span id="vertexDuration">0:00</span></div>
+        <div class="vertex-player-controls"><button type="button" id="vertexMusicPrev" aria-label="Oldingi qo‘shiq" title="Oldingi">⏮</button><button type="button" id="vertexMusicPlay" class="vertex-player-main" aria-label="Ijro etish">▶</button><button type="button" id="vertexMusicNext" aria-label="Keyingi qo‘shiq" title="Keyingi">⏭</button><label class="vertex-player-volume" title="Player ovozi">🔊 <input id="vertexMusicVolume" type="range" min="0" max="100" value="80" aria-label="Player ovozi"></label></div>
+        <div id="vertexLocalAudioList" class="sound-device-list"><span>Ruxsat berilmagan yoki qo‘shiqlar tanlanmagan.</span></div>
+        <p class="sound-device-hint">Brauzer maxfiylik sababli qurilmadagi barcha qo‘shiqlarni o‘zi skanerlay olmaydi. Tugmani bosganingizda Android fayl tanlagichi ochiladi; tanlangan qo‘shiqlar player kutubxonasiga qo‘shiladi.</p>
       </section>
       <div class="sound-mix-controls"><label for="soundMaster">Umumiy ovoz <output id="soundMasterValue">20%</output></label><input id="soundMaster" type="range" min="0" max="70" value="32"></div>
       <div class="sound-active-list" id="soundActiveList"><span>Ovoz tanlanmagan</span></div>

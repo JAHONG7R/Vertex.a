@@ -1,14 +1,22 @@
-VERTEX — Glassmorphism UI update
+VERTEX — DEVICE MUSIC PLAYER UPDATE
 
-Updated:
-- Sidebar navigation / panel location now uses a translucent frosted-glass treatment.
-- Sidebar tip, settings and icon controls use matching glass surfaces.
-- Primary, secondary, danger, habit check and sound controls have coordinated glass styling.
-- Light and AMOLED theme overrides are included.
+Included files:
+- index.html
+- script.js
+- style.css
+
+What changed:
+- Replaced the old “Qo‘shiq qo‘shish” panel with an integrated device music player.
+- “Kutubxonani ochish” opens the Android/browser system file picker after the user taps the button (explicit user action/permission flow).
+- Users can select multiple audio files; selected files are saved in this browser on this device using IndexedDB.
+- Player controls: play/pause, previous/next, seek/progress, elapsed/duration, and volume.
+- Existing ambient sound mixer and its controls remain in place.
+
+Important browser privacy limitation:
+A website cannot silently scan or directly enumerate every song in Android's media library. Browsers require the user to choose files through the system picker. Only selected files become available to the player. This is the supported privacy-preserving web approach; it does not grant unrestricted background access to the whole device library.
 
 Install:
-1. Replace index.html, script.js and style.css in your GitHub repository with the files in this folder.
-2. Keep supabase-config.js and supabase-auth.js in the repository; do not delete them.
-3. Commit the changes and reload the site with a hard refresh / private tab.
+Replace index.html, script.js, and style.css in the GitHub Pages repository. Keep supabase-config.js and supabase-auth.js unchanged.
 
-This package is based on the previous Vertex Regional Time & Audio Controls Fix package. No existing app logic was intentionally changed; this update is primarily CSS styling.
+Validation:
+JavaScript syntax checked with node --check. This package has not been deployed to or tested on the live GitHub Pages site.

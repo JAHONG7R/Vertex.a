@@ -950,23 +950,3 @@ html[data-vertex-theme="light"][data-light-text="rose"] .nav-item.active{
 .vertex-timezone-select{width:100%;min-height:42px;padding:10px;border:1px solid var(--border,#3b4532);border-radius:10px;background:var(--input-bg,#171d13);color:var(--text,#edf1e4)}
 .timezone-live-card{display:grid;gap:5px;margin:12px 0;padding:13px;border:1px solid rgba(212,243,74,.2);border-radius:12px;background:rgba(212,243,74,.055)}.timezone-live-card span{font-size:10px;color:var(--muted,#9ca68f)}.timezone-live-card strong{font-size:25px;letter-spacing:1px;color:var(--accent,#d4f34a);font-variant-numeric:tabular-nums}.timezone-live-card small{font-size:10px;color:var(--muted,#9ca68f)}
 @media(max-width:560px){.sound-device-head{align-items:flex-start;flex-direction:column}.sound-upload-button{width:100%;text-align:center}}
-
-/* Discipline sticker celebration — replaces falling confetti */
-.vertex-discipline-celebration{position:fixed!important;inset:0!important;z-index:99999!important;overflow:hidden!important;pointer-events:none!important;contain:layout paint!important}
-.vertex-discipline-sticker{
-  position:absolute;left:var(--x);top:-70px;width:var(--size);height:var(--size);
-  display:grid;place-items:center;font-size:calc(var(--size)*.67);
-  border:1px solid rgba(212,243,74,.42);border-radius:17px;
-  background:linear-gradient(145deg,rgba(37,49,31,.96),rgba(12,17,11,.94));
-  box-shadow:0 8px 22px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.16),0 0 15px rgba(212,243,74,.13);
-  text-shadow:0 2px 7px rgba(0,0,0,.38);
-  opacity:0;animation:vertex-discipline-sticker-drop var(--duration) cubic-bezier(.18,.62,.28,1) var(--delay) both;
-}
-@keyframes vertex-discipline-sticker-drop{
-  0%{opacity:0;transform:translate3d(0,-8vh,0) rotate(0) scale(.65)}
-  10%{opacity:1}
-  28%{transform:translate3d(calc(var(--drift)*.45),28vh,0) rotate(calc(var(--spin)*.6)) scale(1.08)}
-  55%{transform:translate3d(calc(var(--drift)*.8),58vh,0) rotate(var(--spin)) scale(1)}
-  100%{opacity:0;transform:translate3d(var(--drift),112vh,0) rotate(calc(var(--spin)*1.4)) scale(.92)}
-}
-@media(prefers-reduced-motion:reduce){.vertex-discipline-sticker{animation-duration:2.5s!important}}

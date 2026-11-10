@@ -522,60 +522,17 @@ function toggleCheck(habitId, date) {
 /* ==============================
    COMPLETION CELEBRATION
 ============================== */
-/* ==============================
-   PREMIUM DISCIPLINE CELEBRATION
-   Original layered chime built with Web Audio (not a copy of Apple's sound).
-============================== */
-let vertexCelebrationContext = null;
 function playCelebrationAudio(volume = 0.58) {
   try {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = vertexCelebrationContext || (vertexCelebrationContext = new AudioContextClass());
-    const startAt = ctx.currentTime + 0.035;
-    const master = ctx.createGain();
-    master.gain.setValueAtTime(Math.max(0.02, Math.min(0.8, volume)) * 0.42, startAt);
-    master.connect(ctx.destination);
-
-    // Clean crystal-like chord: soft fundamental + bright upper partials.
-    const notes = [
-      { f: 659.25, t: 0.00, d: 1.45, g: 0.34 },
-      { f: 830.61, t: 0.045, d: 1.25, g: 0.23 },
-      { f: 987.77, t: 0.105, d: 1.10, g: 0.18 },
-      { f: 1318.51, t: 0.18, d: 1.65, g: 0.12 },
-      { f: 1975.53, t: 0.22, d: 1.25, g: 0.055 }
-    ];
-    notes.forEach((note, index) => {
-      const osc = ctx.createOscillator();
-      const env = ctx.createGain();
-      const tone = ctx.createBiquadFilter();
-      osc.type = index === 4 ? 'sine' : 'triangle';
-      osc.frequency.setValueAtTime(note.f, startAt + note.t);
-      tone.type = 'lowpass';
-      tone.frequency.setValueAtTime(index === 4 ? 4200 : 6200, startAt);
-      env.gain.setValueAtTime(0.0001, startAt + note.t);
-      env.gain.exponentialRampToValueAtTime(note.g, startAt + note.t + 0.018);
-      env.gain.exponentialRampToValueAtTime(0.0001, startAt + note.t + note.d);
-      osc.connect(tone); tone.connect(env); env.connect(master);
-      osc.start(startAt + note.t);
-      osc.stop(startAt + note.t + note.d + 0.04);
-      osc.addEventListener?.('ended', () => { osc.disconnect(); tone.disconnect(); env.disconnect(); });
-    });
-
-    // Gentle high shimmer, kept quiet so it stays crisp rather than hissy.
-    const shimmer = ctx.createOscillator();
-    const shimmerEnv = ctx.createGain();
-    shimmer.type = 'sine';
-    shimmer.frequency.setValueAtTime(2637, startAt + 0.12);
-    shimmerEnv.gain.setValueAtTime(0.0001, startAt + 0.12);
-    shimmerEnv.gain.exponentialRampToValueAtTime(0.018, startAt + 0.16);
-    shimmerEnv.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.95);
-    shimmer.connect(shimmerEnv); shimmerEnv.connect(master);
-    shimmer.start(startAt + 0.12); shimmer.stop(startAt + 1.0);
-    window.setTimeout(() => { try { master.disconnect(); } catch (_) {} }, 2200);
-    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    const sound = new Audio('./celebration.wav');
+    sound.volume = volume;
+    sound.preload = 'auto';
+    const playback = sound.play();
+    if (playback && typeof playback.catch === 'function') {
+      playback.catch(error => console.warn('Celebration sound could not play:', error));
+    }
   } catch (error) {
-    console.warn('Celebration chime could not play:', error);
+    console.warn('Celebration sound could not play:', error);
   }
 }
 
@@ -589,41 +546,44 @@ function showConfetti(options = {}) {
 
   const milestone = Boolean(options.milestone);
   const overlay = document.createElement('div');
-  overlay.className = `vertex-celebration vertex-discipline-celebration${milestone ? ' vertex-celebration-milestone' : ''}`;
+  overlay.className = `vertex-celebration${milestone ? ' vertex-celebration-milestone' : ''}`;
   overlay.setAttribute('aria-hidden', 'true');
 
   const fragment = document.createDocumentFragment();
-  const stickers = [
-    { icon: '🏋️', label: 'Kuch' },
-    { icon: '💪', label: 'Intizom' },
-    { icon: '🥇', label: 'Maqsad' },
-    { icon: '🎯', label: 'Fokus' },
-    { icon: '🛡️', label: 'Matonat' },
-    { icon: '🏃', label: 'Harakat' },
-    { icon: '🔥', label: 'Shijoat' },
-    { icon: '⛰️', label: 'O‘sish' },
-    { icon: '⚡', label: 'Quvvat' },
-    { icon: '🏆', label: 'G‘alaba' }
+  const palette = [
+    ['#d9a7a7', '#b97980', '#f0d5d0'], // dusty rose
+    ['#9fb7a1', '#6f927d', '#dce8d8'], // sage
+    ['#a8b4d0', '#7486ad', '#e0e5f1'], // muted periwinkle
+    ['#d8c49a', '#b69a68', '#f0e6ce'], // champagne
+    ['#8fb8b2', '#5e918a', '#d8e9e5'], // soft teal
+    ['#d6a98e', '#b77e62', '#f0d8c9']  // muted coral
   ];
-  const count = milestone ? 24 : 16;
-  for (let i = 0; i < count; i += 1) {
-    const sticker = stickers[Math.floor(Math.random() * stickers.length)];
+  const shapes = ['rectangle', 'strip', 'circle', 'triangle', 'diamond'];
+
+  // Kamroq, lekin kattaroq va alohida ko‘rinadigan qog‘oz bo‘laklari.
+  const pieces = milestone ? 190 : 125;
+  for (let i = 0; i < pieces; i += 1) {
     const piece = document.createElement('span');
-    piece.className = 'vertex-discipline-sticker';
-    piece.textContent = sticker.icon;
-    piece.title = sticker.label;
-    piece.style.setProperty('--x', `${5 + Math.random() * 90}vw`);
-    piece.style.setProperty('--delay', `${Math.random() * 0.55}s`);
-    piece.style.setProperty('--duration', `${3.8 + Math.random() * 1.8}s`);
-    piece.style.setProperty('--drift', `${(Math.random() - 0.5) * 100}px`);
-    piece.style.setProperty('--spin', `${Math.round(Math.random() * 42 - 21)}deg`);
-    piece.style.setProperty('--size', `${36 + Math.random() * 18}px`);
+    const colors = palette[Math.floor(Math.random() * palette.length)];
+    piece.className = 'vertex-confetti-piece';
+    piece.style.setProperty('--x', `${Math.random() * 100}vw`);
+    piece.style.setProperty('--delay', `${Math.random() * (milestone ? 0.8 : 0.55)}s`);
+    piece.style.setProperty('--duration', `${7.5 + Math.random() * 4.5}s`);
+    piece.style.setProperty('--drift', `${(Math.random() - 0.5) * 230}px`);
+    piece.style.setProperty('--spin', `${Math.round(Math.random() * 1080 - 540)}deg`);
+    piece.style.setProperty('--size', `${8 + Math.random() * (milestone ? 8 : 6)}px`);
+    piece.style.setProperty('--paper-light', colors[0]);
+    piece.style.setProperty('--paper-dark', colors[1]);
+    piece.style.setProperty('--paper-edge', colors[2]);
+    piece.style.setProperty('--flutter', `${1.5 + Math.random() * 2.5}s`);
+    piece.dataset.shape = shapes[Math.floor(Math.random() * shapes.length)];
+    if (milestone) piece.dataset.milestone = 'true';
     fragment.appendChild(piece);
   }
 
   overlay.appendChild(fragment);
   document.body.appendChild(overlay);
-  window.setTimeout(() => overlay.remove(), milestone ? 6500 : 6000);
+  window.setTimeout(() => overlay.remove(), milestone ? 13500 : 12500);
 }
 
 function playMilestoneSound() {
@@ -2310,31 +2270,7 @@ const VertexFocusAudio = (() => {
     }
     gain.gain.setTargetAtTime(volume,ctx.currentTime,.45);layers.set(id,{gain,nodes,volume});render();
   }
-  function stopLayer(id){
-    const layer=layers.get(id);
-    if(!layer)return;
-    // Remove this exact layer immediately. The delayed cleanup must still run even
-    // if the same sound is started again before the fade-out finishes.
-    layers.delete(id);
-    try{layer.gain.gain.cancelScheduledValues(ctx.currentTime);layer.gain.gain.setTargetAtTime(0,ctx.currentTime,.12);}catch(_){}
-    setTimeout(()=>{
-      layer.nodes.forEach(node=>{
-        try{
-          if(typeof HTMLAudioElement!=='undefined' && node instanceof HTMLAudioElement){
-            node.pause();
-            node.currentTime=0;
-            node.removeAttribute('src');
-            node.load();
-          }else{
-            if(typeof node.stop==='function')node.stop();
-            if(typeof node.disconnect==='function')node.disconnect();
-          }
-        }catch(_){}
-      });
-      try{layer.gain.disconnect();}catch(_){}
-    },500);
-    render();
-  }
+  function stopLayer(id){const layer=layers.get(id);if(!layer)return;layer.gain.gain.setTargetAtTime(0,ctx.currentTime,.12);setTimeout(()=>{if(!layers.has(id))return;layer.nodes.forEach(n=>{try{if(n instanceof HTMLAudioElement){n.pause();n.currentTime=0;}else{n.stop?.();n.disconnect?.();}}catch(_){}});layer.gain.disconnect();},500);layers.delete(id);render();}
   function setVolume(id,v){const l=layers.get(id);if(!l)return;l.volume=clamp(Number(v),0,70)/100;l.gain.gain.setTargetAtTime(l.volume,ctx.currentTime,.08);}
   function render(){document.querySelectorAll('.sound-layer').forEach(b=>{const on=layers.has(b.dataset.sound);b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});const list=document.getElementById('soundActiveList');if(list){if(!layers.size)list.innerHTML='<span>Ovoz tanlanmagan</span>';else list.innerHTML=[...layers.entries()].map(([id,l])=>`<label class="sound-active-row"><span>${names[id]}</span><input type="range" min="0" max="70" value="${Math.round(l.volume*100)}" data-layer-volume="${id}" aria-label="${names[id]} ovozi"><b>${Math.round(l.volume*100)}%</b></label>`).join('');}const m=document.getElementById('soundMaster');if(m)m.value=Math.round(masterVolume*100);const out=document.getElementById('soundMasterValue');if(out)out.textContent=`${Math.round(masterVolume*100)}%`;const sel=document.getElementById('soundPresetSelect');if(sel){const keep=sel.value;sel.innerHTML='<option value="">Preset tanlang</option>'+Object.keys(presets).map(k=>`<option value="${k.replace(/"/g,'&quot;')}">${k}</option>`).join('');sel.value=keep;}}
   function setMaster(v){masterVolume=clamp(Number(v),0,70)/100;if(master)master.gain.setTargetAtTime(masterVolume,ctx.currentTime,.08);save();render();}
@@ -2472,18 +2408,6 @@ function init() {
   if (timerRunning) runTimerInterval();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  try {
-    init();
-  } catch (error) {
-    console.error('Vertex ishga tushishida xatolik:', error);
-    const caption = document.querySelector('.vertex-loading-caption');
-    if (caption) caption.textContent = 'YUKLASHDA XATOLIK — SAHIFANI YANGILANG';
-  } finally {
-    // Skeleton ekran hech qachon doimiy qolib ketmasin.
-    document.body.classList.remove('vertex-loading');
-    document.getElementById('vertexLoadingScreen')?.remove();
-  }
-});
+document.addEventListener('DOMContentLoaded', init);
 
 })();

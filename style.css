@@ -970,3 +970,78 @@ html[data-vertex-theme="light"][data-light-text="rose"] .nav-item.active{
   100%{opacity:0;transform:translate3d(var(--drift),112vh,0) rotate(calc(var(--spin)*1.4)) scale(.92)}
 }
 @media(prefers-reduced-motion:reduce){.vertex-discipline-sticker{animation-duration:2.5s!important}}
+
+/* VERTEX GLASS UI — sidebar panels and interactive controls */
+.sidebar-label{color:rgba(225,235,213,.62)}
+.nav-item{
+  position:relative;
+  border:1px solid rgba(255,255,255,.075);
+  background:linear-gradient(135deg,rgba(255,255,255,.075),rgba(255,255,255,.018));
+  -webkit-backdrop-filter:blur(14px) saturate(135%);
+  backdrop-filter:blur(14px) saturate(135%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07);
+}
+.nav-item:hover{
+  background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.045));
+  border-color:rgba(255,255,255,.19);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 8px 22px rgba(0,0,0,.15);
+}
+.nav-item.active{
+  background:linear-gradient(135deg,rgba(212,243,74,.20),rgba(212,243,74,.065));
+  border-color:rgba(212,243,74,.34);
+  color:var(--lime);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 7px 22px rgba(0,0,0,.16);
+}
+.sidebar-tip,.settings-link,.icon-button,.secondary-btn,.filter-chip,.timer-tab,
+.sound-collapse,.sound-presets button,.sound-presets select,.sound-device-track button{
+  -webkit-backdrop-filter:blur(16px) saturate(140%);
+  backdrop-filter:blur(16px) saturate(140%);
+  background:linear-gradient(135deg,rgba(255,255,255,.105),rgba(255,255,255,.035));
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 7px 20px rgba(0,0,0,.12);
+}
+.button,.text-button,.check-button,.task-check,.sound-layer,.sound-upload-button{
+  -webkit-backdrop-filter:blur(14px) saturate(140%);
+  backdrop-filter:blur(14px) saturate(140%);
+  transition:background .2s ease,border-color .2s ease,box-shadow .2s ease,transform .2s ease,filter .2s ease;
+}
+.button.primary,.sound-upload-button{
+  background:linear-gradient(135deg,rgba(224,255,125,.96),rgba(178,220,68,.88));
+  border:1px solid rgba(245,255,213,.58);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.48),0 8px 24px rgba(160,205,65,.16);
+}
+.button.primary:hover,.sound-upload-button:hover{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.58),0 11px 28px rgba(160,205,65,.23);
+  filter:brightness(1.04);
+}
+.button.secondary{
+  background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.035));
+  border-color:rgba(255,255,255,.18);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 8px 20px rgba(0,0,0,.13);
+}
+.button.secondary:hover,.icon-button:hover,.secondary-btn:hover{
+  background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.055));
+  border-color:rgba(212,243,74,.38);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 9px 24px rgba(0,0,0,.18);
+}
+.button.danger{background:linear-gradient(135deg,rgba(255,115,99,.19),rgba(110,35,30,.24));border-color:rgba(255,145,130,.28)}
+.check-button,.task-check{background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.035));border-color:rgba(255,255,255,.19);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.check-button.checked,.task-check.done{background:linear-gradient(135deg,#e2ff8a,#b9e65b);border-color:rgba(242,255,203,.7);box-shadow:0 0 15px rgba(212,243,74,.16)}
+.sound-layer{background:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,.025));border-color:rgba(255,255,255,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.09)}
+.sound-layer.active{background:linear-gradient(135deg,rgba(212,243,74,.20),rgba(212,243,74,.055));border-color:rgba(212,243,74,.48)}
+.filter-chip.active,.timer-tab.active{background:linear-gradient(135deg,rgba(212,243,74,.19),rgba(212,243,74,.055));border-color:rgba(212,243,74,.34);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+html[data-vertex-theme="light"] .nav-item,
+html[data-vertex-theme="light"] .sidebar-tip,
+html[data-vertex-theme="light"] .settings-link,
+html[data-vertex-theme="light"] .icon-button,
+html[data-vertex-theme="light"] .button.secondary,
+html[data-vertex-theme="light"] .secondary-btn,
+html[data-vertex-theme="light"] .filter-chip,
+html[data-vertex-theme="light"] .timer-tab{
+  background:linear-gradient(135deg,rgba(255,255,255,.78),rgba(255,255,255,.42));
+  border-color:rgba(255,255,255,.72);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 7px 20px rgba(35,45,30,.08);
+}
+html[data-vertex-theme="light"] .nav-item.active,html[data-vertex-theme="light"] .filter-chip.active,html[data-vertex-theme="light"] .timer-tab.active{background:linear-gradient(135deg,rgba(212,243,74,.35),rgba(212,243,74,.13));border-color:rgba(130,165,55,.35)}
+html[data-vertex-theme="amoled"] .nav-item,html[data-vertex-theme="amoled"] .icon-button,html[data-vertex-theme="amoled"] .button.secondary{background:linear-gradient(135deg,rgba(255,255,255,.075),rgba(255,255,255,.012));border-color:rgba(255,255,255,.13)}
+@media(prefers-reduced-motion:reduce){.nav-item,.button,.icon-button,.secondary-btn,.check-button,.task-check,.sound-layer{transition:none!important}}

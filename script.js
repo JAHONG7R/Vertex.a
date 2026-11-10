@@ -2472,6 +2472,18 @@ function init() {
   if (timerRunning) runTimerInterval();
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    init();
+  } catch (error) {
+    console.error('Vertex ishga tushishida xatolik:', error);
+    const caption = document.querySelector('.vertex-loading-caption');
+    if (caption) caption.textContent = 'YUKLASHDA XATOLIK — SAHIFANI YANGILANG';
+  } finally {
+    // Skeleton ekran hech qachon doimiy qolib ketmasin.
+    document.body.classList.remove('vertex-loading');
+    document.getElementById('vertexLoadingScreen')?.remove();
+  }
+});
 
 })();

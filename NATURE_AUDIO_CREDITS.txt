@@ -1,0 +1,16 @@
+VERTEX — nature audio provenance
+
+Remote field recordings:
+- Humpback whale: National Park Service (NPS), Glacier Bay. Public-domain NPS sound gallery media.
+  https://www.nps.gov/subjects/sound/gallery.htm
+  Direct media: https://www.nps.gov/nps-audiovideo/legacy/mp3/nri/avElement/nri-HumpbackGLBA.mp3
+- Ocean surf: National Park Service (NPS), Olympic National Park. Public-domain NPS sound gallery media.
+  https://www.nps.gov/subjects/sound/gallery.htm
+  Direct media: https://www.nps.gov/nps-audiovideo/audiovideo/588a7add-3839-4eb9-86f1-66cfd867224a.mp3
+
+Local WAV files included in assets/audio (rain, birds, wind, stream, fire, ocean, noise beds)
+were present in the supplied Vertex audio bundle. Their provenance was not verifiable here;
+they are therefore not represented as authentic field recordings.
+
+The remote NPS tracks require an internet connection. Other unavailable sound layers
+remain generated/synthetic and are labelled as such in the app.

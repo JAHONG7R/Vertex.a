@@ -520,12 +520,10 @@ function toggleCheck(habitId, date) {
 /* ==============================
    COMPLETION CELEBRATION
 ============================== */
-function playCelebrationAudio(volume = 0.58, kind = 'success') {
-  const uiPrefs = window.VertexUIPrefs;
-  if (uiPrefs && (kind === 'achievement' ? !uiPrefs.playAchievement() : !uiPrefs.playSuccess())) return;
+function playCelebrationAudio(volume = 0.58) {
   try {
     const sound = new Audio('./celebration.wav');
-    sound.volume = Math.min(1, volume * (uiPrefs ? uiPrefs.getVolume() : 0.35));
+    sound.volume = volume;
     sound.preload = 'auto';
     const playback = sound.play();
     if (playback && typeof playback.catch === 'function') {
@@ -541,7 +539,6 @@ function playCompletionSound() {
 }
 
 function showConfetti(options = {}) {
-  if (document.documentElement.classList.contains('vertex-reduced-motion') || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
   const previous = document.querySelector('.vertex-celebration');
   if (previous) previous.remove();
 
@@ -552,43 +549,43 @@ function showConfetti(options = {}) {
 
   const fragment = document.createDocumentFragment();
   const palette = [
-    ['#ff304f','#ff8a9b','#b90d35'],['#ff8c00','#ffd166','#c65300'],
-    ['#ffe600','#fff4a3','#c49a00'],['#35d07f','#a4ffd0','#087c49'],
-    ['#00c8ff','#a4efff','#087ca8'],['#4169ff','#b9c8ff','#1e319c'],
-    ['#9b5de5','#e0b8ff','#55249a'],['#f72585','#ffc1df','#a90d55'],
-    ['#ffffff','#e9f2ff','#9aa9bd'],['#d8a84e','#fff0a6','#8d5d16']
+    ['#d9a7a7', '#b97980', '#f0d5d0'], // dusty rose
+    ['#9fb7a1', '#6f927d', '#dce8d8'], // sage
+    ['#a8b4d0', '#7486ad', '#e0e5f1'], // muted periwinkle
+    ['#d8c49a', '#b69a68', '#f0e6ce'], // champagne
+    ['#8fb8b2', '#5e918a', '#d8e9e5'], // soft teal
+    ['#d6a98e', '#b77e62', '#f0d8c9']  // muted coral
   ];
-  const shapes=['paper','strip','circle','triangle','diamond','foil'];
-  const isSmallDevice = window.matchMedia && window.matchMedia('(max-width: 600px)').matches;
-  const pieces = milestone ? (isSmallDevice ? 360 : 480) : (isSmallDevice ? 280 : 380);
-  for(let i=0;i<pieces;i+=1){
-    const piece=document.createElement('span');
-    const colors=palette[Math.floor(Math.random()*palette.length)];
-    const foil=Math.random()<0.19;
-    piece.className='vertex-confetti-piece';
-    piece.style.setProperty('--burst-x',`${(Math.random()-0.5)*(isSmallDevice?94:112)}vw`);
-    piece.style.setProperty('--burst-y',`${-55+Math.random()*78}vh`);
-    piece.style.setProperty('--air-x',`${(Math.random()-0.5)*110}px`);
-    piece.style.setProperty('--delay',`${Math.random()*(milestone?0.42:0.32)}s`);
-    piece.style.setProperty('--duration',`${11.5+Math.random()*2}s`);
-    piece.style.setProperty('--drift',`${(Math.random()-0.5)*130}px`);
-    piece.style.setProperty('--sway',`${35+Math.random()*55}px`);
-    piece.style.setProperty('--spin',`${Math.round(Math.random()*1440-720)}deg`);
-    piece.style.setProperty('--size',`${5+Math.random()*(milestone?9:7)}px`);
-    piece.style.setProperty('--c1',foil?'#ffffff':colors[0]);
-    piece.style.setProperty('--c2',colors[1]);
-    piece.style.setProperty('--c3',foil?'#fff8d6':colors[2]);
-    piece.dataset.shape=foil?'foil':shapes[Math.floor(Math.random()*(shapes.length-1))];
-    if(milestone)piece.dataset.milestone='true';
+  const shapes = ['rectangle', 'strip', 'circle', 'triangle', 'diamond'];
+
+  // Kamroq, lekin kattaroq va alohida ko‘rinadigan qog‘oz bo‘laklari.
+  const pieces = milestone ? 190 : 125;
+  for (let i = 0; i < pieces; i += 1) {
+    const piece = document.createElement('span');
+    const colors = palette[Math.floor(Math.random() * palette.length)];
+    piece.className = 'vertex-confetti-piece';
+    piece.style.setProperty('--x', `${Math.random() * 100}vw`);
+    piece.style.setProperty('--delay', `${Math.random() * (milestone ? 0.8 : 0.55)}s`);
+    piece.style.setProperty('--duration', `${7.5 + Math.random() * 4.5}s`);
+    piece.style.setProperty('--drift', `${(Math.random() - 0.5) * 230}px`);
+    piece.style.setProperty('--spin', `${Math.round(Math.random() * 1080 - 540)}deg`);
+    piece.style.setProperty('--size', `${8 + Math.random() * (milestone ? 8 : 6)}px`);
+    piece.style.setProperty('--paper-light', colors[0]);
+    piece.style.setProperty('--paper-dark', colors[1]);
+    piece.style.setProperty('--paper-edge', colors[2]);
+    piece.style.setProperty('--flutter', `${1.5 + Math.random() * 2.5}s`);
+    piece.dataset.shape = shapes[Math.floor(Math.random() * shapes.length)];
+    if (milestone) piece.dataset.milestone = 'true';
     fragment.appendChild(piece);
   }
+
   overlay.appendChild(fragment);
   document.body.appendChild(overlay);
-  window.setTimeout(() => { if (overlay.isConnected) overlay.remove(); }, milestone ? 17500 : 16500);
+  window.setTimeout(() => overlay.remove(), milestone ? 13500 : 12500);
 }
 
 function playMilestoneSound() {
-  playCelebrationAudio(0.68, 'achievement');
+  playCelebrationAudio(0.68);
 }
 
 function celebrateCompletion(message = 'Ajoyib! Vazifa bajarildi!') {
@@ -680,9 +677,7 @@ function goTo(page) {
     element.classList.toggle('active', element.id === `page-${page}`);
   });
   $$('.nav-item[data-page]').forEach(button => {
-    const isActive = button.dataset.page === page;
-    button.classList.toggle('active', isActive);
-    if (isActive) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current');
+    button.classList.toggle('active', button.dataset.page === page);
   });
   const names = {
     dashboard: 'UMUMIY KO‘RINISH',
@@ -825,33 +820,13 @@ function renderHeader() {
       : 'Xayrli kech, ' + name + '!';
 }
 
-function animateVertexPercent(element, target) {
-  if (!element) return;
-  const previous = Number.parseInt(element.textContent, 10);
-  const start = Number.isFinite(previous) ? previous : 0;
-  const end = Math.max(0, Math.min(100, Number(target) || 0));
-  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('vertex-reduced-motion')) {
-    element.textContent = end + '%';
-    return;
-  }
-  const duration = 650;
-  const started = performance.now();
-  const tick = now => {
-    const progress = Math.min(1, (now - started) / duration);
-    const eased = 1 - Math.pow(1 - progress, 3);
-    element.textContent = Math.round(start + (end - start) * eased) + '%';
-    if (progress < 1) requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
-}
-
 function renderStats() {
   const active = activeHabits();
   const done = doneCountOn(today());
   const percent = todayRate();
   const xp = xpTotal();
   const level = Math.floor(xp / 100) + 1;
-  animateVertexPercent($('#todayPercent'), percent);
+  $('#todayPercent').textContent = percent + '%';
   $('#todayDoneText').textContent = `${done} / ${active.length} bajarildi`;
   $('#todayProgress').style.width = percent + '%';
   $('#currentStreak').innerHTML = `${currentStreak()} <small>kun</small>`;
@@ -859,16 +834,8 @@ function renderStats() {
   $('#levelLabel').textContent = `${level}-daraja · keyingi darajagacha ${100 - (xp % 100)} XP`;
   $('#levelProgress').style.width = (xp % 100) + '%';
   const adherence = rateForDays(30);
-  animateVertexPercent($('#adherenceValue'), adherence);
+  $('#adherenceValue').textContent = adherence + '%';
   $('#adherenceProgress').style.width = adherence + '%';
-  ['todayPercent','currentStreak','xpValue','adherenceValue'].forEach(id => {
-    const value = $('#' + id);
-    const card = value?.closest('.stat-card');
-    if (!card) return;
-    card.classList.remove('vertex-stat-updated');
-    void card.offsetWidth;
-    card.classList.add('vertex-stat-updated');
-  });
 }
 
 function renderWeekStrip() {
@@ -918,8 +885,6 @@ function renderDashboardTasks() {
 }
 
 
-let vertexQuoteIndexForLoad = null;
-
 function renderSmartDashboard() {
   const active = activeHabits();
   const done = doneCountOn(today());
@@ -940,71 +905,10 @@ function renderSmartDashboard() {
     { text: 'Bilimning yagona manbai — tajriba.', author: 'Albert Einstein' },
     { text: 'Sabr va qat’iyat bilan deyarli hamma narsaga erishish mumkin.', author: 'Benjamin Franklin' },
     { text: 'Orzularingiz yo‘nalishini ishonch bilan tanlang va hayotingizni shunga mos yashang.', author: 'Henry David Thoreau' },
-    { text: 'Muvaffaqiyatli bo‘lishga emas, foydali bo‘lishga intiling.', author: 'Albert Einstein' },
-    { text: 'Har bir katta natija bugun qilingan kichik bir qarordan boshlanadi.', author: 'Vertex' },
-    { text: 'Intizom — kayfiyat bo‘lmagan kunlarda ham maqsad sari yurishdir.', author: 'Vertex' },
-    { text: 'Vaqtingizni qadrlang: u qayta to‘ldirib bo‘lmaydigan eng qimmat boylikdir.', author: 'Vertex' },
-    { text: 'O‘zingiz bilan kechagi o‘zingizni solishtiring — haqiqiy raqobat shu yerda.', author: 'Vertex' },
-    { text: 'Sekin yurish muammo emas; to‘xtab qolish odatga aylanishi muammo.', author: 'Vertex' },
-    { text: 'Maqsad yo‘lni ko‘rsatadi, odatlar esa sizni manzilga olib boradi.', author: 'Vertex' },
-    { text: 'Bugungi mehnat ertangi imkoniyatlar uchun poydevor bo‘ladi.', author: 'Vertex' },
-    { text: 'Mukammal vaqtni kutmang — boshlashning o‘zi vaqtni qadrli qiladi.', author: 'Vertex' },
-    { text: 'Kichik g‘alabalarni qadrlang; katta o‘zgarishlar ulardan quriladi.', author: 'Vertex' },
-    { text: 'Diqqat qayerga yo‘nalsa, natija ham ko‘pincha o‘sha yerda paydo bo‘ladi.', author: 'Vertex' },
-    { text: 'Reja sizga yo‘nalish beradi, izchillik esa masofani bosib o‘tishga yordam beradi.', author: 'Vertex' },
-    { text: 'Har kuni ozgina o‘rganish — vaqt o‘tib katta bilimga aylanadi.', author: 'Vertex' },
-    { text: 'Bahona vazifani yengillashtirmaydi; birinchi qadam esa uni boshlaydi.', author: 'Vertex' },
-    { text: 'O‘z ustingizda ishlash — kelajagingizga kiritilgan eng foydali sarmoya.', author: 'Vertex' },
-    { text: 'Natija darhol ko‘rinmasligi mumkin, ammo izchil harakat bekor ketmaydi.', author: 'Vertex' },
-    { text: 'Kuchli kunlar sizni ruhlantiradi, qiyin kunlar esa sabringizni tarbiyalaydi.', author: 'Vertex' },
-    { text: 'Maqsad katta bo‘lsa, uni kundalik kichik vazifalarga ajrating.', author: 'Vertex' },
-    { text: 'Bugun boshlagan odatingiz ertaga xarakteringizning bir qismiga aylanishi mumkin.', author: 'Vertex' },
-    { text: 'Vaqtni boshqarishdan avval, e’tiboringizni boshqarishni o‘rganing.', author: 'Vertex' },
-    { text: 'O‘sish qulaylik doirasidan tashqarida boshlanadi.', author: 'Vertex' },
-    { text: 'Xatolar — yo‘l tugaganining emas, yangi narsani o‘rganish vaqti kelganining belgisi.', author: 'Vertex' },
-    { text: 'Bir kunlik harakat kichik ko‘rinadi, ammo takrorlangan harakat hayotni o‘zgartiradi.', author: 'Vertex' },
-    { text: 'O‘zingizga bergan va’dangizni bajarish ishonchni mustahkamlaydi.', author: 'Vertex' },
-    { text: 'Shovqin ko‘p bo‘lgan joyda emas, diqqat jamlangan joyda samaradorlik o‘sadi.', author: 'Vertex' },
-    { text: 'Har bir yakunlangan vazifa — ortga emas, oldinga tashlangan qadam.', author: 'Vertex' },
-    { text: 'Orzu ilhom beradi, aniq reja esa uni amalga oshirishga yaqinlashtiradi.', author: 'Vertex' },
-    { text: 'Bugun hammasini bajarish shart emas; eng muhim ishni boshlash kifoya.', author: 'Vertex' },
-    { text: 'Sabr — kutish emas, kutayotgan paytda ham to‘g‘ri ishni davom ettirishdir.', author: 'Vertex' },
-    { text: 'O‘zingizni rivojlantirish uchun har kuni yangi imkoniyat bor.', author: 'Vertex' },
-    { text: 'Tartibli kun — xotirjam fikr va aniq ustuvorliklardan boshlanadi.', author: 'Vertex' },
-    { text: 'Muvaffaqiyat bir martalik kuchli urinishdan ko‘ra, davomli mehnatni yaxshi ko‘radi.', author: 'Vertex' },
-    { text: 'Qiyin vazifani kichik bo‘laklarga ajrating — boshlash osonlashadi.', author: 'Vertex' },
-    { text: 'O‘zingizga vaqt ajrating: bilim, sog‘lom odatlar va fikr ham parvarish talab qiladi.', author: 'Vertex' },
-    { text: 'Har kuni bir foiz yaxshilanish ham uzoq muddatda sezilarli farq yaratadi.', author: 'Vertex' },
-    { text: 'Maqsadga yetish yo‘lida tezlikdan ko‘ra yo‘nalish muhimroq.', author: 'Vertex' },
-    { text: 'Bugungi tanlovlaringiz ertangi imkoniyatlaringizni shakllantiradi.', author: 'Vertex' },
-    { text: 'O‘zingizni boshqara olsangiz, kuningizni ham yaxshiroq boshqarasiz.', author: 'Vertex' },
-    { text: 'Har bir yangi kun — kechagi tajribadan yaxshiroq foydalanish imkoniyati.', author: 'Vertex' },
-    { text: 'Natijani kutib o‘tirmang; natijaga olib boradigan jarayonni quring.', author: 'Vertex' },
-    { text: 'Bilim eshikni ochadi, mehnat esa undan o‘tishga yordam beradi.', author: 'Vertex' },
-    { text: 'Katta maqsadlar shoshqaloqlikni emas, barqarorlikni talab qiladi.', author: 'Vertex' },
-    { text: 'O‘zingizga ishoning, lekin ishonchingizni harakat bilan mustahkamlang.', author: 'Vertex' },
-    { text: 'Bugun qilishingiz mumkin bo‘lgan foydali ishni ertaga qoldirmang.', author: 'Vertex' },
-    { text: 'Har bir odat — kelajakdagi o‘zingizga yuborilgan kichik xabar.', author: 'Vertex' },
-    { text: 'Diqqatni mayda chalg‘ituvchilardan asrang; katta ishlar e’tibor bilan yaratiladi.', author: 'Vertex' },
-    { text: 'O‘zgarish birdan sodir bo‘lmaydi — u har kuni takrorlangan qarorlarda yashaydi.', author: 'Vertex' },
-    { text: 'Boshlash uchun tayyor bo‘lish shart emas; boshlash tayyorlikni shakllantiradi.', author: 'Vertex' },
-    { text: 'Bugungi mehnatingizni hech kim ko‘rmasa ham, uning natijasi bir kun ko‘rinadi.', author: 'Vertex' },
-    { text: 'O‘zingizga bergan eng yaxshi sovg‘a — rivojlanish uchun ajratilgan vaqtdir.', author: 'Vertex' },
-    { text: 'Har bir kunni maqsad bilan boshlang, minnatdorlik bilan yakunlang.', author: 'Vertex' }
+    { text: 'Muvaffaqiyatli bo‘lishga emas, foydali bo‘lishga intiling.', author: 'Albert Einstein' }
   ];
-  // Har bir sahifa yuklanishida bitta tasodifiy iqtibos tanlanadi.
-  // Dashboard qayta chizilganda iqtibos o‘zgarmaydi; refresh bo‘lganda yangisi tanlanadi.
-  if (vertexQuoteIndexForLoad === null) {
-    let previousIndex = -1;
-    try { previousIndex = Number(sessionStorage.getItem('vertex:last-quote-index')); } catch (error) {}
-    let nextIndex = Math.floor(Math.random() * quotes.length);
-    if (quotes.length > 1 && nextIndex === previousIndex) {
-      nextIndex = (nextIndex + 1 + Math.floor(Math.random() * (quotes.length - 1))) % quotes.length;
-    }
-    vertexQuoteIndexForLoad = nextIndex;
-    try { sessionStorage.setItem('vertex:last-quote-index', String(nextIndex)); } catch (error) {}
-  }
-  const dailyQuote = quotes[vertexQuoteIndexForLoad % quotes.length];
+  const dayIndex = Math.floor(parseDate(today()).getTime() / 86400000) % quotes.length;
+  const dailyQuote = quotes[(dayIndex + quotes.length) % quotes.length];
   $('#dailyQuote').textContent = '“' + dailyQuote.text + '”';
   const quoteAuthor = $('#dailyQuoteAuthor');
   if (quoteAuthor) quoteAuthor.textContent = '— ' + dailyQuote.author;
@@ -1184,88 +1088,7 @@ function renderProgressPrediction() {
 function renderCoachPlan(){const list=$('#coachPlanList'),summary=$('#coachPlanSummary');if(!list||!summary)return;const ranked=activeHabits().map(h=>({habit:h,pct:Math.round(getHabitLogs(h.id,shiftDate(today(),-6),today()).length/7*100)})).sort((a,b)=>a.pct-b.pct);if(!ranked.length){summary.textContent='Avval odat qo‘shing — shunda Vertex reja tuzadi.';list.innerHTML='<p>Hozircha reja tuzish uchun odatlar yo‘q.</p>';}else{const focus=ranked[0].habit;summary.textContent=`Reja eng ko‘p e’tibor talab qilayotgan “${focus.title}” odatiga asoslangan.`;const steps=['Qulay vaqtni tanlang.','Odatning kichik variantini bajaring.','Bajarilgach, Vertex’da belgilang.','Nima xalaqit berganini aniqlang.','Odatni kundalik ishga bog‘lang.','Natijani tekshirib, vaqtini moslang.','Haftani yakunlab, yangi maqsad belgilang.'];list.innerHTML=steps.map((s,i)=>`<div class="coach-plan-row"><b>${['Du','Se','Ch','Pa','Ju','Sh','Ya'][i]}</b><span>${s}</span><small>${escapeHTML(focus.title)}</small></div>`).join('');}const t=localStorage.getItem('vertex_coach_reminder_time')||'19:00';const input=$('#coachReminderTime');if(input)input.value=t;updateCoachReminderStatus();}
 function updateCoachReminderStatus(){const n=$('#coachReminderStatus');if(n)n.textContent=`Eslatma ${localStorage.getItem('vertex_coach_reminder_time')||'19:00'} ga saqlangan. Vertex ochiq bo‘lganda ko‘rinadi.`;}
 
-
-/* ==============================
-   KUNLIK E'TIBOR ESLATMASI
-============================== */
-const ENTRY_REMINDER_KEY = 'vertex_entry_reminder_dismissed_v1';
-
-function renderEntryReminder() {
-  const dashboard = $('#page-dashboard');
-  if (!dashboard) return;
-
-  let panel = $('#entryReminder');
-  const dismissed = (() => {
-    try { return sessionStorage.getItem(ENTRY_REMINDER_KEY) === today(); }
-    catch (_) { return false; }
-  })();
-
-  const missedHabits = activeHabits().filter(habit => !isChecked(habit.id, today()));
-  const overdueTasks = state.tasks.filter(task => !task.done && task.date < today());
-  const todayTasks = state.tasks.filter(task => !task.done && task.date === today());
-  const pendingTasks = [...overdueTasks, ...todayTasks];
-
-  if (dismissed || (!missedHabits.length && !pendingTasks.length)) {
-    panel?.remove();
-    return;
-  }
-
-  const habitNames = missedHabits.slice(0, 3).map(h => escapeHTML(h.title));
-  const taskNames = pendingTasks.slice(0, 3).map(t => escapeHTML(t.title));
-  const moreHabits = missedHabits.length > 3 ? ` va yana ${missedHabits.length - 3} ta` : '';
-  const moreTasks = pendingTasks.length > 3 ? ` va yana ${pendingTasks.length - 3} ta` : '';
-
-  const detailParts = [];
-  if (missedHabits.length) {
-    detailParts.push(`<span><b>${missedHabits.length} ta odat</b> bajarilmagan: ${habitNames.join(', ')}${moreHabits}</span>`);
-  }
-  if (pendingTasks.length) {
-    detailParts.push(`<span><b>${pendingTasks.length} ta vazifa</b> kutilmoqda: ${taskNames.join(', ')}${moreTasks}</span>`);
-  }
-
-  if (!panel) {
-    panel = document.createElement('section');
-    panel.id = 'entryReminder';
-    panel.className = 'entry-reminder';
-    panel.setAttribute('role', 'status');
-    panel.setAttribute('aria-live', 'polite');
-    const quote = dashboard.querySelector('.quote-banner');
-    if (quote) quote.insertAdjacentElement('afterend', panel);
-    else dashboard.prepend(panel);
-  }
-
-  panel.innerHTML = `
-    <div class="entry-reminder-icon" aria-hidden="true">◷</div>
-    <div class="entry-reminder-copy">
-      <div class="entry-reminder-kicker">VERTEX · ESLATMA</div>
-      <h2>${overdueTasks.length ? 'Tugallanmagan ishlaringiz bor' : 'Bugungi rejangiz sizni kutmoqda'}</h2>
-      <div class="entry-reminder-details">${detailParts.join('')}</div>
-    </div>
-    <div class="entry-reminder-actions">
-      ${missedHabits.length ? '<button type="button" class="button secondary" data-entry-reminder-goto="habits">Odatlarni ko‘rish</button>' : ''}
-      ${pendingTasks.length ? '<button type="button" class="button primary" data-entry-reminder-goto="planner">Vazifalarga o‘tish</button>' : ''}
-    </div>
-    <button type="button" class="entry-reminder-close" data-entry-reminder-dismiss aria-label="Eslatmani yopish">×</button>
-  `;
-}
-
-function bindEntryReminderEvents() {
-  if (document.documentElement.dataset.entryReminderBound === '1') return;
-  document.documentElement.dataset.entryReminderBound = '1';
-  document.addEventListener('click', event => {
-    const dismiss = event.target.closest('[data-entry-reminder-dismiss]');
-    if (dismiss) {
-      try { sessionStorage.setItem(ENTRY_REMINDER_KEY, today()); } catch (_) {}
-      $('#entryReminder')?.remove();
-      return;
-    }
-    const goto = event.target.closest('[data-entry-reminder-goto]');
-    if (goto) goTo(goto.dataset.entryReminderGoto);
-  });
-}
-
 function renderDashboard() {
-  renderEntryReminder();
   renderStats();
   renderSmartDashboard();
   renderSmartDailyAnalysis();
@@ -2025,11 +1848,6 @@ function renderAchievements() {
     { icon: '👑', name: 'Tajriba yig‘uvchi', desc: '500 XP to‘plang.', value: xp, goal: 500, unit: 'XP' }
   ];
   const unlocked = badges.filter(b => b.value >= b.goal).length;
-  try {
-    const previousUnlocked = Number(localStorage.getItem('vertex_unlocked_badges_v1'));
-    if (Number.isFinite(previousUnlocked) && unlocked > previousUnlocked) playMilestoneSound();
-    localStorage.setItem('vertex_unlocked_badges_v1', String(unlocked));
-  } catch (_) {}
   setText('achievementUnlocked', `${unlocked} / ${badges.length}`);
   const overall = $('#achievementOverall'); if (overall) overall.style.width = `${unlocked / badges.length * 100}%`;
   const grid = $('#achievementGrid');
@@ -2375,18 +2193,10 @@ const VertexFocusAudio = (() => {
   function startLayer(id,volume=.22){ensure();if(ctx.state==='suspended')ctx.resume();if(layers.has(id))return;
     const gain=ctx.createGain();gain.gain.value=0;gain.connect(master);const nodes=[];
     // Original natural-style stereo loops generated for Vertex. Remaining layers keep their synth engines.
-    // Real field recordings (CC0/public-domain sources). These stream from their source hosts.
-    const audioAssets={
-      rain:'https://sfxjar.com/audio/0124.mp3',
-      ocean:'https://sfxjar.com/audio/1046.mp3',
-      waterfall:'https://sfxjar.com/audio/0219.mp3',
-      stream:'https://sfxjar.com/audio/0213.mp3',
-      roofrain:'https://sfxjar.com/audio/1293.mp3',
-      thunder:'https://sfxjar.com/audio/0740.mp3',
-      whale:'https://www.nps.gov/glba/learn/nature/upload/HWsong_60sec_10_12_2005_16_23_48.mp3'
-    };
-    if(audioAssets[id]){
-      const audio=new Audio();audio.crossOrigin='anonymous';audio.src=audioAssets[id].startsWith('http')?audioAssets[id]:`./assets/audio/${audioAssets[id]}`;audio.loop=true;audio.preload='auto';
+    const audioAssets={rain:'rain_soft_roof.wav',roofrain:'rain_soft_roof.wav',birds:'quiet_forest_birds.wav',forest:'quiet_forest_birds.wav',wind:'wind_in_trees.wav',ocean:'ocean_waves.wav',stream:'flowing_stream.wav',waterfall:'flowing_stream.wav',fire:'fireplace_crackle.wav',brown:'brown_noise.wav',pink:'pink_noise.wav'};
+    const fieldRecordings={whale:'https://www.nps.gov/nps-audiovideo/legacy/mp3/nri/avElement/nri-HumpbackGLBA.mp3',ocean:'https://www.nps.gov/nps-audiovideo/audiovideo/588a7add-3839-4eb9-86f1-66cfd867224a.mp3'};
+    if(fieldRecordings[id] || audioAssets[id]){
+      const audio=new Audio(fieldRecordings[id] || `./assets/audio/${audioAssets[id]}`);audio.loop=true;audio.preload='auto';audio.crossOrigin='anonymous';
       const source=ctx.createMediaElementSource(audio);source.connect(gain);nodes.push(source,audio);
       audio.play().catch(err=>console.warn('Vertex audio playback:',err));
     } else {
@@ -2413,7 +2223,7 @@ const VertexFocusAudio = (() => {
     }
     gain.gain.setTargetAtTime(volume,ctx.currentTime,.45);layers.set(id,{gain,nodes,volume});render();
   }
-  function stopLayer(id){const layer=layers.get(id);if(!layer)return;layer.gain.gain.setTargetAtTime(0,ctx.currentTime,.12);setTimeout(()=>{if(!layers.has(id))return;layer.nodes.forEach(n=>{try{if(n instanceof HTMLAudioElement){n.pause();n.currentTime=0;}else{n.stop?.();n.disconnect?.();}}catch(_){}});layer.gain.disconnect();},500);layers.delete(id);render();}
+  function stopLayer(id){const layer=layers.get(id);if(!layer)return;layers.delete(id);layer.gain.gain.setTargetAtTime(0,ctx.currentTime,.12);setTimeout(()=>{layer.nodes.forEach(n=>{try{if(n instanceof HTMLAudioElement){n.pause();n.currentTime=0;}else{n.stop?.();n.disconnect?.();}}catch(_){}});try{layer.gain.disconnect();}catch(_){}},500);render();}
   function setVolume(id,v){const l=layers.get(id);if(!l)return;l.volume=clamp(Number(v),0,70)/100;l.gain.gain.setTargetAtTime(l.volume,ctx.currentTime,.08);}
   function render(){document.querySelectorAll('.sound-layer').forEach(b=>{const on=layers.has(b.dataset.sound);b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});const list=document.getElementById('soundActiveList');if(list){if(!layers.size)list.innerHTML='<span>Ovoz tanlanmagan</span>';else list.innerHTML=[...layers.entries()].map(([id,l])=>`<label class="sound-active-row"><span>${names[id]}</span><input type="range" min="0" max="70" value="${Math.round(l.volume*100)}" data-layer-volume="${id}" aria-label="${names[id]} ovozi"><b>${Math.round(l.volume*100)}%</b></label>`).join('');}const m=document.getElementById('soundMaster');if(m)m.value=Math.round(masterVolume*100);const out=document.getElementById('soundMasterValue');if(out)out.textContent=`${Math.round(masterVolume*100)}%`;const sel=document.getElementById('soundPresetSelect');if(sel){const keep=sel.value;sel.innerHTML='<option value="">Preset tanlang</option>'+Object.keys(presets).map(k=>`<option value="${k.replace(/"/g,'&quot;')}">${k}</option>`).join('');sel.value=keep;}}
   function setMaster(v){masterVolume=clamp(Number(v),0,70)/100;if(master)master.gain.setTargetAtTime(masterVolume,ctx.currentTime,.08);save();render();}
@@ -2432,7 +2242,6 @@ function init() {
   restoreTimer();
   plannerDate = today();
   bindEvents();
-  bindEntryReminderEvents();
   updatePushPermissionStatus();
   document.getElementById('enablePushBtn')?.addEventListener('click', enableVertexPush);
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('./service-worker.js').catch(error => console.warn('SW registration:', error));
@@ -2481,12 +2290,6 @@ function init() {
     });
   }
   renderAll();
-  requestAnimationFrame(() => {
-    window.setTimeout(() => {
-      document.body.classList.remove('vertex-loading');
-      document.getElementById('vertexLoadingScreen')?.remove();
-    }, 220);
-  });
   VertexFocusAudio.init();
   // Saqlangan faol sessiyani mavjud tugash vaqtini o‘zgartirmasdan davom ettiramiz.
   if (timerRunning) runTimerInterval();

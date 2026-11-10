@@ -11,6 +11,52 @@
   // Vertex AI Coach uchun xavfsiz bridge.
   // Supabase client IIFE ichida qoladi; globalga chiqarilmaydi.
   window.VertexSupabaseAuth = window.VertexSupabaseAuth || {};
+  window.VertexSupabaseAuth.savePushSubscription = async function (subscription) {
+    if (!client) throw new Error('Supabase hali ishga tushmagan.');
+    const { data: sessionData, error: sessionError } = await client.auth.getSession();
+    if (sessionError) throw sessionError;
+    const user = sessionData?.session?.user;
+    if (!user) throw new Error('Push eslatmalar uchun avval Vertex akkauntingizga kiring.');
+    const { error } = await client.from('vertex_push_subscriptions').upsert({
+      user_id: user.id,
+      endpoint: subscription.endpoint,
+      subscription: subscription,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id,endpoint' });
+    if (error) throw error;
+  };
+
+  window.VertexSupabaseAuth.scheduleTaskReminder = async function (task) {
+    if (!client) return;
+    const { data: sessionData, error: sessionError } = await client.auth.getSession();
+    if (sessionError) throw sessionError;
+    const user = sessionData?.session?.user;
+    if (!user) return; // Mehmon rejimida faqat qurilma ichidagi eslatmalar mavjud.
+    if (!task?.time || !task?.date || task.done) return;
+    const dueAt = new Date(`${task.date}T${task.time}:00`);
+    if (Number.isNaN(dueAt.getTime())) return;
+    const remindAt = new Date(dueAt.getTime() - Number(task.reminderMinutes || 0) * 60000);
+    const { error } = await client.from('vertex_reminders').upsert({
+      id: task.id,
+      user_id: user.id,
+      title: task.title,
+      due_at: dueAt.toISOString(),
+      remind_at: remindAt.toISOString(),
+      sent_at: null,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'id' });
+    if (error) throw error;
+  };
+
+  window.VertexSupabaseAuth.cancelTaskReminder = async function (taskId) {
+    if (!client) return;
+    const { data: sessionData } = await client.auth.getSession();
+    const user = sessionData?.session?.user;
+    if (!user) return;
+    const { error } = await client.from('vertex_reminders').delete().eq('id', taskId).eq('user_id', user.id);
+    if (error) console.warn('Vertex reminder delete:', error.message);
+  };
+
   window.VertexSupabaseAuth.invokeCoach = async function (payload) {
     if (!client) {
       throw new Error('Supabase hali ishga tushmagan. Sahifani yangilang.');

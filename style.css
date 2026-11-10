@@ -941,3 +941,12 @@ html[data-vertex-theme="light"][data-light-text="rose"] .nav-item.active{
   #page-pomodoro .sound-layer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   #page-pomodoro .sound-layer{min-height:74px}
 }
+
+/* Device music library + regional time controls */
+.sound-device-music{margin:12px 0 8px;padding:10px;border:1px solid rgba(212,243,74,.16);border-radius:12px;background:rgba(255,255,255,.025)}
+.sound-device-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.sound-device-head>div{display:grid;gap:3px;min-width:0}.sound-device-head b{font-size:11px;color:#edf1e4}.sound-device-head small,.sound-device-hint{font-size:9px;color:#8f9885;line-height:1.45}
+.sound-upload-button{flex:none;padding:8px 10px;border-radius:8px;background:#d4f34a;color:#17200d;font-size:10px;font-weight:700;cursor:pointer}
+.sound-device-list{display:grid;gap:5px;margin-top:9px}.sound-device-list>span{font-size:10px;color:#8f9885}.sound-device-track{display:grid;grid-template-columns:minmax(0,1fr) 32px 32px;align-items:center;gap:5px}.sound-device-track>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:#e4eadb}.sound-device-track button{min-height:30px;border:1px solid #3c4632;border-radius:7px;background:#22291c;color:#d4f34a}.sound-device-track button:last-child{color:#ffb0a6}.sound-device-hint{margin:7px 0 0}
+.vertex-timezone-select{width:100%;min-height:42px;padding:10px;border:1px solid var(--border,#3b4532);border-radius:10px;background:var(--input-bg,#171d13);color:var(--text,#edf1e4)}
+.timezone-live-card{display:grid;gap:5px;margin:12px 0;padding:13px;border:1px solid rgba(212,243,74,.2);border-radius:12px;background:rgba(212,243,74,.055)}.timezone-live-card span{font-size:10px;color:var(--muted,#9ca68f)}.timezone-live-card strong{font-size:25px;letter-spacing:1px;color:var(--accent,#d4f34a);font-variant-numeric:tabular-nums}.timezone-live-card small{font-size:10px;color:var(--muted,#9ca68f)}
+@media(max-width:560px){.sound-device-head{align-items:flex-start;flex-direction:column}.sound-upload-button{width:100%;text-align:center}}

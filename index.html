@@ -170,6 +170,12 @@
         <button type="button" class="sound-layer" data-sound="binaural"><span>🎧</span><b>Binaural 10 Hz</b><small>Stereo tone</small></button>
         <button type="button" class="sound-layer" data-sound="hz40"><span>〰️</span><b>40 Hz</b><small>Low tone</small></button>
       </div>
+      <section class="sound-device-music" aria-label="Qurilmadagi musiqalar">
+        <div class="sound-device-head"><div><b>Qurilmangizdagi qo‘shiqlar</b><small>Audio fayllarni tanlang va offline tinglang.</small></div><label class="sound-upload-button" for="vertexLocalAudioFiles">＋ Qo‘shiq qo‘shish</label></div>
+        <input id="vertexLocalAudioFiles" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac,.flac" multiple hidden>
+        <div id="vertexLocalAudioList" class="sound-device-list"><span>Hozircha qo‘shiq qo‘shilmagan.</span></div>
+        <p class="sound-device-hint">Tanlangan fayllar ushbu qurilmada saqlanadi. Boshqa qurilmalarga avtomatik ko‘chirilmaydi.</p>
+      </section>
       <div class="sound-mix-controls"><label for="soundMaster">Umumiy ovoz <output id="soundMasterValue">20%</output></label><input id="soundMaster" type="range" min="0" max="70" value="32"></div>
       <div class="sound-active-list" id="soundActiveList"><span>Ovoz tanlanmagan</span></div>
       <div class="sound-presets"><select id="soundPresetSelect" aria-label="Saqlangan miks"><option value="">Preset tanlang</option></select><button type="button" id="saveSoundPreset">Saqlash</button><button type="button" id="stopAllSounds">To‘xtatish</button></div>
@@ -227,6 +233,15 @@
             <div class="settings-divider"></div>
             <div class="settings-section-head"><div class="settings-icon">◷</div><div><h2>Pomodoro taymeri</h2><p>Sessiya va tanaffus davomiyligini belgilang.</p></div></div>
             <form id="timerSettingsForm" class="settings-form timer-settings-form"><div class="form-row"><label>Fokus (daqiqa)<input type="number" id="focusMinutes" min="1" max="120" required></label><label>Qisqa tanaffus<input type="number" id="shortMinutes" min="1" max="30" required></label><label>Uzun tanaffus<input type="number" id="longMinutes" min="1" max="60" required></label></div><button class="button primary" type="submit">Taymerni saqlash</button></form>
+          </section>
+          <section class="panel settings-panel timezone-settings-panel">
+            <div class="settings-section-head"><div class="settings-icon">🌐</div><div><h2>Hududiy vaqt</h2><p>Mintaqangizning vaqt zonasi va GMT/UTC farqini tanlang.</p></div></div>
+            <div class="settings-form">
+              <label for="vertexTimeZone">Vaqt mintaqasi</label>
+              <select id="vertexTimeZone" class="vertex-timezone-select"></select>
+              <div class="timezone-live-card"><span>Tanlangan mintaqadagi vaqt</span><strong id="vertexRegionalClock">--:--:--</strong><small id="vertexGmtOffset">GMT/UTC ±00:00</small></div>
+              <button class="button secondary" type="button" id="useDeviceTimeZone">Qurilma vaqt zonasidan foydalanish</button>
+            </div>
           </section>
           <section class="panel settings-panel reminder-settings-panel">
             <div class="settings-section-head"><div class="settings-icon">🔔</div><div><h2>Bildirishnomalar</h2><p>Vazifalar va odatlar uchun eslatmalarni yoqing.</p></div></div>

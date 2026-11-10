@@ -2375,9 +2375,18 @@ const VertexFocusAudio = (() => {
   function startLayer(id,volume=.22){ensure();if(ctx.state==='suspended')ctx.resume();if(layers.has(id))return;
     const gain=ctx.createGain();gain.gain.value=0;gain.connect(master);const nodes=[];
     // Original natural-style stereo loops generated for Vertex. Remaining layers keep their synth engines.
-    const audioAssets={whale:'https://upload.wikimedia.org/wikipedia/commons/1/13/Humpbackwhale2.ogg'};
+    // Real field recordings (CC0/public-domain sources). These stream from their source hosts.
+    const audioAssets={
+      rain:'https://sfxjar.com/audio/0124.mp3',
+      ocean:'https://sfxjar.com/audio/1046.mp3',
+      waterfall:'https://sfxjar.com/audio/0219.mp3',
+      stream:'https://sfxjar.com/audio/0213.mp3',
+      roofrain:'https://sfxjar.com/audio/1293.mp3',
+      thunder:'https://sfxjar.com/audio/0740.mp3',
+      whale:'https://www.nps.gov/glba/learn/nature/upload/HWsong_60sec_10_12_2005_16_23_48.mp3'
+    };
     if(audioAssets[id]){
-      const audio=new Audio(audioAssets[id].startsWith('http')?audioAssets[id]:`./assets/audio/${audioAssets[id]}`);audio.loop=true;audio.preload='auto';audio.crossOrigin='anonymous';
+      const audio=new Audio();audio.crossOrigin='anonymous';audio.src=audioAssets[id].startsWith('http')?audioAssets[id]:`./assets/audio/${audioAssets[id]}`;audio.loop=true;audio.preload='auto';
       const source=ctx.createMediaElementSource(audio);source.connect(gain);nodes.push(source,audio);
       audio.play().catch(err=>console.warn('Vertex audio playback:',err));
     } else {

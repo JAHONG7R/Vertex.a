@@ -2310,7 +2310,31 @@ const VertexFocusAudio = (() => {
     }
     gain.gain.setTargetAtTime(volume,ctx.currentTime,.45);layers.set(id,{gain,nodes,volume});render();
   }
-  function stopLayer(id){const layer=layers.get(id);if(!layer)return;layer.gain.gain.setTargetAtTime(0,ctx.currentTime,.12);setTimeout(()=>{if(!layers.has(id))return;layer.nodes.forEach(n=>{try{if(n instanceof HTMLAudioElement){n.pause();n.currentTime=0;}else{n.stop?.();n.disconnect?.();}}catch(_){}});layer.gain.disconnect();},500);layers.delete(id);render();}
+  function stopLayer(id){
+    const layer=layers.get(id);
+    if(!layer)return;
+    // Remove this exact layer immediately. The delayed cleanup must still run even
+    // if the same sound is started again before the fade-out finishes.
+    layers.delete(id);
+    try{layer.gain.gain.cancelScheduledValues(ctx.currentTime);layer.gain.gain.setTargetAtTime(0,ctx.currentTime,.12);}catch(_){}
+    setTimeout(()=>{
+      layer.nodes.forEach(node=>{
+        try{
+          if(typeof HTMLAudioElement!=='undefined' && node instanceof HTMLAudioElement){
+            node.pause();
+            node.currentTime=0;
+            node.removeAttribute('src');
+            node.load();
+          }else{
+            if(typeof node.stop==='function')node.stop();
+            if(typeof node.disconnect==='function')node.disconnect();
+          }
+        }catch(_){}
+      });
+      try{layer.gain.disconnect();}catch(_){}
+    },500);
+    render();
+  }
   function setVolume(id,v){const l=layers.get(id);if(!l)return;l.volume=clamp(Number(v),0,70)/100;l.gain.gain.setTargetAtTime(l.volume,ctx.currentTime,.08);}
   function render(){document.querySelectorAll('.sound-layer').forEach(b=>{const on=layers.has(b.dataset.sound);b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});const list=document.getElementById('soundActiveList');if(list){if(!layers.size)list.innerHTML='<span>Ovoz tanlanmagan</span>';else list.innerHTML=[...layers.entries()].map(([id,l])=>`<label class="sound-active-row"><span>${names[id]}</span><input type="range" min="0" max="70" value="${Math.round(l.volume*100)}" data-layer-volume="${id}" aria-label="${names[id]} ovozi"><b>${Math.round(l.volume*100)}%</b></label>`).join('');}const m=document.getElementById('soundMaster');if(m)m.value=Math.round(masterVolume*100);const out=document.getElementById('soundMasterValue');if(out)out.textContent=`${Math.round(masterVolume*100)}%`;const sel=document.getElementById('soundPresetSelect');if(sel){const keep=sel.value;sel.innerHTML='<option value="">Preset tanlang</option>'+Object.keys(presets).map(k=>`<option value="${k.replace(/"/g,'&quot;')}">${k}</option>`).join('');sel.value=keep;}}
   function setMaster(v){masterVolume=clamp(Number(v),0,70)/100;if(master)master.gain.setTargetAtTime(masterVolume,ctx.currentTime,.08);save();render();}

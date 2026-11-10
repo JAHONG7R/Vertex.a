@@ -1,8 +1,8 @@
-VERTEX FEATURE UPDATE
+VERTEX — REGIONAL TIME + AUDIO INITIALIZATION FIX
 
-1) Replace index.html, script.js and style.css in your GitHub repository with these files.
-2) New feature: choose multiple audio files from the device; files are stored in IndexedDB on that device/browser and can be played offline after being added.
-3) New settings: choose an IANA time zone; live regional clock and GMT/UTC offset are displayed. The selected zone is saved in Vertex settings.
-4) Existing audio mixer and other app sections are retained.
+Replace index.html, script.js and style.css in the GitHub repository with these files.
+Keep supabase-config.js and supabase-auth.js in the repository; do not delete them.
 
-Note: Local audio files are device-local and are not synchronized to Supabase or other devices.
+This patch initializes audio and regional-time controls independently before the main UI render/event binding, so unrelated UI errors do not prevent these controls from starting. It also guards the regional clock timer and binds the timezone controls once.
+
+After committing, open the site in a private/incognito tab or clear the browser cache / hard refresh so GitHub Pages does not serve an older script.js.

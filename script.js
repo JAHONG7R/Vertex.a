@@ -2111,6 +2111,30 @@ function renderAchievements() {
     const activeCount = cells.filter((_, i) => weekLogs.some(log => log.date === shiftDate(todayDate, i - 6))).length;
     weekMap.innerHTML = `<div class="quest-map-heading"><strong>7 KUNLIK FAOLLIK</strong><span>${activeCount}/7 faol kun</span></div><div class="quest-day-grid">${cells.join('')}</div>`;
   }
+  // Weekly review: a read-only summary derived from the same seven-day log window.
+  const recap = $('#weeklyRecap');
+  if (recap) {
+    const dayNames = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'];
+    const dailyCounts = Array.from({ length: 7 }, (_, i) => {
+      const date = shiftDate(today(), i - 6);
+      return { date, count: weekLogs.filter(log => log.date === date).length };
+    });
+    const activeDayCount = dailyCounts.filter(day => day.count > 0).length;
+    const bestDay = dailyCounts.reduce((best, day) => day.count > best.count ? day : best, { date: '', count: 0 });
+    const bestDayName = bestDay.count ? dayNames[parseDate(bestDay.date).getDay()] : 'Hali aniqlanmagan';
+    const habitCounts = new Map();
+    weekLogs.forEach(log => habitCounts.set(String(log.habitId), (habitCounts.get(String(log.habitId)) || 0) + 1));
+    const topHabitEntry = [...habitCounts.entries()].sort((a, b) => b[1] - a[1])[0];
+    const topHabit = topHabitEntry ? (state.habits.find(h => String(h.id) === topHabitEntry[0])?.name || 'Noma’lum odat') : 'Hali ma’lumot yo‘q';
+    const cards = [
+      { icon: '✓', label: 'Jami bajarilish', value: String(weekLogs.length), note: 'so‘nggi 7 kun' },
+      { icon: '🔥', label: 'Faol kunlar', value: `${activeDayCount}/7`, note: 'kamida bitta odat bajarilgan' },
+      { icon: '☀️', label: 'Eng faol kun', value: bestDayName, note: bestDay.count ? `${bestDay.count} ta bajarilish` : 'faollik qayd etilmagan' },
+      { icon: '🏅', label: 'Yetakchi odat', value: topHabit, note: topHabitEntry ? `${topHabitEntry[1]} marta bajarilgan` : 'hali bajarilish yo‘q' }
+    ];
+    recap.innerHTML = cards.map(card => `<article class="weekly-recap-card"><span class="weekly-recap-icon">${card.icon}</span><span class="weekly-recap-label">${card.label}</span><strong>${escapeHTML(card.value)}</strong><small>${card.note}</small></article>`).join('');
+  }
+
   const list = $('#habitXPList');
   if (list) {
     const rows = state.habits.map(h => ({ habit: h, count: state.logs.filter(log => log.habitId === h.id).length }))

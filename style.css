@@ -1418,3 +1418,12 @@ html[data-vertex-theme="amoled"] body .app-shell .stat-card{background:rgba(255,
 .quest-week-map{margin-top:20px;padding-top:17px;border-top:1px solid var(--line)}.quest-map-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.quest-map-heading strong{font:700 10px var(--mono);letter-spacing:.7px;color:var(--muted)}.quest-map-heading span{font-size:11px;color:var(--lime);font-weight:700}.quest-day-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}.quest-day{min-width:0;display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 4px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);color:var(--muted)}.quest-day>span{font:700 9px var(--mono)}.quest-day>b{font-size:15px;color:var(--text)}.quest-day>small{font-size:9px}.quest-day.has-activity{border-color:rgba(212,243,74,.35);background:rgba(212,243,74,.08)}.quest-day.has-activity>small{color:var(--lime)}.quest-day.is-today{outline:1px solid var(--lime);outline-offset:2px}
 @media(max-width:760px){.challenge-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:480px){.challenge-panel{padding:16px}.challenge-grid{grid-template-columns:1fr}.challenge-card p{min-height:0}}
+
+
+/* Phase 6: weekly review */
+.weekly-recap-panel{margin-bottom:22px;padding:24px}
+.weekly-recap-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.weekly-recap-card{min-width:0;display:flex;flex-direction:column;gap:7px;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2)}
+.weekly-recap-icon{font-size:21px}.weekly-recap-label{font-size:10px;color:var(--muted);letter-spacing:.35px}.weekly-recap-card strong{font-size:clamp(16px,2vw,22px);line-height:1.25;overflow-wrap:anywhere}.weekly-recap-card small{font-size:10px;color:var(--muted);line-height:1.4}
+@media(max-width:760px){.weekly-recap-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.weekly-recap-panel{padding:16px}.weekly-recap-card{padding:13px}}

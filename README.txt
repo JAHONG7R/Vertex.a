@@ -1,12 +1,11 @@
-VERTEX — SMART ANALYTICS PHASE 2
+VERTEX — WEEKLY REVIEW PHASE 6
 
-This update adds an eight-week progress trend to the Analytics page.
-It compares weekly habit completion rates and gives a short summary of the
-current week versus the previous week. Calculations use existing local habit
-logs and active habits; no new storage fields, permissions, or external AI
-service are required.
+This update adds a weekly recap to the Achievements page. It summarizes the
+last seven days using existing habit logs: total completions, active days,
+the most active day, and the most frequently completed habit.
 
-Files: index.html, script.js, style.css
+No new storage fields, permissions, external services, or database changes
+are required. Existing app features and Supabase configuration are preserved.
 
 Install:
 1. Back up your current repository files.
@@ -14,6 +13,4 @@ Install:
 3. Keep supabase-config.js and supabase-auth.js unchanged.
 4. Commit and push to GitHub Pages, then hard-refresh the site.
 
-Existing features and the current storage format are preserved. This update
-has passed JavaScript syntax and ZIP integrity checks; it has not been tested
-against your live GitHub Pages deployment.
+Checks: JavaScript syntax and ZIP integrity. Not yet tested on the live site.

@@ -1735,6 +1735,48 @@ function renderWeeklyFocusPlan() {
   if (note) note.textContent = `Ro‘yxat ${habits.length} ta faol odat ichidan bajarilish foizi eng past ${ranked.length} tasini ko‘rsatadi. Bu tanqid emas — keyingi kichik qadamni tanlashga yordam beruvchi kuzatuv.`;
 }
 
+function renderStreakResilience() {
+  const root = document.getElementById('streakResilienceList');
+  const note = document.getElementById('streakResilienceNote');
+  if (!root) return;
+  const habits = activeHabits();
+  if (!habits.length) {
+    root.innerHTML = '<p class="habit-stat-empty">Avval odat qo‘shing — seriyalar tahlili shu yerda ko‘rinadi.</p>';
+    if (note) note.textContent = 'Hozircha faol odatlar mavjud emas.';
+    return;
+  }
+  const rows = habits.map(habit => {
+    const streak = streakForHabit(habit.id);
+    let lastDate = null;
+    for (let i = 0; i < 366; i++) {
+      const candidate = shiftDate(today(), -i);
+      if (isChecked(habit.id, candidate)) { lastDate = candidate; break; }
+    }
+    const gap = lastDate ? Math.max(0, Math.round((parseDate(today()) - parseDate(lastDate)) / 86400000)) : null;
+    const status = streak >= 7 ? 'Mustahkam seriya' : streak >= 3 ? 'Yaxshi davom etmoqda' : streak > 0 ? 'Boshlang‘ich seriya' : lastDate ? 'Qayta boshlash mumkin' : 'Birinchi qadam';
+    const advice = streak >= 7
+      ? 'Hozirgi ritmni saqlang; maqsadni birdan oshirish shart emas.'
+      : streak > 0
+        ? 'Keyingi safar ham aynan shu kichik qadamni takrorlang.'
+        : gap !== null
+          ? 'Bugun eng yengil variantini tanlab, odatga qayting.'
+          : 'Bajarish oson bo‘lgan aniq birinchi qadamni belgilang.';
+    return { habit, streak, gap, status, advice };
+  }).sort((a,b) => b.streak-a.streak || (a.gap ?? 999)- (b.gap ?? 999));
+  root.innerHTML = rows.map((item, index) => {
+    const accent = normalizeHabitColor(item.habit.color);
+    const width = Math.min(100, item.streak / 14 * 100);
+    const last = item.gap === null ? 'Hali belgilanmagan' : item.gap === 0 ? 'Bugun bajarilgan' : `${item.gap} kun oldin bajarilgan`;
+    return `<article class="streak-resilience-row" style="--streak-accent:${accent}">
+      <span class="streak-resilience-icon">${habitIcon(item.habit)}</span>
+      <div class="streak-resilience-main"><div class="streak-resilience-head"><strong>${escapeHTML(item.habit.title)}</strong><b>${item.streak} kun</b></div>
+      <div class="review-track"><i style="width:${width}%;background:${accent}"></i></div>
+      <div class="streak-resilience-meta"><span>${item.status}</span><small>${last}</small></div><p>${item.advice}</p></div>
+    </article>`;
+  }).join('');
+  if (note) note.textContent = `${rows.length} ta faol odat ko‘rsatildi. Seriya bugun bajarilmagan bo‘lsa, kechagi seriya ham hisobga olinadi; bu ko‘rsatkich odatni davom ettirishga yordam berish uchun. `;
+}
+
 function renderAnalytics() {
   const week = rateForDays(7);
   const month = rateForDays(30);
@@ -1892,6 +1934,7 @@ function renderAnalytics() {
   renderHabitPeriodComparison();
   renderCategoryPeriodComparison();
   renderWeeklyFocusPlan();
+  renderStreakResilience();
 
   $('#categoryBreakdown').innerHTML = Object.entries(CATEGORIES)
     .filter(([key]) => key !== 'discipline' || state.habits.some(habit => habit.category === key))

@@ -1,19 +1,14 @@
-VERTEX — MONTHLY REVIEW PHASE 8
+VERTEX — PHASE 12: STREAK RESILIENCE
 
-WHAT CHANGED
-- Added an Analytics panel comparing the latest 30 days with the previous 30 days.
-- Shows completion rate, total completions, and active days for both periods.
-- Shows the difference in percentage points and a short plain-language interpretation.
-- Uses existing active habits and completion history; no storage schema, Supabase, or permission changes.
+Qayerda ko‘rasiz:
+Analytics (Rivojlanish tahlili) sahifasini oching. “Keyingi haftada nimaga e’tibor berish kerak?” (Weekly Focus Plan) panelidan darhol keyin, “Har bir odat ko‘rsatkichi” panelidan oldin “Odatlar seriyasi va qayta boshlash” yangi paneli chiqadi.
 
-WHERE TO FIND IT
-Open Vertex → Rivojlanish tahlili (Analytics). Scroll to “Oylik faollik xaritasi”. The new panel “Oylik natijalar sharhi” is directly BELOW the activity map and ABOVE “Har bir odat ko‘rsatkichi”.
+Nima qo‘shildi:
+- Har bir faol odat uchun ketma-ket bajarilgan kunlar soni.
+- 14 kungacha vizual seriya indikatori.
+- Oxirgi bajarilgan sana va odat holati.
+- Seriyani davom ettirish yoki qayta boshlash uchun yumshoq, kichik tavsiya.
 
-INSTALL
-1. Back up your current repository files.
-2. Replace index.html, script.js, and style.css with these files.
-3. Keep supabase-config.js and supabase-auth.js unchanged.
-4. Commit and push to GitHub Pages, then refresh the site.
+Ma’lumotlar mavjud odatlar logidan olinadi. Yangi storage key, Supabase jadvali yoki ruxsat talab qilinmaydi.
 
-CHECKS
-JavaScript syntax and ZIP integrity should be checked before use. This package has not been tested on the live GitHub Pages site.
+O‘rnatish: index.html, script.js, style.css fayllarini loyihangizdagi mos fayllar bilan almashtiring. supabase-config.js va supabase-auth.js fayllarini saqlang.

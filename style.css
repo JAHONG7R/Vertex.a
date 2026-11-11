@@ -1499,3 +1499,13 @@ html[data-vertex-theme="amoled"] body .app-shell .stat-card{background:rgba(255,
 .weekly-focus-main{flex:1;min-width:0}.weekly-focus-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}.weekly-focus-head strong{font-size:13px;overflow-wrap:anywhere}.weekly-focus-head b{font-size:12px;color:var(--focus-accent);white-space:nowrap}
 .weekly-focus-main .review-track{height:7px}.weekly-focus-main small{display:block;margin-top:6px;color:var(--muted);font-size:10px}.weekly-focus-main p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
 @media(max-width:620px){.weekly-focus-panel{padding:17px}.weekly-focus-row{padding:12px;gap:9px}}
+
+
+/* Phase 12 — Streak Resilience */
+.streak-resilience-panel{margin:22px 0;padding:24px}
+.streak-resilience-list{display:grid;gap:11px;margin-top:16px}
+.streak-resilience-row{display:flex;align-items:flex-start;gap:12px;min-width:0;padding:14px;border:1px solid var(--line,rgba(255,255,255,.09));border-radius:15px;background:var(--surface-2,rgba(255,255,255,.025))}
+.streak-resilience-icon{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;border-radius:11px;background:color-mix(in srgb,var(--streak-accent) 14%,transparent);font-size:18px}
+.streak-resilience-main{flex:1;min-width:0}.streak-resilience-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}.streak-resilience-head strong{font-size:13px;overflow-wrap:anywhere}.streak-resilience-head b{font-size:12px;color:var(--streak-accent);white-space:nowrap}
+.streak-resilience-main .review-track{height:7px}.streak-resilience-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:7px}.streak-resilience-meta span{font-size:11px;color:var(--text)}.streak-resilience-meta small{font-size:10px;color:var(--muted)}.streak-resilience-main p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+@media(max-width:620px){.streak-resilience-panel{padding:17px}.streak-resilience-row{padding:12px;gap:9px}}

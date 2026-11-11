@@ -1855,6 +1855,7 @@ function renderAnalytics() {
   renderMonthlyActivityMap();
   renderMonthlyReview();
   renderHabitPeriodComparison();
+  renderCategoryPeriodComparison();
 
   $('#categoryBreakdown').innerHTML = Object.entries(CATEGORIES)
     .filter(([key]) => key !== 'discipline' || state.habits.some(habit => habit.category === key))
@@ -2087,6 +2088,44 @@ function renderHabitPeriodComparison() {
   const improved = rows.filter(row => row.delta > 0).length;
   const declined = rows.filter(row => row.delta < 0).length;
   if (note) note.textContent = `${rows.length} ta odat taqqoslandi · ${improved} tasi o‘sdi · ${declined} tasida pasayish kuzatildi. Har bir foiz 30 kunlik davrda bajarilgan kunlar ulushidir.`;
+}
+
+function renderCategoryPeriodComparison() {
+  const host = document.getElementById('categoryPeriodList');
+  const note = document.getElementById('categoryPeriodNote');
+  if (!host) return;
+  const habits = activeHabits();
+  const rows = Object.entries(CATEGORIES).map(([key, label]) => {
+    const group = habits.filter(habit => habit.category === key);
+    if (!group.length) return null;
+    let currentDone = 0;
+    let previousDone = 0;
+    for (const habit of group) {
+      for (let i = 0; i < 30; i++) {
+        if (isChecked(habit.id, shiftDate(today(), -i))) currentDone++;
+        if (isChecked(habit.id, shiftDate(today(), -(i + 30)))) previousDone++;
+      }
+    }
+    const possible = group.length * 30;
+    const currentRate = Math.round(currentDone / possible * 100);
+    const previousRate = Math.round(previousDone / possible * 100);
+    return { key, label, count: group.length, currentDone, previousDone, currentRate, previousRate, delta: currentRate - previousRate };
+  }).filter(Boolean);
+  if (!rows.length) {
+    host.innerHTML = '<p class="habit-stat-empty">Taqqoslash uchun faol odatlar mavjud emas. Odat qo‘shib, unga kategoriya belgilang.</p>';
+    if (note) note.textContent = 'Har bir kategoriyada kamida bitta faol odat bo‘lsa, natijalar shu yerda ko‘rinadi.';
+    return;
+  }
+  rows.sort((a, b) => b.delta - a.delta || b.currentRate - a.currentRate);
+  host.innerHTML = rows.map(row => {
+    const trendClass = row.delta > 0 ? 'is-up' : row.delta < 0 ? 'is-down' : 'is-flat';
+    const trend = row.delta > 0 ? `+${row.delta} foiz punkt` : `${row.delta} foiz punkt`;
+    const icon = CATEGORY_ICONS[row.key] || '◎';
+    return `<article class="category-period-row"><div class="category-period-top"><span class="category-period-name"><span class="category-period-icon">${icon}</span><strong>${escapeHTML(row.label)}</strong><small>${row.count} ta odat</small></span><span class="habit-period-delta ${trendClass}">${trend}</span></div><div class="category-period-bars"><div><small>So‘nggi 30 kun · ${row.currentDone} bajarilish</small><span class="review-track"><i style="width:${row.currentRate}%"></i></span></div><div><small>Oldingi 30 kun · ${row.previousDone} bajarilish</small><span class="review-track"><i style="width:${row.previousRate}%;opacity:.45"></i></span></div></div></article>`;
+  }).join('');
+  const best = [...rows].sort((a, b) => b.currentRate - a.currentRate)[0];
+  const improved = rows.filter(row => row.delta > 0).length;
+  if (note) note.textContent = `${rows.length} ta kategoriya tahlil qilindi · ${improved} tasida o‘sish bor. Hozirgi eng yuqori natija: ${best.label} (${best.currentRate}%). Foizlar kategoriya ichidagi faol odatlar bajarilish ulushini bildiradi.`;
 }
 
 function renderHabitIntelligence() {

@@ -1476,3 +1476,15 @@ html[data-vertex-theme="amoled"] body .app-shell .stat-card{background:rgba(255,
 .habit-period-bars>div{min-width:0}.habit-period-bars small{display:block;margin-bottom:6px;color:var(--muted);font-size:10px}
 .habit-period-bars .review-track{display:block;height:6px}
 @media(max-width:620px){.habit-period-panel{padding:17px}.habit-period-row{padding:12px;gap:10px}.habit-period-heading{display:block}.habit-period-delta{display:block;text-align:left;margin-top:4px}.habit-period-bars{grid-template-columns:1fr;gap:9px}}
+
+
+/* Phase 10 · category period comparison */
+.category-period-panel{margin:22px 0;padding:24px}
+.category-period-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.category-period-row{min-width:0;padding:15px;border:1px solid var(--border,rgba(255,255,255,.09));border-radius:15px;background:rgba(255,255,255,.025)}
+.category-period-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
+.category-period-name{display:flex;align-items:center;gap:9px;min-width:0;flex-wrap:wrap}
+.category-period-name strong{font-size:14px}.category-period-name small,.category-period-bars small{color:var(--muted,#9aa39a);font-size:11px}
+.category-period-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:rgba(212,243,74,.09);font-size:17px}
+.category-period-bars{display:grid;gap:9px}.category-period-bars>div{display:grid;gap:5px}.category-period-bars .review-track{height:7px}
+@media(max-width:680px){.category-period-panel{padding:17px}.category-period-list{grid-template-columns:1fr;gap:9px}.category-period-row{padding:13px}}

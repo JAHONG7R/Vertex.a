@@ -1445,3 +1445,18 @@ html[data-vertex-theme="amoled"] body .app-shell .stat-card{background:rgba(255,
 .monthly-activity-legend i{width:13px;height:13px;border:1px solid var(--line);border-radius:4px}
 .monthly-activity-footnote{margin:12px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
 @media(max-width:620px){.monthly-activity-panel{padding:17px}.monthly-activity-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}.monthly-activity-cell{border-radius:8px}}
+
+
+/* Phase 8 — 30-day period comparison in Analytics */
+.monthly-review-panel{margin:22px 0;padding:24px}
+.monthly-review-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-top:18px}
+.monthly-review-card{min-width:0;padding:17px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2);display:flex;flex-direction:column;gap:9px}
+.monthly-review-card>span{font-size:10px;font-weight:800;letter-spacing:.09em;color:var(--muted)}
+.monthly-review-card>strong{font-size:clamp(24px,4vw,34px);line-height:1.1;color:var(--text)}
+.monthly-review-card small,.monthly-review-card p{font-size:11px;line-height:1.5;color:var(--muted);margin:0}
+.review-track{height:7px;border-radius:20px;background:var(--line);overflow:hidden}
+.review-track i{display:block;height:100%;width:0;border-radius:20px;background:var(--lime,#d4f34a);transition:width .3s ease}
+.monthly-review-delta{justify-content:center}
+.monthly-review-delta>strong{font-size:clamp(19px,3vw,27px)}
+.monthly-review-footnote{margin:13px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
+@media(max-width:680px){.monthly-review-panel{padding:17px}.monthly-review-grid{grid-template-columns:1fr;gap:9px}.monthly-review-card{padding:14px}.monthly-review-card>strong{font-size:27px}}

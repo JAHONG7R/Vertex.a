@@ -1,19 +1,19 @@
-VERTEX — MONTHLY ACTIVITY MAP PHASE 7
+VERTEX — MONTHLY REVIEW PHASE 8
 
-What changed:
-- Added a 30-day activity heatmap to the Analytics page.
-- Each cell shows the day of month and number of completed active habits.
-- Cell intensity reflects the share of active habits completed that day.
-- Today's cell is outlined; a summary shows active days out of 30.
-- Uses existing habit logs only; no storage schema, Supabase, or permission changes.
+WHAT CHANGED
+- Added an Analytics panel comparing the latest 30 days with the previous 30 days.
+- Shows completion rate, total completions, and active days for both periods.
+- Shows the difference in percentage points and a short plain-language interpretation.
+- Uses existing active habits and completion history; no storage schema, Supabase, or permission changes.
 
-Where to find it:
-Open Vertex → Rivojlanish tahlili (Analytics). The new panel is titled “Oylik faollik xaritasi”, directly below “Rivojlanish tendensiyasi” (8 haftalik) and above “Har bir odat ko‘rsatkichi”.
+WHERE TO FIND IT
+Open Vertex → Rivojlanish tahlili (Analytics). Scroll to “Oylik faollik xaritasi”. The new panel “Oylik natijalar sharhi” is directly BELOW the activity map and ABOVE “Har bir odat ko‘rsatkichi”.
 
-Install:
-1. Back up the current repository files.
-2. Replace index.html, script.js and style.css with these files.
+INSTALL
+1. Back up your current repository files.
+2. Replace index.html, script.js, and style.css with these files.
 3. Keep supabase-config.js and supabase-auth.js unchanged.
-4. Commit and push to GitHub Pages, then hard-refresh the site.
+4. Commit and push to GitHub Pages, then refresh the site.
 
-Checks: JavaScript syntax and ZIP integrity. Not yet tested on the live site.
+CHECKS
+JavaScript syntax and ZIP integrity should be checked before use. This package has not been tested on the live GitHub Pages site.

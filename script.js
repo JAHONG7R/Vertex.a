@@ -1853,6 +1853,7 @@ function renderAnalytics() {
   renderHabitIntelligence();
   renderEightWeekTrend();
   renderMonthlyActivityMap();
+  renderMonthlyReview();
 
   $('#categoryBreakdown').innerHTML = Object.entries(CATEGORIES)
     .filter(([key]) => key !== 'discipline' || state.habits.some(habit => habit.category === key))
@@ -2015,6 +2016,43 @@ function renderMonthlyActivityMap() {
   grid.innerHTML = cells.join('');
   if (summary) summary.textContent = `${activeDays} / 30 faol kun`;
   if (note) note.textContent = `${totalDone} ta bajarilish · ${habits.length} ta faol odat asosida. Katakdagi yuqori raqam sana, pastdagi raqam bajarilgan odatlar soni.`;
+}
+
+function renderMonthlyReview() {
+  const habits = activeHabits();
+  const summarize = (offset, days) => {
+    let done = 0;
+    let activeDays = 0;
+    for (let i = offset; i < offset + days; i++) {
+      const date = shiftDate(today(), -i);
+      const count = habits.filter(habit => isChecked(habit.id, date)).length;
+      done += count;
+      if (count > 0) activeDays++;
+    }
+    const possible = habits.length * days;
+    return { done, activeDays, rate: possible ? Math.round(done / possible * 100) : 0 };
+  };
+  const current = summarize(0, 30);
+  const previous = summarize(30, 30);
+  const delta = current.rate - previous.rate;
+  const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = value; };
+  const setWidth = (id, value) => { const node = document.getElementById(id); if (node) node.style.width = `${value}%`; };
+  setText('monthlyReviewCurrent', `${current.rate}%`);
+  setText('monthlyReviewPrevious', `${previous.rate}%`);
+  setWidth('monthlyReviewCurrentBar', current.rate);
+  setWidth('monthlyReviewPreviousBar', previous.rate);
+  setText('monthlyReviewCurrentMeta', `${current.done} ta bajarilish · ${current.activeDays} faol kun`);
+  setText('monthlyReviewPreviousMeta', `${previous.done} ta bajarilish · ${previous.activeDays} faol kun`);
+  setText('monthlyReviewDelta', `${delta > 0 ? '+' : ''}${delta} foiz punkt`);
+  setText('monthlyReviewTrend', !habits.length ? 'Odatlar kerak' : delta > 0 ? 'O‘sish ↗' : delta < 0 ? 'Pasayish ↘' : 'Bir xil →');
+  setText('monthlyReviewMessage', !habits.length
+    ? 'Taqqoslash uchun avval faol odat qo‘shing.'
+    : delta > 0 ? 'So‘nggi davrda bajarish ulushi oshgan. Shu ritmni saqlang.'
+    : delta < 0 ? 'Natija oldingi davrga nisbatan pasaygan. Bitta odatni kichikroq qadamga ajrating.'
+    : 'Ikki davr natijasi bir xil. Izchillikni davom ettiring.');
+  setText('monthlyReviewFootnote', habits.length
+    ? `Har bir davr ${habits.length} ta faol odat asosida hisoblandi. Foiz punkt — ikki davr foizlari orasidagi farq.`
+    : 'Ma’lumotlar paydo bo‘lgach, ikki 30 kunlik davr avtomatik taqqoslanadi.');
 }
 
 function renderHabitIntelligence() {

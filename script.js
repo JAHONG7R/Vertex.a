@@ -947,10 +947,41 @@ function renderSmartDashboard() {
     { text: 'Bilimning yagona manbai — tajriba.', author: 'Albert Einstein' },
     { text: 'Sabr va qat’iyat bilan deyarli hamma narsaga erishish mumkin.', author: 'Benjamin Franklin' },
     { text: 'Orzularingiz yo‘nalishini ishonch bilan tanlang va hayotingizni shunga mos yashang.', author: 'Henry David Thoreau' },
-    { text: 'Muvaffaqiyatli bo‘lishga emas, foydali bo‘lishga intiling.', author: 'Albert Einstein' }
+    { text: 'Muvaffaqiyatli bo‘lishga emas, foydali bo‘lishga intiling.', author: 'Albert Einstein' },
+    { text: 'Intizom — maqsadlar va natijalar orasidagi ko‘prikdir.', author: 'Jim Rohn' },
+    { text: 'Boshlash uchun buyuk bo‘lish shart emas, ammo buyuk bo‘lish uchun boshlash kerak.', author: 'Zig Ziglar' },
+    { text: 'Kichik odatlar katta o‘zgarishlarga olib keladi.', author: 'James Clear' },
+    { text: 'O‘zingizni kechagidan yaxshiroq qilishga intiling.', author: 'Ernest Hemingway' },
+    { text: 'Qiyinchiliklar insonning imkoniyatlarini yuzaga chiqaradi.', author: 'Epictetus' },
+    { text: 'Harakat — barcha muvaffaqiyatlarning asosidir.', author: 'Pablo Picasso' },
+    { text: 'Vaqtingizni qadrlang: hayot aynan undan tashkil topadi.', author: 'Benjamin Franklin' },
+    { text: 'Maqsad sari sekin yurish ham to‘xtab qolishdan yaxshiroq.', author: 'Confucius' },
+    { text: 'O‘z ustingizda ishlash — eng foydali sarmoyadir.', author: 'Warren Buffett' },
+    { text: 'Bugungi mehnat ertangi imkoniyatlarni yaratadi.', author: 'Vertex' },
+    { text: 'Mukammallik emas, izchillik uzoq muddatli natija beradi.', author: 'Vertex' },
+    { text: 'Har bir kun yangi qaror va yangi boshlanish uchun imkoniyatdir.', author: 'Vertex' },
+    { text: 'O‘zgarish kutmang — unga sababchi bo‘ling.', author: 'Vertex' },
+    { text: 'Bilim olishga sarflangan vaqt hech qachon bekor ketmaydi.', author: 'Vertex' },
+    { text: 'Kuchli natijalar sabr bilan takrorlangan harakatlardan tug‘iladi.', author: 'Vertex' },
+    { text: 'Reja yo‘nalish beradi, intizom esa manzilga yetkazadi.', author: 'Vertex' },
+    { text: 'Bugun qilishingiz mumkin bo‘lgan ishni ortga surmang.', author: 'Benjamin Franklin' },
+    { text: 'O‘zingizga bergan va’dangizni bajarishdan boshlang.', author: 'Vertex' },
+    { text: 'Har bir kichik g‘alaba keyingi qadam uchun ishonch beradi.', author: 'Vertex' },
+    { text: 'Maqsadni ko‘zlang, lekin kundalik jarayonga sodiq qoling.', author: 'Vertex' },
+    { text: 'O‘rganishni to‘xtatmagan inson o‘sishda davom etadi.', author: 'Vertex' },
+    { text: 'Natija birdan kelmaydi; u har kungi tanlovlarda shakllanadi.', author: 'Vertex' },
+    { text: 'Qat’iyat — boshlagan ishingizni oxiriga yetkazish odatidir.', author: 'Vertex' },
+    { text: 'Bugungi bir foizlik o‘sish vaqt o‘tib katta farq yaratadi.', author: 'Vertex' },
+    { text: 'Diqqatni nazorat qilsangiz, yo‘nalishingizni ham boshqarasiz.', author: 'Vertex' },
+    { text: 'O‘zingizga kerakli kelajakni bugungi odatlaringiz bilan quring.', author: 'Vertex' },
+    { text: 'Muvaffaqiyat — bir martalik hodisa emas, kundalik jarayondir.', author: 'Vertex' }
   ];
-  const dayIndex = Math.floor(parseDate(today()).getTime() / 86400000) % quotes.length;
-  const dailyQuote = quotes[(dayIndex + quotes.length) % quotes.length];
+  // Mahalliy kalendar sanasi bo‘yicha indeks: UTC siljishi sabab bir iqtibos qotib qolmaydi.
+  const localDateKey = new Intl.DateTimeFormat('en-CA', {year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date());
+  const [quoteYear, quoteMonth, quoteDay] = localDateKey.split('-').map(Number);
+  const dayNumber = Math.floor(Date.UTC(quoteYear, quoteMonth - 1, quoteDay) / 86400000);
+  const dayIndex = ((dayNumber % quotes.length) + quotes.length) % quotes.length;
+  const dailyQuote = quotes[dayIndex];
   $('#dailyQuote').textContent = '“' + dailyQuote.text + '”';
   const quoteAuthor = $('#dailyQuoteAuthor');
   if (quoteAuthor) quoteAuthor.textContent = '— ' + dailyQuote.author;

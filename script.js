@@ -1803,6 +1803,45 @@ function exportAnalyticsCSV() {
   notify('30 kunlik CSV hisoboti yuklab olindi.');
 }
 
+
+function printAnalyticsReport() {
+  const habits = activeHabits();
+  if (!habits.length) {
+    notify('Hisobot yaratish uchun avval kamida bitta faol odat qo‘shing.');
+    return;
+  }
+  const days = 30;
+  const possible = habits.length * days;
+  let totalDone = 0;
+  let activeDays = 0;
+  const habitRows = habits.map(habit => {
+    let done = 0;
+    for (let offset = 0; offset < days; offset++) {
+      if (isChecked(habit.id, shiftDate(today(), -offset))) done++;
+    }
+    totalDone += done;
+    return { title: habit.title || 'Nomsiz odat', category: CATEGORIES[habit.category] || 'Boshqa', done, rate: Math.round(done / days * 100) };
+  });
+  for (let offset = 0; offset < days; offset++) {
+    const date = shiftDate(today(), -offset);
+    if (habits.some(habit => isChecked(habit.id, date))) activeDays++;
+  }
+  const rate = possible ? Math.round(totalDone / possible * 100) : 0;
+  const safe = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const popup = window.open('', '_blank');
+  if (!popup) {
+    notify('Hisobot oynasi ochilmadi. Brauzerda popup oynalariga ruxsat bering.');
+    return;
+  }
+  const rows = habitRows.map(item => `<tr><td>${safe(item.title)}</td><td>${safe(item.category)}</td><td>${item.done} / 30</td><td>${item.rate}%</td></tr>`).join('');
+  popup.document.open();
+  popup.document.write(`<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vertex — 30 kunlik hisobot</title><style>
+    *{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#17211b;margin:0;padding:32px;line-height:1.5}header{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;border-bottom:2px solid #d4f34a;padding-bottom:18px}h1{font-size:25px;margin:0 0 4px}.muted{color:#657168;font-size:12px}.brand{font-weight:800;letter-spacing:3px;color:#33452d}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}.card{border:1px solid #dce3dc;border-radius:10px;padding:14px}.card span{display:block;color:#657168;font-size:11px;text-transform:uppercase}.card strong{font-size:25px;display:block;margin-top:4px}h2{font-size:17px;margin:24px 0 10px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px;border-bottom:1px solid #e2e8e2}th{background:#f2f5ef;font-size:11px;text-transform:uppercase}.note{font-size:11px;color:#657168;margin-top:22px}.actions{margin:0 0 22px;display:flex;gap:10px}button{border:0;border-radius:7px;padding:10px 16px;background:#d4f34a;font-weight:700;cursor:pointer}@media(max-width:560px){body{padding:18px}.summary{grid-template-columns:1fr}header{display:block}}@media print{body{padding:0}.actions{display:none}header{break-inside:avoid}table{break-inside:auto}tr{break-inside:avoid}}
+    </style></head><body><div class="actions"><button onclick="window.print()">PDF sifatida saqlash / Chop etish</button><button onclick="window.close()">Yopish</button></div><header><div><div class="brand">VERTEX</div><h1>30 kunlik rivojlanish hisoboti</h1><div class="muted">Hisobot sanasi: ${safe(today())}</div></div><div class="muted">Shaxsiy odatlar tahlili</div></header><section class="summary"><div class="card"><span>Umumiy bajarilish</span><strong>${rate}%</strong></div><div class="card"><span>Jami bajarilishlar</span><strong>${totalDone}</strong></div><div class="card"><span>Faol kunlar</span><strong>${activeDays}/30</strong></div></section><h2>Odatlar kesimida natijalar</h2><table><thead><tr><th>Odat</th><th>Kategoriya</th><th>Bajarilishlar</th><th>Natija</th></tr></thead><tbody>${rows}</tbody></table><p class="note">Hisobot Vertex ilovasidagi faol odatlar va so‘nggi 30 kunlik belgilaringiz asosida qurilmangizda yaratildi. Bu hisobot maslahat vositasi bo‘lib, natijalar mavjud ma’lumotlar bilan cheklangan.</p></body></html>`);
+  popup.document.close();
+  notify('Hisobot alohida oynada tayyor. Uni PDF sifatida saqlashingiz mumkin.');
+}
+
 function renderAnalytics() {
   const week = rateForDays(7);
   const month = rateForDays(30);
@@ -2660,6 +2699,7 @@ function bindEvents() {
 
   $('#exportBtn').addEventListener('click', exportData);
   document.getElementById('exportAnalyticsCsv')?.addEventListener('click', exportAnalyticsCSV);
+  document.getElementById('printAnalyticsReport')?.addEventListener('click', printAnalyticsReport);
   $('#importFile').addEventListener('change', event => {
     importData(event.target.files[0]);
     event.target.value = '';
@@ -2981,6 +3021,28 @@ function init() {
   renderAll();
   // Saqlangan faol sessiyani mavjud tugash vaqtini o‘zgartirmasdan davom ettiramiz.
   if (timerRunning) runTimerInterval();
+}
+
+// Vertex accordion controls: sections start closed; users can toggle or use the explicit close button.
+if (!document.documentElement.dataset.vertexAccordionBound) {
+  document.documentElement.dataset.vertexAccordionBound = '1';
+  document.addEventListener('click', event => {
+    const closeButton = event.target.closest('[data-close-vertex-panel]');
+    if (closeButton) {
+      const details = closeButton.closest('details.vertex-collapsible');
+      if (details) {
+        details.open = false;
+        const hint = details.querySelector('.vertex-collapse-hint');
+        if (hint) hint.textContent = 'Ochish';
+      }
+    }
+  });
+  document.addEventListener('toggle', event => {
+    const details = event.target;
+    if (!details.matches?.('details.vertex-collapsible')) return;
+    const hint = details.querySelector('.vertex-collapse-hint');
+    if (hint) hint.textContent = details.open ? 'Yopish' : 'Ochish';
+  }, true);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

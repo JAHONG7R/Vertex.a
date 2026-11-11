@@ -1518,3 +1518,23 @@ html[data-vertex-theme="amoled"] body .app-shell .stat-card{background:rgba(255,
 .analytics-export-row p{margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
 .analytics-export-row .button{white-space:nowrap}
 @media(max-width:560px){.analytics-export-row{align-items:stretch;flex-direction:column}.analytics-export-row .button{width:100%}}
+
+/* Phase 14 — print-ready analytics report */
+.analytics-print-panel{margin-top:18px}
+.analytics-print-panel .analytics-export-row{border-top:1px solid var(--line)}
+
+/* Phase 15: compact, accessible collapsible feature panels */
+.vertex-collapsible{margin:16px 0;border:1px solid var(--line,#30372a);border-radius:var(--radius,16px);background:var(--surface,#191d15);overflow:hidden}
+.vertex-collapsible>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:58px;padding:15px 19px;cursor:pointer;color:var(--text);font-weight:650;user-select:none}
+.vertex-collapsible>summary::-webkit-details-marker{display:none}
+.vertex-collapsible>summary::after{content:'＋';display:grid;place-items:center;width:27px;height:27px;flex:0 0 27px;border:1px solid var(--line,#30372a);border-radius:8px;color:var(--lime,#d4f34a);font-size:16px}
+.vertex-collapsible[open]>summary::after{content:'−'}
+.vertex-collapse-title{flex:1;min-width:0;font-size:13px}
+.vertex-collapse-hint{font-family:var(--mono,monospace);font-size:9px;color:var(--muted,#9aa18f);white-space:nowrap}
+.vertex-collapsible>.panel{margin:0;border:0;border-top:1px solid var(--line,#30372a);border-radius:0;box-shadow:none}
+.vertex-collapse-close{flex:0 0 auto;border:1px solid var(--line,#30372a);border-radius:8px;background:var(--surface-2,#22271c);color:var(--muted,#aab19d);padding:7px 10px;font-size:10px;font-weight:650}
+.vertex-collapse-close:hover{border-color:var(--lime,#d4f34a);color:var(--lime,#d4f34a)}
+.settings-export-collapse{margin:10px 0;background:var(--surface-2,#20251b)}
+.settings-export-collapse>.panel{padding:17px}
+.settings-export-collapse .panel-heading{align-items:flex-start}
+@media(max-width:560px){.vertex-collapsible>summary{padding:13px 14px;min-height:54px}.vertex-collapse-title{font-size:12px}.vertex-collapse-close{padding:7px 8px;font-size:9px}.settings-export-collapse>.panel{padding:14px}}

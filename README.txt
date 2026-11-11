@@ -1,14 +1,24 @@
-VERTEX — PHASE 13: ANALYTICS CSV EXPORT
+VERTEX — PHASE 15: SETTINGS + COLLAPSIBLE PANELS
 
-Qayerda ko‘rasiz:
-Analytics (Rivojlanish tahlili) sahifasini oching. “Odatlar seriyasi va qayta boshlash” panelidan keyin va “Har bir odat ko‘rsatkichi” panelidan oldin “Tahlil ma’lumotlarini yuklab olish” paneli turadi.
+WHAT CHANGED
+1) Analytics CSV export was moved from the Analytics page to Settings > Ma'lumotlar > Analytics hisobotlari.
+2) Print/PDF report was moved to the same Settings section.
+3) The eight added Analytics feature panels (Habit Intelligence, 8-week trend, monthly activity map, monthly review, habit comparison, category intelligence, weekly focus plan, streak resilience) are now closed by default.
+4) Tap/click a panel header to open it; tap/click again to close it. An explicit “Yopish ×” button is also inside each open panel.
+5) CSV and PDF controls in Settings are also individually collapsible and closed by default.
 
-Nima qo‘shildi:
-- So‘nggi 30 kun uchun CSV hisobot yuklab olish tugmasi.
-- Har bir faol odat va sana uchun bajarildi/bajarilmadi holati.
-- Odat nomi, kategoriya va sana ustunlari.
-- Fayl qurilmaning o‘zida yaratiladi; serverga yuborilmaydi.
-- Excel va Google Sheets uchun UTF-8 BOM bilan saqlanadi.
+WHERE TO FIND
+- Analytics: the added feature panels are compact closed rows. Open any row to view its content.
+- Settings > Ma'lumotlar: scroll to “Analytics hisobotlari”; open either CSV or PDF row.
 
-O‘rnatish:
-index.html, script.js, style.css fayllarini loyihangizdagi mos fayllar bilan almashtiring. supabase-config.js va supabase-auth.js fayllarini saqlang.
+INSTALLATION
+Replace these three files in the existing GitHub Pages repository:
+- index.html
+- script.js
+- style.css
+
+Keep these existing files unchanged:
+- supabase-config.js
+- supabase-auth.js
+
+No database schema or storage-key changes were made.

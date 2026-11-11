@@ -1391,3 +1391,14 @@ html[data-vertex-theme="amoled"] body .app-shell .stat-card{background:rgba(255,
 .intelligence-item strong{display:block;font-size:13px;line-height:1.45;color:var(--text,#f5f6f2)}
 .intelligence-item p{margin:5px 0 0;color:var(--muted,#a4aaa0);font-size:12px;line-height:1.55}
 @media(max-width:700px){.intelligence-grid{grid-template-columns:1fr}}
+
+/* Smart Analytics — eight-week progress trend */
+.vertex-trend-panel{margin-top:22px}
+.vertex-trend-chart{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px;align-items:end;min-height:190px;padding:18px 8px 8px}
+.vertex-trend-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px;min-width:0;height:170px}
+.vertex-trend-col strong{font-size:11px;color:var(--text,#f5f6f2)}
+.vertex-trend-track{display:flex;align-items:flex-end;justify-content:center;width:min(100%,34px);height:120px;border-radius:9px;background:rgba(255,255,255,.07);overflow:hidden}
+.vertex-trend-track i{display:block;width:100%;min-height:2px;border-radius:8px 8px 3px 3px;background:var(--lime,#d4f34a);transition:height .25s ease}
+.vertex-trend-col span{font-size:10px;color:var(--muted,#a4aaa0);white-space:nowrap}
+.vertex-trend-summary{padding:12px 14px;border-radius:12px;background:rgba(212,243,74,.08);color:var(--text,#f5f6f2);font-size:12px;line-height:1.55}
+@media(max-width:520px){.vertex-trend-chart{gap:5px;padding-inline:0}.vertex-trend-col{height:150px}.vertex-trend-track{height:100px;width:min(100%,26px)}.vertex-trend-col span{font-size:9px}}

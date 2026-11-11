@@ -1851,6 +1851,7 @@ function renderAnalytics() {
   }
 
   renderHabitIntelligence();
+  renderEightWeekTrend();
 
   $('#categoryBreakdown').innerHTML = Object.entries(CATEGORIES)
     .filter(([key]) => key !== 'discipline' || state.habits.some(habit => habit.category === key))
@@ -1873,6 +1874,40 @@ function renderAnalytics() {
         </div>
       `;
     }).join('');
+}
+
+function renderEightWeekTrend() {
+  const chart = document.getElementById('vertexTrendChart');
+  const summary = document.getElementById('vertexTrendSummary');
+  if (!chart || !summary) return;
+  const habits = activeHabits();
+  if (!habits.length) {
+    chart.innerHTML = '<p class="habit-stat-empty">Trendni ko‘rish uchun avval odat qo‘shing.</p>';
+    summary.textContent = 'Odatlar qo‘shilgach, haftalik o‘zgarishlar shu yerda ko‘rinadi.';
+    return;
+  }
+  const weeks = [];
+  for (let w = 7; w >= 0; w--) {
+    let done = 0;
+    for (let d = 0; d < 7; d++) {
+      const offset = w * 7 + d;
+      const date = shiftDate(today(), -offset);
+      done += habits.filter(h => isChecked(h.id, date)).length;
+    }
+    const possible = habits.length * 7;
+    weeks.push({ label: w === 0 ? 'Joriy' : `${w} hf`, rate: Math.round(done / possible * 100), done });
+  }
+  chart.innerHTML = weeks.map((item, index) => `
+    <div class="vertex-trend-col" title="${item.done}/${habits.length * 7} bajarilish">
+      <strong>${item.rate}%</strong>
+      <div class="vertex-trend-track"><i style="height:${item.rate}%"></i></div>
+      <span>${item.label}</span>
+    </div>`).join('');
+  const current = weeks[7].rate;
+  const previous = weeks[6].rate;
+  const delta = current - previous;
+  const direction = delta > 0 ? `Oldingi haftaga nisbatan ${delta} foiz punktga o‘sish bor.` : delta < 0 ? `Oldingi haftaga nisbatan ${Math.abs(delta)} foiz punktga pasaygan; kichik va bajarish oson maqsadlarni tanlang.` : 'Natija oldingi haftaga nisbatan bir xil.';
+  summary.textContent = `Joriy hafta: ${current}%. ${direction}`;
 }
 
 function isValidTimeZone(zone) {

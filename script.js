@@ -2069,6 +2069,22 @@ function renderAchievements() {
     const percent = Math.min(100, Math.round(b.value / b.goal * 100));
     return `<article class="achievement-card ${done ? 'unlocked' : 'locked'}"><div class="achievement-card-top"><span class="achievement-icon">${b.icon}</span><span class="achievement-state">${done ? '✓ OCHILDI' : '🔒 QULFLANGAN'}</span></div><h3>${b.name}</h3><p>${b.desc}</p><div class="achievement-progress"><span style="width:${percent}%"></span></div><div class="achievement-progress-label"><span>${Math.min(b.value, b.goal)} / ${b.goal} ${b.unit}</span><b>${percent}%</b></div></article>`;
   }).join('');
+  // Weekly quests are calculated from existing logs; no new storage fields are needed.
+  const questStart = shiftDate(today(), -6);
+  const weekLogs = state.logs.filter(log => log.date >= questStart && log.date <= today());
+  const activeDays = new Set(weekLogs.map(log => log.date)).size;
+  const uniqueHabits = new Set(weekLogs.map(log => String(log.habitId))).size;
+  const quests = [
+    { icon: '🔥', title: 'Barqarorlik', detail: '5 xil kunda odat bajaring', value: activeDays, goal: 5, unit: 'kun' },
+    { icon: '🎯', title: 'Maqsad sari', detail: 'Hafta davomida 10 ta bajarilish', value: weekLogs.length, goal: 10, unit: 'marta' },
+    { icon: '🌿', title: 'Xilma-xillik', detail: '3 xil odat ustida ishlang', value: uniqueHabits, goal: 3, unit: 'odat' }
+  ];
+  const questGrid = $('#weeklyChallenges');
+  if (questGrid) questGrid.innerHTML = quests.map(q => {
+    const done = q.value >= q.goal;
+    const pct = Math.min(100, Math.round(q.value / q.goal * 100));
+    return `<article class="challenge-card ${done ? 'completed' : ''}"><div class="challenge-top"><span>${q.icon}</span><b>${done ? '✓ BAJARILDI' : 'DAVOM ETMOQDA'}</b></div><h3>${q.title}</h3><p>${q.detail}</p><div class="challenge-track"><span style="width:${pct}%"></span></div><div class="challenge-meta"><span>${Math.min(q.value,q.goal)} / ${q.goal} ${q.unit}</span><strong>${pct}%</strong></div></article>`;
+  }).join('');
   const list = $('#habitXPList');
   if (list) {
     const rows = state.habits.map(h => ({ habit: h, count: state.logs.filter(log => log.habitId === h.id).length }))

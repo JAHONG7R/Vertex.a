@@ -1852,6 +1852,7 @@ function renderAnalytics() {
 
   renderHabitIntelligence();
   renderEightWeekTrend();
+  renderMonthlyActivityMap();
 
   $('#categoryBreakdown').innerHTML = Object.entries(CATEGORIES)
     .filter(([key]) => key !== 'discipline' || state.habits.some(habit => habit.category === key))
@@ -1984,6 +1985,38 @@ function renderAll() {
 /* ==============================
    YUTUQLAR VA BADGE TIZIMI
 ============================== */
+function renderMonthlyActivityMap() {
+  const grid = $('#monthlyActivityGrid');
+  const summary = $('#monthlyActivitySummary');
+  const note = $('#monthlyActivityNote');
+  if (!grid) return;
+  const habits = activeHabits();
+  if (!habits.length) {
+    grid.innerHTML = '<p class="habit-stat-empty">Faollik xaritasini ko‘rish uchun avval odat qo‘shing.</p>';
+    if (summary) summary.textContent = '0 / 30 faol kun';
+    if (note) note.textContent = 'Odat qo‘shilgach, so‘nggi 30 kunlik belgilaringiz shu yerda aks etadi.';
+    return;
+  }
+  let activeDays = 0;
+  let totalDone = 0;
+  const cells = [];
+  for (let offset = 29; offset >= 0; offset--) {
+    const date = shiftDate(today(), -offset);
+    const done = habits.filter(habit => isChecked(habit.id, date)).length;
+    const rate = done / habits.length;
+    const level = done === 0 ? 0 : rate < 0.25 ? 1 : rate < 0.5 ? 2 : rate < 0.75 ? 3 : 4;
+    if (done > 0) activeDays++;
+    totalDone += done;
+    const dayLabel = date.slice(8, 10) + '.' + date.slice(5, 7);
+    const todayMark = date === today();
+    const title = `${dayLabel}: ${done}/${habits.length} ta odat${todayMark ? ' · bugun' : ''}`;
+    cells.push(`<div class="monthly-activity-cell activity-level-${level}${todayMark ? ' is-today' : ''}" role="listitem" tabindex="0" title="${title}" aria-label="${title}"><span>${date.slice(8,10)}</span><small>${done}</small></div>`);
+  }
+  grid.innerHTML = cells.join('');
+  if (summary) summary.textContent = `${activeDays} / 30 faol kun`;
+  if (note) note.textContent = `${totalDone} ta bajarilish · ${habits.length} ta faol odat asosida. Katakdagi yuqori raqam sana, pastdagi raqam bajarilgan odatlar soni.`;
+}
+
 function renderHabitIntelligence() {
   const host = $('#habitIntelligence');
   if (!host) return;

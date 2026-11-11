@@ -1279,6 +1279,53 @@ function renderHabits() {
    REJALASHTIRUVCHI
 ============================== */
 
+function renderYearActivityCalendar() {
+  const grid = document.getElementById('yearActivityGrid');
+  if (!grid) return;
+  const end = parseDate(today());
+  const firstDay = new Date(end);
+  firstDay.setDate(firstDay.getDate() - 364);
+  const firstRealDate = localDateString(firstDay);
+  const start = new Date(firstDay);
+  // Align the first cell to Sunday so the calendar forms stable week columns.
+  const offset = start.getDay();
+  start.setDate(start.getDate() - offset);
+  const validHabitIds = new Set(state.habits.map(h => h.id));
+  const counts = new Map();
+  state.logs.forEach(log => {
+    if (!validHabitIds.has(log.habitId)) return;
+    counts.set(log.date, (counts.get(log.date) || 0) + 1);
+  });
+  const activeCount = state.habits.filter(h => !h.archived).length || state.habits.length;
+  const dates = [];
+  let activeDays = 0;
+  const monthLabels = [];
+  let previousMonth = -1;
+  for (let i = 0; i < 371; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const key = localDateString(d);
+    const count = counts.get(key) || 0;
+    const inRange = key >= firstRealDate && key <= today();
+    const ratio = activeCount ? count / activeCount : 0;
+    const level = count === 0 ? 0 : ratio < .25 ? 1 : ratio < .5 ? 2 : ratio < .8 ? 3 : 4;
+    if (inRange && count > 0) activeDays++;
+    if (d.getMonth() !== previousMonth && d.getFullYear() === end.getFullYear()) {
+      monthLabels.push(`<span style="grid-column:${Math.floor(i/7)+1}">${d.toLocaleDateString('uz-UZ',{month:'short'})}</span>`);
+      previousMonth = d.getMonth();
+    }
+    dates.push({key, count, level, inRange, d});
+  }
+  const cells = dates.map((item, index) => {
+    const label = `${dateLabel(item.key,{day:'numeric',month:'long',year:'numeric'})}: ${item.count} ta odat bajarilgan`;
+    return `<button type="button" class="year-activity-cell activity-level-${item.level} ${item.inRange ? '' : 'outside-year'} ${item.key === plannerDate ? 'selected' : ''}" data-year-date="${item.key}" ${item.inRange ? '' : 'tabindex="-1" aria-hidden="true"'} aria-label="${escapeHTML(label)}" title="${escapeHTML(label)}" ${item.inRange ? '' : 'disabled'}></button>`;
+  }).join('');
+  grid.innerHTML = cells;
+  document.getElementById('yearActivityMonths').innerHTML = monthLabels.join('');
+  document.getElementById('yearActivitySummary').textContent = `${activeDays} / 365 faol kun`;
+  document.getElementById('yearActivitySelected').textContent = `Tanlangan sana: ${dateLabel(plannerDate,{day:'numeric',month:'short',year:'numeric'})}`;
+}
+
 function renderPlanner() {
   $('#plannerDate').value = plannerDate;
   $('#plannerDateTitle').textContent = plannerDate === today()
@@ -1305,6 +1352,7 @@ function renderPlanner() {
   `).join('');
   $('#plannerEmpty').classList.toggle('hidden', tasks.length > 0);
   $('#plannerTaskList').classList.toggle('hidden', tasks.length === 0);
+  renderYearActivityCalendar();
 }
 
 /* ==============================
@@ -2596,6 +2644,13 @@ function bindEvents() {
   });
 
   document.addEventListener('click', event => {
+    const yearDate = event.target.closest('[data-year-date]');
+    if (yearDate && validDate(yearDate.dataset.yearDate)) {
+      plannerDate = yearDate.dataset.yearDate;
+      $('#plannerDate').value = plannerDate;
+      renderPlanner();
+      return;
+    }
     const toggle = event.target.closest('[data-toggle-check]');
     if (toggle) {
       toggleCheck(toggle.dataset.toggleCheck, toggle.dataset.date);

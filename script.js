@@ -1280,14 +1280,16 @@ function renderHabits() {
 ============================== */
 
 function renderYearActivityCalendar() {
-  const grid = document.getElementById('yearActivityGrid');
-  if (!grid) return;
+  const targets = [
+    {grid:'yearActivityGrid', months:'yearActivityMonths', summary:'yearActivitySummary', selected:'yearActivitySelected'},
+    {grid:'yearActivityGridMonths', months:'yearActivityMonthsMonths', summary:'yearActivitySummaryMonths', selected:'yearActivitySelectedMonths'}
+  ];
+  if (!targets.some(target => document.getElementById(target.grid))) return;
   const end = parseDate(today());
   const firstDay = new Date(end);
   firstDay.setDate(firstDay.getDate() - 364);
   const firstRealDate = localDateString(firstDay);
   const start = new Date(firstDay);
-  // Align the first cell to Sunday so the calendar forms stable week columns.
   const offset = start.getDay();
   start.setDate(start.getDate() - offset);
   const validHabitIds = new Set(state.habits.map(h => h.id));
@@ -1314,16 +1316,23 @@ function renderYearActivityCalendar() {
       monthLabels.push(`<span style="grid-column:${Math.floor(i/7)+1}">${d.toLocaleDateString('uz-UZ',{month:'short'})}</span>`);
       previousMonth = d.getMonth();
     }
-    dates.push({key, count, level, inRange, d});
+    dates.push({key, count, level, inRange});
   }
-  const cells = dates.map((item, index) => {
+  const cells = dates.map(item => {
     const label = `${dateLabel(item.key,{day:'numeric',month:'long',year:'numeric'})}: ${item.count} ta odat bajarilgan`;
     return `<button type="button" class="year-activity-cell activity-level-${item.level} ${item.inRange ? '' : 'outside-year'} ${item.key === plannerDate ? 'selected' : ''}" data-year-date="${item.key}" ${item.inRange ? '' : 'tabindex="-1" aria-hidden="true"'} aria-label="${escapeHTML(label)}" title="${escapeHTML(label)}" ${item.inRange ? '' : 'disabled'}></button>`;
   }).join('');
-  grid.innerHTML = cells;
-  document.getElementById('yearActivityMonths').innerHTML = monthLabels.join('');
-  document.getElementById('yearActivitySummary').textContent = `${activeDays} / 365 faol kun`;
-  document.getElementById('yearActivitySelected').textContent = `Tanlangan sana: ${dateLabel(plannerDate,{day:'numeric',month:'short',year:'numeric'})}`;
+  targets.forEach(target => {
+    const grid = document.getElementById(target.grid);
+    if (!grid) return;
+    grid.innerHTML = cells;
+    const months = document.getElementById(target.months);
+    if (months) months.innerHTML = monthLabels.join('');
+    const summary = document.getElementById(target.summary);
+    if (summary) summary.textContent = `${activeDays} / 365 faol kun`;
+    const selected = document.getElementById(target.selected);
+    if (selected) selected.textContent = `Tanlangan sana: ${dateLabel(plannerDate,{day:'numeric',month:'short',year:'numeric'})}`;
+  });
 }
 
 function renderPlanner() {
@@ -1935,6 +1944,7 @@ function printAnalyticsReport() {
 }
 
 function renderAnalytics() {
+  renderYearActivityCalendar();
   const week = rateForDays(7);
   const month = rateForDays(30);
   $('#analyticsWeekRate').textContent = week + '%';

@@ -2095,6 +2095,22 @@ function renderAchievements() {
     const pct = Math.min(100, Math.round(q.value / q.goal * 100));
     return `<article class="challenge-card ${done ? 'completed' : ''}"><div class="challenge-top"><span>${q.icon}</span><b>${done ? '✓ BAJARILDI' : 'DAVOM ETMOQDA'}</b></div><h3>${q.title}</h3><p>${q.detail}</p><div class="challenge-track"><span style="width:${pct}%"></span></div><div class="challenge-meta"><span>${Math.min(q.value,q.goal)} / ${q.goal} ${q.unit}</span><strong>${pct}%</strong></div></article>`;
   }).join('');
+  // A compact seven-day activity map, derived only from the existing habit log.
+  const weekMap = $('#weeklyQuestCalendar');
+  if (weekMap) {
+    const dayLabels = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
+    const todayDate = today();
+    const cells = Array.from({ length: 7 }, (_, i) => {
+      const date = shiftDate(todayDate, i - 6);
+      const count = weekLogs.filter(log => log.date === date).length;
+      const day = new Date(`${date}T12:00:00`).getDay();
+      const label = dayLabels[(day + 6) % 7];
+      const isToday = date === todayDate;
+      return `<div class="quest-day ${count ? 'has-activity' : ''} ${isToday ? 'is-today' : ''}" title="${date}: ${count} ta bajarilish"><span>${label}</span><b>${date.slice(8,10)}</b><small>${count ? `${count} ta` : '—'}</small></div>`;
+    });
+    const activeCount = cells.filter((_, i) => weekLogs.some(log => log.date === shiftDate(todayDate, i - 6))).length;
+    weekMap.innerHTML = `<div class="quest-map-heading"><strong>7 KUNLIK FAOLLIK</strong><span>${activeCount}/7 faol kun</span></div><div class="quest-day-grid">${cells.join('')}</div>`;
+  }
   const list = $('#habitXPList');
   if (list) {
     const rows = state.habits.map(h => ({ habit: h, count: state.logs.filter(log => log.habitId === h.id).length }))

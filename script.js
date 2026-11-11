@@ -1811,35 +1811,79 @@ function printAnalyticsReport() {
     return;
   }
   const days = 30;
-  const possible = habits.length * days;
+  const dateAt = offset => shiftDate(today(), -offset);
+  const safe = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const dayRows = [];
   let totalDone = 0;
   let activeDays = 0;
+  let previousDone = 0;
+  let previousActiveDays = 0;
   const habitRows = habits.map(habit => {
     let done = 0;
-    for (let offset = 0; offset < days; offset++) {
-      if (isChecked(habit.id, shiftDate(today(), -offset))) done++;
+    let previous = 0;
+    let bestRun = 0;
+    let run = 0;
+    for (let offset = days - 1; offset >= 0; offset--) {
+      if (isChecked(habit.id, dateAt(offset))) { done++; run++; bestRun = Math.max(bestRun, run); }
+      else run = 0;
     }
+    for (let offset = 30; offset < 60; offset++) if (isChecked(habit.id, dateAt(offset))) previous++;
     totalDone += done;
-    return { title: habit.title || 'Nomsiz odat', category: CATEGORIES[habit.category] || 'Boshqa', done, rate: Math.round(done / days * 100) };
+    previousDone += previous;
+    const rate = Math.round(done / days * 100);
+    return { title: habit.title || 'Nomsiz odat', category: CATEGORIES[habit.category] || 'Boshqa', done, previous, rate, delta: rate - Math.round(previous / days * 100), bestRun };
   });
-  for (let offset = 0; offset < days; offset++) {
-    const date = shiftDate(today(), -offset);
-    if (habits.some(habit => isChecked(habit.id, date))) activeDays++;
+  for (let offset = days - 1; offset >= 0; offset--) {
+    const date = dateAt(offset);
+    const count = habits.filter(habit => isChecked(habit.id, date)).length;
+    if (count) activeDays++;
+    dayRows.push({ date, count, rate: Math.round(count / habits.length * 100) });
   }
+  for (let offset = 30; offset < 60; offset++) {
+    if (habits.some(habit => isChecked(habit.id, dateAt(offset)))) previousActiveDays++;
+  }
+  const possible = habits.length * days;
   const rate = possible ? Math.round(totalDone / possible * 100) : 0;
-  const safe = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const previousRate = possible ? Math.round(previousDone / possible * 100) : 0;
+  const delta = rate - previousRate;
+  const categoryMap = new Map();
+  habitRows.forEach(item => {
+    const current = categoryMap.get(item.category) || { category: item.category, done: 0, possible: 0, habits: 0 };
+    current.done += item.done; current.possible += days; current.habits++;
+    categoryMap.set(item.category, current);
+  });
+  const categoryRows = [...categoryMap.values()].map(item => ({ ...item, rate: Math.round(item.done / item.possible * 100) })).sort((a,b) => b.rate-a.rate);
+  const weekdayNames = ['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'];
+  const weekdayMap = weekdayNames.map(name => ({ name, done: 0, days: 0 }));
+  dayRows.forEach(item => {
+    const day = new Date(item.date + 'T12:00:00').getDay();
+    weekdayMap[day].done += item.count; weekdayMap[day].days++;
+  });
+  const weekdayRows = weekdayMap.filter(item => item.days).map(item => ({ ...item, average: (item.done / item.days).toFixed(1) })).sort((a,b) => Number(b.average)-Number(a.average));
+  const strongest = [...habitRows].sort((a,b) => b.rate-a.rate || b.done-a.done)[0];
+  const needsAttention = [...habitRows].sort((a,b) => a.rate-b.rate || a.done-b.done)[0];
+  const habitTable = habitRows.slice().sort((a,b) => b.rate-a.rate).map(item => `<tr><td>${safe(item.title)}</td><td>${safe(item.category)}</td><td>${item.done}/30</td><td>${item.rate}%</td><td>${item.delta > 0 ? '+' : ''}${item.delta} foiz punkt</td><td>${item.bestRun} kun</td></tr>`).join('');
+  const categoryTable = categoryRows.map(item => `<tr><td>${safe(item.category)}</td><td>${item.habits}</td><td>${item.done}/${item.possible}</td><td>${item.rate}%</td></tr>`).join('');
+  const dailyTable = dayRows.slice().reverse().map(item => `<tr><td>${safe(item.date)}</td><td>${weekdayNames[new Date(item.date + 'T12:00:00').getDay()]}</td><td>${item.count}/${habits.length}</td><td>${item.rate}%</td></tr>`).join('');
+  const weekdayTable = weekdayRows.map(item => `<tr><td>${item.name}</td><td>${item.days}</td><td>${item.average}</td></tr>`).join('');
   const popup = window.open('', '_blank');
   if (!popup) {
     notify('Hisobot oynasi ochilmadi. Brauzerda popup oynalariga ruxsat bering.');
     return;
   }
-  const rows = habitRows.map(item => `<tr><td>${safe(item.title)}</td><td>${safe(item.category)}</td><td>${item.done} / 30</td><td>${item.rate}%</td></tr>`).join('');
   popup.document.open();
-  popup.document.write(`<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vertex — 30 kunlik hisobot</title><style>
-    *{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#17211b;margin:0;padding:32px;line-height:1.5}header{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;border-bottom:2px solid #d4f34a;padding-bottom:18px}h1{font-size:25px;margin:0 0 4px}.muted{color:#657168;font-size:12px}.brand{font-weight:800;letter-spacing:3px;color:#33452d}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}.card{border:1px solid #dce3dc;border-radius:10px;padding:14px}.card span{display:block;color:#657168;font-size:11px;text-transform:uppercase}.card strong{font-size:25px;display:block;margin-top:4px}h2{font-size:17px;margin:24px 0 10px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px;border-bottom:1px solid #e2e8e2}th{background:#f2f5ef;font-size:11px;text-transform:uppercase}.note{font-size:11px;color:#657168;margin-top:22px}.actions{margin:0 0 22px;display:flex;gap:10px}button{border:0;border-radius:7px;padding:10px 16px;background:#d4f34a;font-weight:700;cursor:pointer}@media(max-width:560px){body{padding:18px}.summary{grid-template-columns:1fr}header{display:block}}@media print{body{padding:0}.actions{display:none}header{break-inside:avoid}table{break-inside:auto}tr{break-inside:avoid}}
-    </style></head><body><div class="actions"><button onclick="window.print()">PDF sifatida saqlash / Chop etish</button><button onclick="window.close()">Yopish</button></div><header><div><div class="brand">VERTEX</div><h1>30 kunlik rivojlanish hisoboti</h1><div class="muted">Hisobot sanasi: ${safe(today())}</div></div><div class="muted">Shaxsiy odatlar tahlili</div></header><section class="summary"><div class="card"><span>Umumiy bajarilish</span><strong>${rate}%</strong></div><div class="card"><span>Jami bajarilishlar</span><strong>${totalDone}</strong></div><div class="card"><span>Faol kunlar</span><strong>${activeDays}/30</strong></div></section><h2>Odatlar kesimida natijalar</h2><table><thead><tr><th>Odat</th><th>Kategoriya</th><th>Bajarilishlar</th><th>Natija</th></tr></thead><tbody>${rows}</tbody></table><p class="note">Hisobot Vertex ilovasidagi faol odatlar va so‘nggi 30 kunlik belgilaringiz asosida qurilmangizda yaratildi. Bu hisobot maslahat vositasi bo‘lib, natijalar mavjud ma’lumotlar bilan cheklangan.</p></body></html>`);
+  popup.document.write(`<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vertex — batafsil 30 kunlik hisobot</title><style>
+    *{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#17211b;margin:0;padding:30px;line-height:1.45}header{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;border-bottom:3px solid #d4f34a;padding-bottom:18px}h1{font-size:25px;margin:0 0 5px}.muted,.note{color:#657168;font-size:11px}.brand{font-weight:800;letter-spacing:3px;color:#33452d}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0}.card{border:1px solid #dce3dc;border-radius:10px;padding:13px}.card span{display:block;color:#657168;font-size:10px;text-transform:uppercase}.card strong{font-size:23px;display:block;margin-top:4px}h2{font-size:17px;margin:24px 0 9px;border-bottom:1px solid #e2e8e2;padding-bottom:6px}h3{font-size:13px;margin:15px 0 6px}.insights{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.insight{background:#f5f7f2;border-left:4px solid #a9c83a;padding:11px;border-radius:7px;font-size:12px}.insight strong{display:block;margin-bottom:3px}table{width:100%;border-collapse:collapse;font-size:11px;margin:8px 0 14px}th,td{text-align:left;padding:7px;border-bottom:1px solid #e2e8e2}th{background:#f2f5ef;font-size:10px;text-transform:uppercase}.actions{margin:0 0 20px;display:flex;gap:10px}button{border:0;border-radius:7px;padding:10px 16px;background:#d4f34a;font-weight:700;cursor:pointer}.secondary{background:#e9eee7}.note{margin-top:22px}.page-break{break-before:page}@media(max-width:650px){body{padding:16px}.summary{grid-template-columns:repeat(2,1fr)}.insights{grid-template-columns:1fr}header{display:block}table{font-size:10px}th,td{padding:5px}}@media print{body{padding:0}.actions{display:none}header{break-inside:avoid}.card,.insight{break-inside:avoid}table{break-inside:auto}tr{break-inside:avoid}h2{break-after:avoid}}
+    </style></head><body><div class="actions"><button onclick="window.print()">PDF sifatida saqlash / Chop etish</button><button class="secondary" onclick="window.close()">Yopish</button></div><header><div><div class="brand">VERTEX · PERSONAL GROWTH SYSTEM</div><h1>Batafsil rivojlanish hisoboti</h1><div class="muted">Davr: ${safe(dateAt(29))} — ${safe(today())} · Hisobot sanasi: ${safe(today())}</div></div><div class="muted">Shaxsiy odatlar tahlili</div></header>
+    <section class="summary"><div class="card"><span>Umumiy bajarilish</span><strong>${rate}%</strong></div><div class="card"><span>Jami bajarilishlar</span><strong>${totalDone}</strong></div><div class="card"><span>Faol kunlar</span><strong>${activeDays}/30</strong></div><div class="card"><span>Faol odatlar</span><strong>${habits.length}</strong></div></section>
+    <h2>Qisqa xulosa</h2><div class="insights"><div class="insight"><strong>Oldingi 30 kun bilan taqqoslash</strong>${delta > 0 ? '+' : ''}${delta} foiz punkt · Oldingi natija ${previousRate}% edi.</div><div class="insight"><strong>Eng yaxshi natija</strong>${safe(strongest.title)} — ${strongest.rate}% bajarilish.</div><div class="insight"><strong>E’tibor talab qiladigan odat</strong>${safe(needsAttention.title)} — ${needsAttention.rate}% bajarilish. Kichikroq maqsaddan boshlash foydali bo‘lishi mumkin.</div><div class="insight"><strong>Faol kunlar taqqoslanishi</strong>${activeDays} kun · oldingi davrda ${previousActiveDays} kun.</div></div>
+    <h2>Odatlar kesimida batafsil natijalar</h2><table><thead><tr><th>Odat</th><th>Kategoriya</th><th>Bajarilish</th><th>Foiz</th><th>30 kunlik o‘zgarish</th><th>Eng uzun seriya</th></tr></thead><tbody>${habitTable}</tbody></table>
+    <h2>Kategoriyalar bo‘yicha tahlil</h2><table><thead><tr><th>Kategoriya</th><th>Odatlar</th><th>Bajarilishlar</th><th>Natija</th></tr></thead><tbody>${categoryTable}</tbody></table>
+    <h2>Hafta kunlari bo‘yicha faollik</h2><table><thead><tr><th>Hafta kuni</th><th>Hisoblangan kunlar</th><th>Kuniga o‘rtacha bajarilish</th></tr></thead><tbody>${weekdayTable}</tbody></table>
+    <h2 class="page-break">Kunlik faollik jurnali</h2><table><thead><tr><th>Sana</th><th>Hafta kuni</th><th>Bajarilgan odatlar</th><th>Kunlik foiz</th></tr></thead><tbody>${dailyTable}</tbody></table>
+    <p class="note">Hisobot Vertex ilovasidagi faol odatlar va mavjud belgilaringiz asosida qurilmangizda yaratildi. Umumiy foiz har bir faol odat uchun 30 kunlik imkoniyatga nisbatan hisoblanadi. “Eng uzun seriya” faqat ushbu 30 kun ichida kuzatilgan ketma-ket kunlarni bildiradi. Hisobot maslahat vositasi bo‘lib, natijalar ilovada mavjud ma’lumotlar bilan cheklangan; bu tibbiy yoki professional baholash emas.</p></body></html>`);
   popup.document.close();
-  notify('Hisobot alohida oynada tayyor. Uni PDF sifatida saqlashingiz mumkin.');
+  notify('Batafsil hisobot tayyor. Uni PDF sifatida saqlashingiz mumkin.');
 }
 
 function renderAnalytics() {

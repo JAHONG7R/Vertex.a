@@ -1488,3 +1488,14 @@ html[data-vertex-theme="amoled"] body .app-shell .stat-card{background:rgba(255,
 .category-period-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:rgba(212,243,74,.09);font-size:17px}
 .category-period-bars{display:grid;gap:9px}.category-period-bars>div{display:grid;gap:5px}.category-period-bars .review-track{height:7px}
 @media(max-width:680px){.category-period-panel{padding:17px}.category-period-list{grid-template-columns:1fr;gap:9px}.category-period-row{padding:13px}}
+
+
+/* Phase 11 — Weekly Focus Plan */
+.weekly-focus-panel{margin:22px 0;padding:24px}
+.weekly-focus-list{display:grid;gap:11px;margin-top:16px}
+.weekly-focus-row{display:flex;align-items:flex-start;gap:12px;min-width:0;padding:14px;border:1px solid var(--line,rgba(255,255,255,.09));border-radius:15px;background:var(--surface-2,rgba(255,255,255,.025))}
+.weekly-focus-rank{display:grid;place-items:center;width:25px;height:25px;flex:0 0 25px;border-radius:8px;background:rgba(212,243,74,.1);color:var(--lime,#d4f34a);font-size:12px;font-weight:800}
+.weekly-focus-icon{display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;border-radius:11px;background:color-mix(in srgb,var(--focus-accent) 14%,transparent);font-size:18px}
+.weekly-focus-main{flex:1;min-width:0}.weekly-focus-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}.weekly-focus-head strong{font-size:13px;overflow-wrap:anywhere}.weekly-focus-head b{font-size:12px;color:var(--focus-accent);white-space:nowrap}
+.weekly-focus-main .review-track{height:7px}.weekly-focus-main small{display:block;margin-top:6px;color:var(--muted);font-size:10px}.weekly-focus-main p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+@media(max-width:620px){.weekly-focus-panel{padding:17px}.weekly-focus-row{padding:12px;gap:9px}}

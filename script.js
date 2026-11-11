@@ -1700,6 +1700,41 @@ function showCalendarMonthDetail(monthKey) {
   panel.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
+function renderWeeklyFocusPlan() {
+  const root = document.getElementById('weeklyFocusList');
+  const note = document.getElementById('weeklyFocusNote');
+  if (!root) return;
+  const habits = activeHabits();
+  if (!habits.length) {
+    root.innerHTML = '<p class="habit-stat-empty">Avval odat qo‘shing — shunda shaxsiy fokus rejangiz paydo bo‘ladi.</p>';
+    if (note) note.textContent = 'Hozircha faol odatlar mavjud emas.';
+    return;
+  }
+  const ranked = habits.map(habit => {
+    let done = 0;
+    for (let i = 0; i < 14; i++) {
+      if (isChecked(habit.id, shiftDate(today(), -i))) done++;
+    }
+    return { habit, done, rate: Math.round(done / 14 * 100) };
+  }).sort((a, b) => a.rate - b.rate || a.done - b.done).slice(0, 3);
+  root.innerHTML = ranked.map((item, index) => {
+    const accent = normalizeHabitColor(item.habit.color);
+    const advice = item.done === 0
+      ? 'Juda kichik boshlang‘ich qadam belgilang va bajarish uchun qulay vaqt tanlang.'
+      : item.rate < 35
+        ? 'Maqsadni vaqtincha soddalashtiring; haftada bir necha barqaror bajarishdan boshlang.'
+        : 'Odatni mavjud kundalik rutiningizga bog‘lang va hozirgi sur’atni mustahkamlang.';
+    return `<article class="weekly-focus-row" style="--focus-accent:${accent}">
+      <span class="weekly-focus-rank">${index + 1}</span>
+      <span class="weekly-focus-icon">${habitIcon(item.habit)}</span>
+      <div class="weekly-focus-main"><div class="weekly-focus-head"><strong>${escapeHTML(item.habit.title)}</strong><b>${item.done}/14</b></div>
+      <div class="review-track"><i style="width:${item.rate}%;background:${accent}"></i></div>
+      <small>${item.rate}% · so‘nggi 14 kun</small><p>${advice}</p></div>
+    </article>`;
+  }).join('');
+  if (note) note.textContent = `Ro‘yxat ${habits.length} ta faol odat ichidan bajarilish foizi eng past ${ranked.length} tasini ko‘rsatadi. Bu tanqid emas — keyingi kichik qadamni tanlashga yordam beruvchi kuzatuv.`;
+}
+
 function renderAnalytics() {
   const week = rateForDays(7);
   const month = rateForDays(30);
@@ -1856,6 +1891,7 @@ function renderAnalytics() {
   renderMonthlyReview();
   renderHabitPeriodComparison();
   renderCategoryPeriodComparison();
+  renderWeeklyFocusPlan();
 
   $('#categoryBreakdown').innerHTML = Object.entries(CATEGORIES)
     .filter(([key]) => key !== 'discipline' || state.habits.some(habit => habit.category === key))

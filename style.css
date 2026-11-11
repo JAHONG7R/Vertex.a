@@ -1055,3 +1055,90 @@ html[data-vertex-theme="amoled"] .nav-item,html[data-vertex-theme="amoled"] .ico
 .vertex-player-seek{display:grid;grid-template-columns:32px minmax(0,1fr) 32px;align-items:center;gap:8px;margin-top:12px;color:#a9b29f;font-size:9px;font-variant-numeric:tabular-nums}.vertex-player-seek input,.vertex-player-volume input{width:100%;accent-color:#d4f34a;min-width:0}
 .vertex-player-controls{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0 12px}.vertex-player-controls>button{width:36px;height:36px;border:1px solid rgba(212,243,74,.2);border-radius:50%;background:rgba(255,255,255,.055);color:#eaf0df;font-size:15px;cursor:pointer}.vertex-player-controls>button.vertex-player-main{width:44px;height:44px;background:#d4f34a;color:#10150a;border-color:#d4f34a;font-size:18px}.vertex-player-volume{display:flex;align-items:center;gap:6px;width:100px;color:#c8d0bd;font-size:12px}.sound-device-track.is-playing{padding:5px 7px;border-radius:9px;background:rgba(212,243,74,.08)}.sound-device-track.is-playing>span{color:#d4f34a}
 @media(max-width:560px){.vertex-device-player .sound-device-head{align-items:center;flex-direction:row}.vertex-device-player .sound-upload-button{width:auto}.vertex-player-volume{width:78px}}
+
+/* Vertex unified glassmorphism pass: panels and controls */
+:root{
+  --vertex-glass-bg:rgba(255,255,255,.045);
+  --vertex-glass-bg-strong:rgba(255,255,255,.075);
+  --vertex-glass-border:rgba(255,255,255,.12);
+  --vertex-glass-highlight:rgba(255,255,255,.09);
+}
+.panel,.stat-card,.smart-card,.insight-card,.prediction-card,.personal-coach-card,
+.goals-card,.timezone-live-card,.category-panel,.chart-panel,.daily-analysis-panel,
+.achievement-panel,.focus-panel,.game-habits-panel,.game-level-panel,.habit-table-panel,
+.insights-panel,.task-panel,.timer-panel,.weekly-panel,.settings-panel,
+.appearance-settings-panel,.reminder-settings-panel,.timezone-settings-panel,
+.sound-panel,.vertex-device-player,.sidebar-tip,.settings-link{
+  background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025) 58%,rgba(255,255,255,.018)) !important;
+  border:1px solid var(--vertex-glass-border) !important;
+  -webkit-backdrop-filter:blur(20px) saturate(145%);
+  backdrop-filter:blur(20px) saturate(145%);
+  box-shadow:inset 0 1px 0 var(--vertex-glass-highlight),0 12px 28px rgba(0,0,0,.12) !important;
+}
+button,.button,.text-button,.icon-button,.secondary-btn,.file-button,
+.check-button,.task-check,.filter-chip,.timer-tab,.nav-item,
+.sound-collapse,.sound-presets button,.sound-device-track button,
+.vertex-device-player .sound-upload-button,.vertex-player-controls>button{
+  -webkit-backdrop-filter:blur(16px) saturate(150%);
+  backdrop-filter:blur(16px) saturate(150%);
+  transition:background .2s ease,border-color .2s ease,box-shadow .2s ease,transform .2s ease;
+}
+.button:not(.primary):not(.danger),.text-button,.icon-button,.secondary-btn,.file-button,
+.filter-chip,.timer-tab,.nav-item:not(.active),.sound-collapse,
+.sound-presets button,.sound-device-track button,.vertex-player-controls>button{
+  background:linear-gradient(140deg,rgba(255,255,255,.105),rgba(255,255,255,.028)) !important;
+  border:1px solid rgba(255,255,255,.15) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.11),0 6px 18px rgba(0,0,0,.10) !important;
+}
+.button.primary,.vertex-player-controls>button.vertex-player-main{
+  background:linear-gradient(140deg,rgba(212,243,74,.88),rgba(170,210,58,.72)) !important;
+  border:1px solid rgba(236,255,174,.48) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.38),0 7px 20px rgba(160,205,65,.14) !important;
+}
+.button.danger{background:linear-gradient(140deg,rgba(255,115,99,.18),rgba(110,35,30,.12)) !important;border:1px solid rgba(255,145,130,.24) !important}
+button:hover,.button:hover,.text-button:hover,.icon-button:hover,.secondary-btn:hover,
+.file-button:hover,.filter-chip:hover,.timer-tab:hover,.vertex-player-controls>button:hover{
+  border-color:rgba(212,243,74,.32) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 9px 23px rgba(0,0,0,.16) !important;
+}
+.nav-item.active,.filter-chip.active,.timer-tab.active,.check-button.checked,.task-check.done{
+  background:linear-gradient(140deg,rgba(212,243,74,.20),rgba(212,243,74,.055)) !important;
+  border-color:rgba(212,243,74,.38) !important;
+}
+html[data-vertex-theme="light"] .panel,html[data-vertex-theme="light"] .stat-card,
+html[data-vertex-theme="light"] .smart-card,html[data-vertex-theme="light"] .insight-card,
+html[data-vertex-theme="light"] .prediction-card,html[data-vertex-theme="light"] .personal-coach-card,
+html[data-vertex-theme="light"] .goals-card,html[data-vertex-theme="light"] .timezone-live-card,
+html[data-vertex-theme="light"] .category-panel,html[data-vertex-theme="light"] .chart-panel,
+html[data-vertex-theme="light"] .daily-analysis-panel,html[data-vertex-theme="light"] .achievement-panel,
+html[data-vertex-theme="light"] .focus-panel,html[data-vertex-theme="light"] .game-habits-panel,
+html[data-vertex-theme="light"] .game-level-panel,html[data-vertex-theme="light"] .habit-table-panel,
+html[data-vertex-theme="light"] .insights-panel,html[data-vertex-theme="light"] .task-panel,
+html[data-vertex-theme="light"] .timer-panel,html[data-vertex-theme="light"] .weekly-panel,
+html[data-vertex-theme="light"] .settings-panel,html[data-vertex-theme="light"] .appearance-settings-panel,
+html[data-vertex-theme="light"] .reminder-settings-panel,html[data-vertex-theme="light"] .timezone-settings-panel,
+html[data-vertex-theme="light"] .vertex-device-player{
+  background:linear-gradient(145deg,rgba(255,255,255,.72),rgba(255,255,255,.38)) !important;
+  border-color:rgba(255,255,255,.72) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.88),0 10px 25px rgba(35,45,30,.07) !important;
+}
+html[data-vertex-theme="light"] .button:not(.primary):not(.danger),
+html[data-vertex-theme="light"] .text-button,html[data-vertex-theme="light"] .icon-button,
+html[data-vertex-theme="light"] .secondary-btn,html[data-vertex-theme="light"] .file-button,
+html[data-vertex-theme="light"] .filter-chip,html[data-vertex-theme="light"] .timer-tab,
+html[data-vertex-theme="light"] .nav-item:not(.active),html[data-vertex-theme="light"] .vertex-player-controls>button{
+  background:linear-gradient(140deg,rgba(255,255,255,.78),rgba(255,255,255,.40)) !important;
+  border-color:rgba(255,255,255,.78) !important;
+  color:var(--text) !important;
+}
+html[data-vertex-theme="amoled"] .panel,html[data-vertex-theme="amoled"] .stat-card,
+html[data-vertex-theme="amoled"] .smart-card,html[data-vertex-theme="amoled"] .insight-card,
+html[data-vertex-theme="amoled"] .prediction-card,html[data-vertex-theme="amoled"] .personal-coach-card,
+html[data-vertex-theme="amoled"] .goals-card,html[data-vertex-theme="amoled"] .category-panel,
+html[data-vertex-theme="amoled"] .chart-panel,html[data-vertex-theme="amoled"] .task-panel,
+html[data-vertex-theme="amoled"] .timer-panel,html[data-vertex-theme="amoled"] .weekly-panel,
+html[data-vertex-theme="amoled"] .settings-panel,html[data-vertex-theme="amoled"] .vertex-device-player{
+  background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.012)) !important;
+  border-color:rgba(255,255,255,.10) !important;
+}
+@media(prefers-reduced-motion:reduce){button,.button,.text-button,.icon-button,.secondary-btn,.file-button{transition:none!important}}

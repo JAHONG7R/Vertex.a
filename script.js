@@ -2812,9 +2812,14 @@ const VertexFocusAudio = (() => {
   const names = {rain:'Yomg‘ir',roofrain:'Tomdagi yomg‘ir',birds:'Qushlar',forest:'O‘rmon',whale:'Kitlar',ocean:'Okean to‘lqini',stream:'Jilg‘a',waterfall:'Sharshara',wind:'Shamol',leaves:'Barglar shitiri',fire:'Gulxan',crickets:'Tungi hasharotlar',thunder:'Momaqaldiroq',brown:'Brown noise',pink:'Pink noise',white:'White noise',cafe:'Kafe shovqini',library:'Kutubxona',fan:'Ventilyator',binaural:'Binaural 10 Hz','hz40':'40 Hz'};
   let ctx = null, master = null, limiter = null, layers = new Map(), masterVolume = 0.32, presets = {};
   let collapsed = false;
+  let pendingRestore = [];
+  let restoreBound = false;
+  const layerVolumes = {}; 
   const clamp = (n,min,max)=>Math.max(min,Math.min(max,n));
-  function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'{}');masterVolume=clamp(Number(d.master ?? 32),0,70)/100;presets=d.presets||{};}catch(_){}}
-  function save(){try{localStorage.setItem(KEY,JSON.stringify({master:Math.round(masterVolume*100),presets}));}catch(_){}}
+  function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'{}');masterVolume=clamp(Number(d.master ?? 32),0,70)/100;presets=d.presets||{};Object.assign(layerVolumes,d.layerVolumes||{});pendingRestore=Array.isArray(d.activeLayers)?d.activeLayers.filter(id=>names[id]):[];}catch(_){}}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify({master:Math.round(masterVolume*100),presets,activeLayers:[...layers.keys()],layerVolumes}));}catch(_){}}
+  function restoreSavedLayers(){if(!pendingRestore.length)return;const wanted=[...pendingRestore];pendingRestore=[];try{ensure();if(ctx.state==='suspended')ctx.resume();wanted.forEach(id=>{if(!layers.has(id))startLayer(id,clamp(Number(layerVolumes[id]??22),0,70)/100);});const note=document.getElementById('vertexAudioRestoreStatus');if(note)note.textContent='Oldingi ovoz qatlamlari qayta yoqildi.';}catch(error){console.warn('Vertex audio restore:',error);pendingRestore=wanted;}}
+  function bindRestoreGesture(){if(restoreBound)return;restoreBound=true;const resume=()=>{if(!pendingRestore.length)return;restoreSavedLayers();if(!pendingRestore.length){document.removeEventListener('pointerdown',resume,true);document.removeEventListener('keydown',resume,true);}};document.addEventListener('pointerdown',resume,true);document.addEventListener('keydown',resume,true);}
   function ensure(){if(ctx)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)throw new Error('Web Audio qo‘llab-quvvatlanmaydi');ctx=new AC();master=ctx.createGain();master.gain.value=masterVolume;limiter=ctx.createDynamicsCompressor();limiter.threshold.value=-8;limiter.knee.value=8;limiter.ratio.value=12;limiter.attack.value=.004;limiter.release.value=.18;master.connect(limiter);limiter.connect(ctx.destination);}
   function noiseSource(type){const size=ctx.sampleRate*3,buffer=ctx.createBuffer(1,size,ctx.sampleRate),data=buffer.getChannelData(0);let last=0,b0=0,b1=0,b2=0,b3=0,b4=0,b5=0;for(let i=0;i<size;i++){const white=Math.random()*2-1;if(type==='brown'||type==='wind'||type==='ocean'||type==='thunder'){last=(last+.018*white)/1.018;data[i]=last*3.2;}else if(type==='pink'||type==='rain'||type==='roofrain'||type==='stream'||type==='fire'||type==='leaves'){b0=.99886*b0+white*.0555179;b1=.99332*b1+white*.0750759;b2=.969*b2+white*.153852;b3=.8665*b3+white*.3104856;b4=.55*b4+white*.5329522;b5=-.7616*b5-white*.016898;data[i]=(b0+b1+b2+b3+b4+b5+white*.5362)*.11;}else{data[i]=white*.5;}}const src=ctx.createBufferSource();src.buffer=buffer;src.loop=true;return src;}
   function addOsc(freq,type='sine',detune=0){const o=ctx.createOscillator();o.type=type;o.frequency.value=freq;o.detune.value=detune;return o;}
@@ -2848,7 +2853,7 @@ const VertexFocusAudio = (() => {
     else if(id==='binaural'){const left=addOsc(200),right=addOsc(210);const merger=ctx.createChannelMerger(2),gl=ctx.createGain(),gr=ctx.createGain();gl.gain.value=.5;gr.gain.value=.5;left.connect(gl);right.connect(gr);gl.connect(merger,0,0);gr.connect(merger,0,1);merger.connect(gain);left.start();right.start();nodes.push(left,right,gl,gr,merger);}
     else if(id==='hz40'){const osc=addOsc(40);osc.connect(gain);osc.start();nodes.push(osc);}
     }
-    gain.gain.setTargetAtTime(volume,ctx.currentTime,.45);layers.set(id,{gain,nodes,volume});render();
+    gain.gain.setTargetAtTime(volume,ctx.currentTime,.45);layers.set(id,{gain,nodes,volume});layerVolumes[id]=Math.round(volume*100);save();render();
   }
   function stopLayer(id){
     const layer=layers.get(id);
@@ -2856,6 +2861,7 @@ const VertexFocusAudio = (() => {
     // Remove this exact layer immediately. The delayed cleanup must still run even
     // if the same sound is started again before the fade-out finishes.
     layers.delete(id);
+    save();
     try{layer.gain.gain.cancelScheduledValues(ctx.currentTime);layer.gain.gain.setTargetAtTime(0,ctx.currentTime,.12);}catch(_){}
     setTimeout(()=>{
       layer.nodes.forEach(node=>{
@@ -2875,7 +2881,7 @@ const VertexFocusAudio = (() => {
     },500);
     render();
   }
-  function setVolume(id,v){const l=layers.get(id);if(!l)return;l.volume=clamp(Number(v),0,70)/100;l.gain.gain.setTargetAtTime(l.volume,ctx.currentTime,.08);}
+  function setVolume(id,v){const l=layers.get(id);if(!l)return;l.volume=clamp(Number(v),0,70)/100;layerVolumes[id]=Math.round(l.volume*100);l.gain.gain.setTargetAtTime(l.volume,ctx.currentTime,.08);save();}
   function render(){document.querySelectorAll('.sound-layer').forEach(b=>{const on=layers.has(b.dataset.sound);b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});const list=document.getElementById('soundActiveList');if(list){if(!layers.size)list.innerHTML='<span>Ovoz tanlanmagan</span>';else list.innerHTML=[...layers.entries()].map(([id,l])=>`<label class="sound-active-row"><span>${names[id]}</span><input type="range" min="0" max="70" value="${Math.round(l.volume*100)}" data-layer-volume="${id}" aria-label="${names[id]} ovozi"><b>${Math.round(l.volume*100)}%</b></label>`).join('');}const m=document.getElementById('soundMaster');if(m)m.value=Math.round(masterVolume*100);const out=document.getElementById('soundMasterValue');if(out)out.textContent=`${Math.round(masterVolume*100)}%`;const sel=document.getElementById('soundPresetSelect');if(sel){const keep=sel.value;sel.innerHTML='<option value="">Preset tanlang</option>'+Object.keys(presets).map(k=>`<option value="${k.replace(/"/g,'&quot;')}">${k}</option>`).join('');sel.value=keep;}}
   function setMaster(v){masterVolume=clamp(Number(v),0,70)/100;if(master)master.gain.setTargetAtTime(masterVolume,ctx.currentTime,.08);save();render();}
   function stopAll(){[...layers.keys()].forEach(stopLayer);}
@@ -2952,7 +2958,7 @@ const VertexFocusAudio = (() => {
   function formatMusicTime(value){if(!Number.isFinite(value)||value<0)return '0:00';const m=Math.floor(value/60),sec=Math.floor(value%60);return `${m}:${String(sec).padStart(2,'0')}`;}
   function updatePlayerProgress(){const a=localMusicAudio;const seek=document.getElementById('vertexMusicSeek');const cur=document.getElementById('vertexCurrentTime');const dur=document.getElementById('vertexDuration');if(cur)cur.textContent=formatMusicTime(a?.currentTime||0);if(dur)dur.textContent=formatMusicTime(a?.duration||0);if(seek&&!musicSeeking){seek.value=a&&Number.isFinite(a.duration)&&a.duration>0?Math.round(a.currentTime/a.duration*1000):0;}const play=document.getElementById('vertexMusicPlay');if(play)play.textContent=a&&!a.paused?'Ⅱ':'▶';}
   function playNextTrack(direction){if(!localTracks.length)return;let i=localTracks.findIndex(t=>t.id===currentTrackId);i=i<0?(direction>0?0:localTracks.length-1):(i+direction+localTracks.length)%localTracks.length;playLocalTrack(localTracks[i].id);}
-  function init(){load();const masterInput=document.getElementById('soundMaster');if(masterInput){masterInput.max='70';masterInput.value=Math.round(masterVolume*100);masterInput.addEventListener('input',e=>setMaster(e.target.value));}document.getElementById('soundMasterValue')?.replaceChildren(document.createTextNode(`${Math.round(masterVolume*100)}%`));
+  function init(){load();bindRestoreGesture();const restoreNote=document.getElementById('vertexAudioRestoreStatus');if(restoreNote&&pendingRestore.length)restoreNote.textContent='Sahifa yangilandi. Brauzer audio ruxsati uchun ekranga bir marta teging — oldingi ovozlar tiklanadi.';const masterInput=document.getElementById('soundMaster');if(masterInput){masterInput.max='70';masterInput.value=Math.round(masterVolume*100);masterInput.addEventListener('input',e=>setMaster(e.target.value));}document.getElementById('soundMasterValue')?.replaceChildren(document.createTextNode(`${Math.round(masterVolume*100)}%`));
     document.getElementById('vertexGrantMusicAccess')?.addEventListener('click',()=>document.getElementById('vertexLocalAudioFiles')?.click());
     document.getElementById('vertexLocalAudioFiles')?.addEventListener('change',async e=>{try{await addLocalFiles(e.target.files);const status=document.getElementById('vertexPlayerStatus');if(status)status.textContent=`${e.target.files.length} ta audio fayl kutubxonaga qo‘shildi`;if(!currentTrackId&&localTracks.length)playLocalTrack(localTracks[0].id);}catch(err){console.error('Local audio import:',err);alert('Qo‘shiqlarni qurilmada saqlashda xatolik yuz berdi.');}e.target.value='';});
     document.getElementById('vertexMusicPlay')?.addEventListener('click',async()=>{if(!localMusicAudio){if(localTracks.length)await playLocalTrack(localTracks[0].id);else document.getElementById('vertexLocalAudioFiles')?.click();return;}if(localMusicAudio.paused){try{await localMusicAudio.play();}catch(e){console.warn(e);}}else localMusicAudio.pause();updatePlayerProgress();refreshLocalTracks();});
@@ -2964,6 +2970,8 @@ const VertexFocusAudio = (() => {
     document.addEventListener('click',e=>{const play=e.target.closest('[data-local-play]');if(play){playLocalTrack(play.dataset.localPlay);return;}const del=e.target.closest('[data-local-delete]');if(del){if(currentTrackId===del.dataset.localDelete)stopLocalMusic();musicDB('delete',del.dataset.localDelete).then(refreshLocalTracks).catch(console.error);return;}const b=e.target.closest('.sound-layer');if(b){const id=b.dataset.sound;try{layers.has(id)?stopLayer(id):startLayer(id);}catch(err){console.warn(err);alert('Ushbu brauzer audio funksiyasini qo‘llab-quvvatlamaydi.');}return;}if(e.target.closest('#stopAllSounds')){stopAll();return;}if(e.target.closest('#soundCollapse')){collapsed=!collapsed;document.getElementById('vertexSoundDock')?.classList.toggle('collapsed',collapsed);e.target.textContent=collapsed?'+':'−';return;}if(e.target.closest('#saveSoundPreset')){if(!layers.size){alert('Avval kamida bitta ovozni yoqing.');return;}const name=prompt('Preset nomi:');if(name&&name.trim()){presets[name.trim().slice(0,24)]=[...layers.keys()];save();render();}return;}});
     document.addEventListener('change',e=>{if(e.target.id==='soundPresetSelect'&&e.target.value)applyPreset(e.target.value);});
     refreshLocalTracks();
+    // Browsers may block audio autoplay after a reload. Try once, then reliably resume on the first user gesture.
+    if(pendingRestore.length){try{restoreSavedLayers();}catch(_){}if(pendingRestore.length)bindRestoreGesture();}
     document.addEventListener('input',e=>{const el=e.target.closest('[data-layer-volume]');if(el){setVolume(el.dataset.layerVolume,el.value);const row=el.closest('.sound-active-row');if(row)row.querySelector('b').textContent=`${el.value}%`;}});render();}
   return {init,stopAll:()=>{stopAll();stopLocalMusic();}};
 })();
@@ -2983,10 +2991,16 @@ function init() {
   }
   try {
     renderRegionalTime();
-    if (!window.__vertexRegionalClockTimer) {
-      window.__vertexRegionalClockTimer = setInterval(() => {
-        try { renderRegionalTime(); } catch (error) { console.warn('Regional clock:', error); }
-      }, 1000);
+    // A dedicated one-second clock tick, independent of page rendering/navigation.
+    if (window.__vertexRegionalClockTimer) clearInterval(window.__vertexRegionalClockTimer);
+    window.__vertexRegionalClockTimer = setInterval(() => {
+      try { renderRegionalTime(); } catch (error) { console.warn('Regional clock:', error); }
+    }, 1000);
+    if (!window.__vertexRegionalClockEventsBound) {
+      window.__vertexRegionalClockEventsBound = true;
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) renderRegionalTime(); });
+      window.addEventListener('focus', renderRegionalTime);
+      window.addEventListener('pageshow', renderRegionalTime);
     }
     const timeZoneSelect = document.getElementById('vertexTimeZone');
     if (timeZoneSelect && !timeZoneSelect.dataset.vertexBound) {

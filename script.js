@@ -2074,11 +2074,21 @@ function renderAchievements() {
   const weekLogs = state.logs.filter(log => log.date >= questStart && log.date <= today());
   const activeDays = new Set(weekLogs.map(log => log.date)).size;
   const uniqueHabits = new Set(weekLogs.map(log => String(log.habitId))).size;
-  const quests = [
+  const daysWithMultiple = new Set(weekLogs.filter(log => weekLogs.filter(x => x.date === log.date).length >= 2).map(log => log.date)).size;
+  const weekHabitTarget = Math.min(4, Math.max(2, state.habits.filter(h => !h.archived).length));
+  const questPool = [
     { icon: '🔥', title: 'Barqarorlik', detail: '5 xil kunda odat bajaring', value: activeDays, goal: 5, unit: 'kun' },
     { icon: '🎯', title: 'Maqsad sari', detail: 'Hafta davomida 10 ta bajarilish', value: weekLogs.length, goal: 10, unit: 'marta' },
-    { icon: '🌿', title: 'Xilma-xillik', detail: '3 xil odat ustida ishlang', value: uniqueHabits, goal: 3, unit: 'odat' }
+    { icon: '🌿', title: 'Xilma-xillik', detail: '3 xil odat ustida ishlang', value: uniqueHabits, goal: 3, unit: 'odat' },
+    { icon: '⚡', title: 'Ikki karra harakat', detail: '2 xil kunda kamida 2 tadan odat bajaring', value: daysWithMultiple, goal: 2, unit: 'kun' },
+    { icon: '🧩', title: 'Odatlar jamoasi', detail: `${weekHabitTarget} xil odatni bajaring`, value: uniqueHabits, goal: weekHabitTarget, unit: 'odat' },
+    { icon: '🌤️', title: 'Qayta boshlash', detail: 'Hafta davomida 3 ta bajarilishni jamlang', value: weekLogs.length, goal: 3, unit: 'marta' }
   ];
+  // Rotate three quests each week using a stable week index; no extra storage is needed.
+  const monday = new Date(`${questStart}T12:00:00`);
+  const weekIndex = Math.floor((monday - new Date('2024-01-01T12:00:00')) / (7 * 86400000));
+  const questOffset = ((weekIndex % questPool.length) + questPool.length) % questPool.length;
+  const quests = [0, 1, 2].map(i => questPool[(questOffset + i) % questPool.length]);
   const questGrid = $('#weeklyChallenges');
   if (questGrid) questGrid.innerHTML = quests.map(q => {
     const done = q.value >= q.goal;

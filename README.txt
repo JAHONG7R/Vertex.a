@@ -1,13 +1,19 @@
-VERTEX — AUDIO PERSISTENCE & LIVE CLOCK (PHASE 17)
+VERTEX — PHASE 19 (PHASE 18 + AUDIO RESUME)
 
-O'zgarishlar:
-1) Focus Sounds mikserida yoqilgan ambience qatlamlari, har bir qatlam ovoz balandligi va master volume localStorage'da saqlanadi.
-2) Sahifa yangilangandan keyin oldingi qatlamlar tiklash uchun navbatga olinadi. Brauzer autoplay siyosati sababli avtomatik ijro bloklansa, sahifaga bir marta teging yoki klaviaturada tugma bosing — ovozlar qayta boshlanadi. Brauzer sahifani qayta yuklash vaqtida audio oqimini uzadi; uzluksiz, bir soniya ham to'xtamasdan ijro etishni oddiy sahifa JavaScript'i kafolatlay olmaydi.
-3) Regional clock har soniyada yangilanadi; sahifa qayta ko'ringanda, fokusga qaytganda va pageshow hodisasida darhol sinxronlanadi.
+Ushbu versiya Phase 18 dagi 365 kunlik faollik taqvimini saqlaydi va Phase 17 qurilmadan musiqa ijro etish qismini yangilaydi.
 
-O'rnatish:
-- index.html, script.js, style.css fayllarini loyihadagi mos fayllar bilan almashtiring.
-- assets/audio papkasini va supabase-config.js / supabase-auth.js fayllarini o'chirmang yoki almashtirmang.
+Yangi imkoniyatlar:
+1) Qurilmadan tanlangan qo‘shiq IndexedDB kutubxonasida saqlanadi.
+2) Ijro holati, qo‘shiq identifikatori va oxirgi ijro vaqti localStorage’da muntazam saqlanadi.
+3) Sahifa qayta yuklangach, sayt avvalgi qo‘shiqni va vaqtini topib, avtomatik davom ettirishga urinadi.
+4) Brauzer autoplay'ni bloklasa, qo‘shiq tayyor holatda qoladi; ▶ tugmasini bir marta bosish bilan saqlangan joyidan davom etadi.
+5) Phase 18 dagi 365 kunlik activity calendar va mavjud boshqa funksiyalar saqlangan.
 
-Tekshiruv: script.js node --check va ZIP yaxlitligi.
-Jonli GitHub Pages muhitida sinovdan o'tkazilmagan.
+MUHIM BRAUZER CHEKLOVI:
+Sahifa to‘liq qayta yuklanganda brauzer eski audio oqimini majburan to‘xtatadi. Sayt qayta ochilgach avtomatik ijro brauzer ruxsat bersa boshlanadi; autoplay siyosati bloklasa, foydalanuvchining bir marta ▶ bosishi talab qilinadi. Oddiy veb-sahifa JavaScript'i bu cheklovni chetlab o‘ta olmaydi va 1–2 soniya uzilishni ham kafolatli yo‘qota olmaydi.
+
+O‘rnatish:
+- ZIP ichidagi index.html, script.js, style.css fayllarini GitHub loyihasidagi mos fayllar bilan almashtiring.
+- assets/audio papkasini, supabase-config.js va supabase-auth.js fayllarini o‘chirmang; ular ZIP ichida bo‘lmasa, mavjud loyihada qoldiring.
+
+Tekshiruv: script.js node --check va ZIP arxiv yaxlitligi tekshirilgan. GitHub Pages jonli muhitida sinovdan o‘tkazilmagan.

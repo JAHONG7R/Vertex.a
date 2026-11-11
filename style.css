@@ -1509,3 +1509,12 @@ html[data-vertex-theme="amoled"] body .app-shell .stat-card{background:rgba(255,
 .streak-resilience-main{flex:1;min-width:0}.streak-resilience-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}.streak-resilience-head strong{font-size:13px;overflow-wrap:anywhere}.streak-resilience-head b{font-size:12px;color:var(--streak-accent);white-space:nowrap}
 .streak-resilience-main .review-track{height:7px}.streak-resilience-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:7px}.streak-resilience-meta span{font-size:11px;color:var(--text)}.streak-resilience-meta small{font-size:10px;color:var(--muted)}.streak-resilience-main p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
 @media(max-width:620px){.streak-resilience-panel{padding:17px}.streak-resilience-row{padding:12px;gap:9px}}
+
+
+/* Phase 13 — Analytics CSV export */
+.analytics-export-panel{margin-top:18px}
+.analytics-export-row{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 0 4px;border-top:1px solid var(--line)}
+.analytics-export-row strong{display:block;color:var(--text);font-size:14px}
+.analytics-export-row p{margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+.analytics-export-row .button{white-space:nowrap}
+@media(max-width:560px){.analytics-export-row{align-items:stretch;flex-direction:column}.analytics-export-row .button{width:100%}}

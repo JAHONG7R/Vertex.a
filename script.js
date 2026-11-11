@@ -1777,6 +1777,32 @@ function renderStreakResilience() {
   if (note) note.textContent = `${rows.length} ta faol odat ko‘rsatildi. Seriya bugun bajarilmagan bo‘lsa, kechagi seriya ham hisobga olinadi; bu ko‘rsatkich odatni davom ettirishga yordam berish uchun. `;
 }
 
+function exportAnalyticsCSV() {
+  const habits = activeHabits();
+  if (!habits.length) {
+    notify('Hisobot yaratish uchun avval kamida bitta faol odat qo‘shing.');
+    return;
+  }
+  const rows = [['Sana', 'Odat', 'Kategoriya', 'Bajarildi']];
+  for (let offset = 29; offset >= 0; offset--) {
+    const date = shiftDate(today(), -offset);
+    for (const habit of habits) {
+      rows.push([date, habit.title || '', CATEGORIES[habit.category] || 'Boshqa', isChecked(habit.id, date) ? 'Ha' : 'Yo‘q']);
+    }
+  }
+  const csv = '\uFEFF' + rows.map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `vertex-analytics-${today()}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  notify('30 kunlik CSV hisoboti yuklab olindi.');
+}
+
 function renderAnalytics() {
   const week = rateForDays(7);
   const month = rateForDays(30);
@@ -2633,6 +2659,7 @@ function bindEvents() {
   });
 
   $('#exportBtn').addEventListener('click', exportData);
+  document.getElementById('exportAnalyticsCsv')?.addEventListener('click', exportAnalyticsCSV);
   $('#importFile').addEventListener('change', event => {
     importData(event.target.files[0]);
     event.target.value = '';

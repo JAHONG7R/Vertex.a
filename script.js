@@ -1854,6 +1854,7 @@ function renderAnalytics() {
   renderEightWeekTrend();
   renderMonthlyActivityMap();
   renderMonthlyReview();
+  renderHabitPeriodComparison();
 
   $('#categoryBreakdown').innerHTML = Object.entries(CATEGORIES)
     .filter(([key]) => key !== 'discipline' || state.habits.some(habit => habit.category === key))
@@ -2053,6 +2054,39 @@ function renderMonthlyReview() {
   setText('monthlyReviewFootnote', habits.length
     ? `Har bir davr ${habits.length} ta faol odat asosida hisoblandi. Foiz punkt — ikki davr foizlari orasidagi farq.`
     : 'Ma’lumotlar paydo bo‘lgach, ikki 30 kunlik davr avtomatik taqqoslanadi.');
+}
+
+
+function renderHabitPeriodComparison() {
+  const host = document.getElementById('habitPeriodList');
+  const note = document.getElementById('habitPeriodNote');
+  if (!host) return;
+  const habits = activeHabits();
+  if (!habits.length) {
+    host.innerHTML = '<p class="habit-stat-empty">Taqqoslash uchun avval faol odat qo‘shing.</p>';
+    if (note) note.textContent = 'Odatlar qo‘shilgach, har biri alohida tahlil qilinadi.';
+    return;
+  }
+  const rows = habits.map(habit => {
+    let currentDone = 0;
+    let previousDone = 0;
+    for (let i = 0; i < 30; i++) {
+      if (isChecked(habit.id, shiftDate(today(), -i))) currentDone++;
+      if (isChecked(habit.id, shiftDate(today(), -(i + 30)))) previousDone++;
+    }
+    const currentRate = Math.round(currentDone / 30 * 100);
+    const previousRate = Math.round(previousDone / 30 * 100);
+    return { habit, currentDone, previousDone, currentRate, previousRate, delta: currentRate - previousRate };
+  }).sort((a, b) => b.delta - a.delta || b.currentRate - a.currentRate || a.habit.title.localeCompare(b.habit.title));
+  host.innerHTML = rows.map(row => {
+    const color = normalizeHabitColor(row.habit.color ?? row.habit.habitColor);
+    const trendClass = row.delta > 0 ? 'is-up' : row.delta < 0 ? 'is-down' : 'is-flat';
+    const trendLabel = row.delta > 0 ? `+${row.delta} foiz punkt · o‘sish` : row.delta < 0 ? `${row.delta} foiz punkt · pasayish` : '0 foiz punkt · o‘zgarmagan';
+    return `<article class="habit-period-row" style="${habitAccent(row.habit)}"><span class="habit-period-icon" style="background:${color}22;color:${color}">${habitIcon(row.habit)}</span><div class="habit-period-main"><div class="habit-period-heading"><strong>${escapeHTML(row.habit.title)}</strong><span class="habit-period-delta ${trendClass}">${trendLabel}</span></div><div class="habit-period-bars"><div><small>So‘nggi 30 kun · ${row.currentDone}/30</small><span class="review-track"><i style="width:${row.currentRate}%;background:${color}"></i></span></div><div><small>Oldingi 30 kun · ${row.previousDone}/30</small><span class="review-track"><i style="width:${row.previousRate}%;background:${color};opacity:.48"></i></span></div></div></div></article>`;
+  }).join('');
+  const improved = rows.filter(row => row.delta > 0).length;
+  const declined = rows.filter(row => row.delta < 0).length;
+  if (note) note.textContent = `${rows.length} ta odat taqqoslandi · ${improved} tasi o‘sdi · ${declined} tasida pasayish kuzatildi. Har bir foiz 30 kunlik davrda bajarilgan kunlar ulushidir.`;
 }
 
 function renderHabitIntelligence() {

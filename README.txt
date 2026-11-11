@@ -1,6 +1,17 @@
-Vertex — Famous Quotes Update
+VERTEX — HABIT INTELLIGENCE PHASE 1
 
-Iqtiboslar bo‘limi yangilandi: Vertex nomidan yozilgan original satrlar olib tashlandi va ularning o‘rniga tarixiy hamda zamonaviy mashhur shaxslar bilan bog‘liq iqtiboslar kiritildi.
-Iqtiboslar o‘zbek tiliga mazmunan tarjima qilingan. Ayrim mashhur iboralarning muallifligi turli manbalarda bahsli bo‘lishi mumkin; shu sababli ularni so‘zma-so‘z asl nusxa deb qabul qilmaslik kerak.
+This update adds a rule-based Habit Intelligence panel to the Analytics page.
+It summarizes 30-day adherence, identifies the strongest and least consistent
+active habit, and compares each habit's latest 7 days with the previous 7 days.
 
-O‘rnatish: index.html, script.js va style.css fayllarini GitHub repositoriyangizdagi mos fayllar bilan almashtiring. Supabase konfiguratsiya/auth fayllarini o‘chirmang.
+Files: index.html, script.js, style.css
+
+Install:
+1. Back up the current repository files.
+2. Replace index.html, script.js and style.css with these files.
+3. Keep supabase-config.js and supabase-auth.js unchanged.
+4. Commit and push to GitHub Pages, then hard-refresh the site.
+
+All insights are calculated locally from the existing habit logs. No external
+AI service or additional permissions are used. Existing storage keys and app
+state format are preserved.

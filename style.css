@@ -1382,3 +1382,12 @@ html[data-vertex-theme="light"] body .app-shell .icon-button{color:#111 !importa
 html[data-vertex-theme="amoled"] body .app-shell .sidebar,
 html[data-vertex-theme="amoled"] body .app-shell .panel,
 html[data-vertex-theme="amoled"] body .app-shell .stat-card{background:rgba(255,255,255,.025) !important}
+
+/* Habit Intelligence — readable, responsive insight cards */
+.vertex-intelligence-panel{margin-top:22px}
+.intelligence-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.intelligence-item{display:flex;align-items:flex-start;gap:12px;min-width:0;padding:15px;border:1px solid var(--border,rgba(255,255,255,.14));border-radius:15px;background:rgba(255,255,255,.035)}
+.intelligence-icon{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border-radius:11px;background:rgba(212,243,74,.12);color:var(--lime,#d4f34a);font-size:18px}
+.intelligence-item strong{display:block;font-size:13px;line-height:1.45;color:var(--text,#f5f6f2)}
+.intelligence-item p{margin:5px 0 0;color:var(--muted,#a4aaa0);font-size:12px;line-height:1.55}
+@media(max-width:700px){.intelligence-grid{grid-template-columns:1fr}}

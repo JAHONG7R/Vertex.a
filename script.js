@@ -1850,6 +1850,8 @@ function renderAnalytics() {
     $('#nextStepText').textContent = 'Birinchi odatingizni bugun bajaring va jadvalda belgilang.';
   }
 
+  renderHabitIntelligence();
+
   $('#categoryBreakdown').innerHTML = Object.entries(CATEGORIES)
     .filter(([key]) => key !== 'discipline' || state.habits.some(habit => habit.category === key))
     .map(([key, label]) => {
@@ -1947,6 +1949,35 @@ function renderAll() {
 /* ==============================
    YUTUQLAR VA BADGE TIZIMI
 ============================== */
+function renderHabitIntelligence() {
+  const host = $('#habitIntelligence');
+  if (!host) return;
+  const habits = activeHabits();
+  if (!habits.length) {
+    host.innerHTML = '<article class="intelligence-item"><span class="intelligence-icon">＋</span><div><strong>Birinchi odatingizni qo‘shing</strong><p>Kamida bir hafta belgi qo‘yilgach, bu yerda shaxsiy naqshlar ko‘rinadi.</p></div></article>';
+    return;
+  }
+  const rate = (habit, days, offset = 0) => {
+    let done = 0;
+    for (let i = offset; i < offset + days; i++) if (isChecked(habit.id, shiftDate(today(), -i))) done++;
+    return Math.round(done / days * 100);
+  };
+  const ranked = habits.map(h => ({habit:h, rate:rate(h,30), recent:rate(h,7), previous:rate(h,7,7), streak:streakForHabit(h.id)}));
+  const strongest = [...ranked].sort((a,b)=>b.rate-a.rate || b.streak-a.streak)[0];
+  const weakest = [...ranked].sort((a,b)=>a.rate-b.rate)[0];
+  const improving = ranked.filter(x=>x.recent>x.previous).length;
+  const declining = ranked.filter(x=>x.recent<x.previous).length;
+  const totalPossible = habits.length * 30;
+  const totalDone = habits.reduce((sum,h)=>{ let n=0; for(let i=0;i<30;i++) if(isChecked(h.id,shiftDate(today(),-i))) n++; return sum+n; },0);
+  const overall = Math.round(totalDone / Math.max(1,totalPossible) * 100);
+  const cards = [];
+  cards.push(`<article class="intelligence-item"><span class="intelligence-icon">↗</span><div><strong>Umumiy barqarorlik: ${overall}%</strong><p>Faol odatlaringizning oxirgi 30 kundagi o‘rtacha bajarilish darajasi.</p></div></article>`);
+  if (strongest && strongest.rate > 0) cards.push(`<article class="intelligence-item"><span class="intelligence-icon">🏆</span><div><strong>Kuchli odat: ${escapeHTML(strongest.habit.title)} · ${strongest.rate}%</strong><p>${strongest.streak} kunlik joriy seriya. Shu odatni qaysi vaqtda bajarishingizni kuzatib, foydali sharoitni takrorlang.</p></div></article>`);
+  if (weakest) cards.push(`<article class="intelligence-item"><span class="intelligence-icon">🎯</span><div><strong>E’tibor talab qiladi: ${escapeHTML(weakest.habit.title)} · ${weakest.rate}%</strong><p>Keyingi 7 kun uchun maqsadni kichikroq qadamga ajrating va bajarishni qulay vaqtga bog‘lang.</p></div></article>`);
+  cards.push(`<article class="intelligence-item"><span class="intelligence-icon">◷</span><div><strong>So‘nggi haftadagi yo‘nalish</strong><p>${improving} ta odat oldingi haftaga nisbatan yaxshilangan${declining ? `, ${declining} tasi pasaygan` : ''}. ${declining ? 'Pasaygan odatlarni vaqtincha soddalashtirish foydali bo‘lishi mumkin.' : 'Hozircha pasayish kuzatilmayapti; shu ritmni saqlang.'}</p></div></article>`);
+  host.innerHTML = cards.join('');
+}
+
 function longestOverallStreak() {
   const active = activeHabits();
   if (!active.length) return 0;

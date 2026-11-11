@@ -1221,3 +1221,92 @@ html[data-vertex-theme="amoled"] .timer-panel,html[data-vertex-theme="amoled"] .
 html[data-vertex-theme="amoled"] .settings-panel,html[data-vertex-theme="amoled"] .vertex-device-player{
   background:rgba(255,255,255,.035) !important;
 }
+
+/* VERTEX TRUE TRANSPARENT GLASS — v3 */
+:root{
+  --vertex-surface-glass:rgba(7,11,10,.16);
+  --vertex-control-glass:rgba(255,255,255,.045);
+  --vertex-glass-line:rgba(255,255,255,.26);
+}
+/* Panels and navigation must reveal the actual page background behind them. */
+.panel,.stat-card,.smart-card,.insight-card,.prediction-card,
+.personal-coach-card,.goals-card,.category-panel,.chart-panel,
+.task-panel,.timer-panel,.weekly-panel,.settings-panel,
+.appearance-settings-panel,.reminder-settings-panel,
+.timezone-settings-panel,.vertex-device-player,
+.sidebar,.side-panel,.nav-panel,.modal-content,
+.panels-section,.panels-container,.panel-section{
+  background:var(--vertex-surface-glass) !important;
+  -webkit-backdrop-filter:blur(9px) saturate(108%) !important;
+  backdrop-filter:blur(9px) saturate(108%) !important;
+  border-color:var(--vertex-glass-line) !important;
+}
+/* Nearly all controls are translucent; text/icons remain high contrast. */
+button:not(.primary):not(.danger),
+.button:not(.primary):not(.danger),
+.text-button,.icon-button,.secondary-btn,.file-button,
+.filter-chip,.timer-tab,.nav-item:not(.active),
+.vertex-player-controls>button,.sound-layer,
+.sound-upload-button:not(.primary),select,
+input:not([type="checkbox"]):not([type="radio"]),textarea{
+  background:rgba(255,255,255,.045) !important;
+  color:#fff !important;
+  border:1px solid rgba(255,255,255,.30) !important;
+  -webkit-backdrop-filter:blur(7px) !important;
+  backdrop-filter:blur(7px) !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.55);
+}
+button:not(.primary):not(.danger):hover,
+.button:not(.primary):not(.danger):hover,
+.text-button:hover,.icon-button:hover,.secondary-btn:hover,
+.file-button:hover,.filter-chip:hover,.timer-tab:hover,
+.nav-item:hover,.vertex-player-controls>button:hover{
+  background:rgba(255,255,255,.13) !important;
+  border-color:rgba(255,255,255,.52) !important;
+}
+/* Keep strong semantic contrast for primary, active and destructive actions. */
+button.primary,.button.primary,.vertex-player-controls>button.vertex-player-main,
+.nav-item.active,.filter-chip.active,.timer-tab.active,.sound-layer.active{
+  background:#d4f34a !important;color:#10130b !important;
+  border-color:#efffae !important;text-shadow:none !important;
+}
+button.danger,.button.danger{
+  background:rgba(190,35,45,.72) !important;color:#fff !important;
+  border-color:rgba(255,145,145,.72) !important;text-shadow:none !important;
+}
+/* Light theme: transparent milky glass with dark readable labels. */
+html[data-vertex-theme="light"] .panel,
+html[data-vertex-theme="light"] .stat-card,
+html[data-vertex-theme="light"] .smart-card,
+html[data-vertex-theme="light"] .insight-card,
+html[data-vertex-theme="light"] .prediction-card,
+html[data-vertex-theme="light"] .personal-coach-card,
+html[data-vertex-theme="light"] .goals-card,
+html[data-vertex-theme="light"] .category-panel,
+html[data-vertex-theme="light"] .chart-panel,
+html[data-vertex-theme="light"] .task-panel,
+html[data-vertex-theme="light"] .timer-panel,
+html[data-vertex-theme="light"] .weekly-panel,
+html[data-vertex-theme="light"] .settings-panel,
+html[data-vertex-theme="light"] .vertex-device-player,
+html[data-vertex-theme="light"] .sidebar,
+html[data-vertex-theme="light"] .side-panel{
+  background:rgba(255,255,255,.17) !important;
+  border-color:rgba(15,20,15,.25) !important;
+}
+html[data-vertex-theme="light"] button:not(.primary):not(.danger),
+html[data-vertex-theme="light"] .button:not(.primary):not(.danger),
+html[data-vertex-theme="light"] .text-button,
+html[data-vertex-theme="light"] .icon-button,
+html[data-vertex-theme="light"] .secondary-btn,
+html[data-vertex-theme="light"] .file-button,
+html[data-vertex-theme="light"] .filter-chip,
+html[data-vertex-theme="light"] .timer-tab,
+html[data-vertex-theme="light"] .nav-item:not(.active),
+html[data-vertex-theme="light"] .vertex-player-controls>button,
+html[data-vertex-theme="light"] select,
+html[data-vertex-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
+html[data-vertex-theme="light"] textarea{
+  background:rgba(15,20,15,.035) !important;color:#111 !important;
+  border-color:rgba(15,20,15,.30) !important;text-shadow:none !important;
+}

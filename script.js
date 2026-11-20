@@ -88,8 +88,22 @@ function normalizeHabitColor(color) {
   return HABIT_COLORS.includes(value.toUpperCase()) ? value.toUpperCase() : DEFAULT_HABIT_COLOR;
 }
 
+function habitContrastInk(color) {
+  const hex = normalizeHabitColor(color).replace('#', '');
+  const channels = hex.length === 3
+    ? hex.split('').map(value => parseInt(value + value, 16))
+    : [0, 2, 4].map(index => parseInt(hex.slice(index, index + 2), 16));
+  const linear = channels.map(value => {
+    const channel = value / 255;
+    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+  });
+  const luminance = 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+  return luminance > 0.42 ? '#151515' : '#ffffff';
+}
+
 function habitAccent(habit) {
-  return `--habit-accent:${normalizeHabitColor(habit?.color ?? habit?.habitColor)}`;
+  const accent = normalizeHabitColor(habit?.color ?? habit?.habitColor);
+  return `--habit-accent:${accent};--habit-check-ink:${habitContrastInk(accent)}`;
 }
 
 const DAY_NAMES = ['Du', 'Se', 'Cho', 'Pay', 'Ju', 'Shan', 'Yak'];

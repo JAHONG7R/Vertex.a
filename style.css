@@ -1644,3 +1644,60 @@ html[data-vertex-theme="light"] .vertex-collapsible{
   html[data-vertex-theme="light"] .sidebar{background:rgba(248,250,255,.92)!important;}
 }
 @media(prefers-reduced-motion:reduce){body::before{background-attachment:scroll!important}}
+
+
+/* VERTEX RESPONSIVE MASTER BACKGROUND — one continuous full-viewport image. */
+html, body { min-height:100%; }
+body {
+  min-height:100vh;
+  min-height:100dvh;
+  background:transparent !important;
+  isolation:isolate;
+}
+body::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  background-image:
+    linear-gradient(90deg,rgba(5,10,24,.68) 0%,rgba(5,10,24,.43) 42%,rgba(5,10,24,.20) 100%),
+    linear-gradient(0deg,rgba(3,7,18,.34),transparent 52%),
+    url("vertex-masterpiece-bg.png");
+  background-position:center,center,center;
+  background-size:cover,cover,cover;
+  background-repeat:no-repeat;
+  opacity:1;
+}
+html[data-vertex-theme="amoled"] body::before {
+  background-image:
+    linear-gradient(90deg,rgba(0,0,0,.82) 0%,rgba(0,0,0,.58) 48%,rgba(0,0,0,.30) 100%),
+    linear-gradient(0deg,rgba(0,0,0,.45),transparent 55%),
+    url("vertex-masterpiece-bg.png");
+}
+html[data-vertex-theme="light"] body::before {
+  background-image:
+    linear-gradient(90deg,rgba(245,248,252,.56) 0%,rgba(245,248,252,.34) 48%,rgba(245,248,252,.18) 100%),
+    linear-gradient(0deg,rgba(255,255,255,.14),transparent 58%),
+    url("vertex-masterpiece-bg.png");
+}
+@media (max-width:850px) {
+  body::before { background-position:center,center,62% center; background-size:cover,cover,cover; }
+}
+@media (max-width:560px) {
+  body::before { background-position:center,center,64% center; background-size:cover,cover,cover; }
+}
+
+/* A completed habit uses its own color, with automatically contrasting check glyph. */
+.check-button.checked,
+.habit-cell-check.checked {
+  background:var(--habit-accent,var(--lime)) !important;
+  border-color:var(--habit-accent,var(--lime)) !important;
+  color:var(--habit-check-ink,#151515) !important;
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--habit-accent,var(--lime)) 22%,transparent),
+             0 0 12px color-mix(in srgb,var(--habit-accent,var(--lime)) 30%,transparent);
+}
+.check-button:hover,
+.habit-cell-check:hover { border-color:var(--habit-accent,var(--lime)) !important; }

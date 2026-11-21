@@ -1,34 +1,96 @@
+/* VERTEX PWA — offline app shell + safe runtime asset cache */
 'use strict';
+const CACHE_VERSION = 'vertex-pwa-v1';
+const APP_CACHE = `${CACHE_VERSION}-app`;
+const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
+const APP_SHELL = [
+  './',
+  './index.html',
+  './style.css',
+  './script.js',
+  './manifest.webmanifest',
+  './vertex-masterpiece-bg.png',
+  './vertex-masterpiece-bg-mobile.png',
+  './icons/vertex-192.png',
+  './icons/vertex-512.png'
+];
 
-self.addEventListener('push', event => {
-  let payload = {};
-  try { payload = event.data ? event.data.json() : {}; }
-  catch (_) { payload = { body: event.data ? event.data.text() : '' }; }
-
-  const title = payload.title || 'Vertex eslatmasi';
-  const options = {
-    body: payload.body || 'Rejalashtirilgan vazifangiz vaqti keldi.',
-    icon: './icons/vertex-192.png',
-    badge: './icons/vertex-192.png',
-    tag: payload.tag || 'vertex-reminder',
-    renotify: true,
-    data: { url: payload.url || './' },
-    actions: [{ action: 'open', title: 'Vertex’ni ochish' }]
-  };
-  event.waitUntil(self.registration.showNotification(title, options));
-});
-
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-  const target = new URL(event.notification.data?.url || './', self.location.origin).href;
+self.addEventListener('install', event => {
   event.waitUntil((async () => {
-    const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    for (const client of clientsList) {
-      if (client.url.startsWith(self.location.origin) && 'focus' in client) return client.focus();
-    }
-    if (self.clients.openWindow) return self.clients.openWindow(target);
+    const cache = await caches.open(APP_CACHE);
+    // A missing optional asset must not prevent the whole app from installing.
+    await Promise.all(APP_SHELL.map(async path => {
+      try { await cache.add(new Request(path, { cache: 'reload' })); }
+      catch (error) { console.warn('[VERTEX SW] Cache skipped:', path, error); }
+    }));
+    await self.skipWaiting();
   })());
 });
 
-self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
-self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(key => key.startsWith('vertex-pwa-') && ![APP_CACHE, RUNTIME_CACHE].includes(key)).map(key => caches.delete(key)));
+    await self.clients.claim();
+  })());
+});
+
+function isCacheableAsset(url) {
+  return url.origin === self.location.origin ||
+    url.hostname === 'cdn.jsdelivr.net' ||
+    url.hostname === 'fonts.googleapis.com' ||
+    url.hostname === 'fonts.gstatic.com';
+}
+
+self.addEventListener('fetch', event => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  if (!isCacheableAsset(url)) return;
+
+  // HTML: prefer fresh content, but serve the installed app when offline.
+  if (request.mode === 'navigate') {
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(request);
+        if (fresh && fresh.ok) {
+          const cache = await caches.open(APP_CACHE);
+          cache.put('./index.html', fresh.clone());
+        }
+        return fresh;
+      } catch (_) {
+        return (await caches.match('./index.html')) || (await caches.match('./')) || new Response('VERTEX offline: ilova keshi topilmadi. Internetga ulanib sahifani bir marta oching.', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+      }
+    })());
+    return;
+  }
+
+  // Local app files and static CDN assets: cache-first, then refresh cache.
+  event.respondWith((async () => {
+    const cached = await caches.match(request);
+    if (cached) {
+      event.waitUntil((async () => {
+        try {
+          const fresh = await fetch(request);
+          if (fresh && (fresh.ok || fresh.type === 'opaque')) {
+            const cache = await caches.open(RUNTIME_CACHE);
+            await cache.put(request, fresh.clone());
+          }
+        } catch (_) {}
+      })());
+      return cached;
+    }
+    try {
+      const response = await fetch(request);
+      if (response && (response.ok || response.type === 'opaque')) {
+        const cache = await caches.open(RUNTIME_CACHE);
+        await cache.put(request, response.clone());
+      }
+      return response;
+    } catch (error) {
+      const fallback = await caches.match(request);
+      if (fallback) return fallback;
+      throw error;
+    }
+  })());
+});

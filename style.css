@@ -1726,3 +1726,28 @@ body::before {
 @media (max-width: 560px) {
   body::before { width:100vw!important; height:100vh!important; height:100dvh!important; }
 }
+
+
+/* VERTEX RESPONSIVE ARTWORK — dedicated desktop and portrait compositions. */
+@media (min-width: 851px) {
+  body::before {
+    background-image:
+      linear-gradient(90deg,rgba(5,10,24,.68) 0%,rgba(5,10,24,.43) 42%,rgba(5,10,24,.20) 100%),
+      linear-gradient(0deg,rgba(3,7,18,.34),transparent 52%),
+      url("vertex-masterpiece-bg.png") !important;
+    background-position:center,center,center center !important;
+    background-size:cover,cover,cover !important;
+  }
+}
+@media (max-width: 850px) {
+  body::before {
+    background-image:
+      linear-gradient(90deg,rgba(5,10,24,.48),rgba(5,10,24,.20)),
+      linear-gradient(0deg,rgba(3,7,18,.34),transparent 58%),
+      url("vertex-masterpiece-bg-mobile.png") !important;
+    background-position:center,center,center center !important;
+    /* The portrait artwork is composed for phone screens; fit the whole focal scene. */
+    background-size:cover,cover,100% 100% !important;
+    background-repeat:no-repeat !important;
+  }
+}

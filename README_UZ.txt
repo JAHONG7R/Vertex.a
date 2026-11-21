@@ -1,17 +1,15 @@
-VERTEX — mobile background and habit emoji update
+VERTEX — RESPONSIVE BACKGROUND + HABIT CHECK CONTRAST
 
-Included files:
+GitHub repositoryingizning asosiy (root) papkasiga quyidagi 4 faylni joylang va mavjudlarini yangilang:
 - index.html
-- style.css (mobile full-viewport background adjustment)
-- script.js (expanded habit emoji picker)
-- vertex-masterpiece-bg.png (background artwork)
+- style.css
+- script.js
+- vertex-masterpiece-bg.png
 
-Upload/replace these four files in the repository root. Keep any other project files, including Supabase configuration and manifest files, unchanged.
+Qolgan fayllarni, ayniqsa supabase-config.js, supabase-auth.js va manifest.webmanifest fayllarini o‘chirmang yoki almashtirmang. Ular repositoryda avvalgidek qolishi kerak.
 
-Emoji note: the picker uses Unicode emoji characters corresponding to the Apple emoji repertoire. The exact artwork is rendered by the device/browser emoji font; Apple artwork is not embedded or redistributed. Therefore an Android device may show its native emoji design rather than Apple's exact artwork, while the same characters appear in Apple's style on supported Apple devices.
-
-
-Responsive background update:
-- Desktop: vertex-masterpiece-bg.png (wide original composition, fills the screen with cover).
-- Phone: vertex-masterpiece-bg-mobile.png (separate portrait composition focused on the main wave and starry sky; fit to the full phone viewport).
-- Keep both image files in the same repository folder as style.css.
+O‘zgarishlar:
+1. Fon desktop va mobil ekranlarda viewportni to‘liq qoplaydi (cover), ekran nisbatiga moslashadi.
+2. Kichik ekranlarda rasm markazi biroz o‘ngroqqa siljiydi, fon bo‘sh joy qoldirmaydi.
+3. Odat bajarilganda belgi o‘sha odatning rangida ko‘rinadi; belgi ichidagi ✓ rangi avtomatik ravishda kontrast (qora yoki oq) tanlanadi.
+4. Mavjud odat ma’lumotlari va boshqa funksiyalar saqlangan.

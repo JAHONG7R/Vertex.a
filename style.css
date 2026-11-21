@@ -1701,3 +1701,28 @@ html[data-vertex-theme="light"] body::before {
 }
 .check-button:hover,
 .habit-cell-check:hover { border-color:var(--habit-accent,var(--lime)) !important; }
+
+
+/* VERTEX FIX — mobile viewport-safe full-frame artwork. Keep the entire artwork visible. */
+html, body { min-height:100%; }
+body { min-height:100vh; min-height:100dvh; background:transparent!important; }
+body::before {
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100vh!important;
+  height:100dvh!important;
+  background-position:center center,center center,center center!important;
+  background-size:cover,cover,cover!important;
+  background-repeat:no-repeat!important;
+}
+@media (max-width: 850px) {
+  body::before {
+    /* 100% 100% deliberately shows the complete image on narrow/tall phones. */
+    background-position:center center,center center,center center!important;
+    background-size:100% 100%,100% 100%,100% 100%!important;
+  }
+}
+@media (max-width: 560px) {
+  body::before { width:100vw!important; height:100vh!important; height:100dvh!important; }
+}

@@ -24,3 +24,9 @@ OFFLINE CHEGARALARI:
 XAVFSIZLIK:
 - Supabase API so'rovlari va autentifikatsiya endpointlari keshlanmaydi.
 - Faqat app shell, statik fayllar va kerakli statik CDN/font resurslari keshlanadi.
+
+
+BACKGROUND YANGILANISHI:
+- Desktop fon endi telefon versiyasidagi ayni artwork asosida tayyorlangan 1672x941 landscape formatda.
+- Desktop ekranda avvalgi 16:9 full-screen cover o‘lchamida ko‘rinadi.
+- Telefonda alohida 1024x1536 portrait fon saqlangan.

@@ -1751,3 +1751,65 @@ body::before {
     background-repeat:no-repeat !important;
   }
 }
+
+
+/* VERTEX BACKGROUND STABILITY FIX — fixed to the viewport, not the scrolling page. */
+html {
+  min-height:100%;
+  position:relative;
+  isolation:isolate;
+  background:#07101f;
+}
+body {
+  min-height:100vh;
+  min-height:100dvh;
+  background:transparent !important;
+}
+/* Move the artwork layer to html so page sections/transforms cannot make it scroll. */
+body::before { content:none !important; display:none !important; }
+html::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  display:block;
+  pointer-events:none;
+  background-image:
+    linear-gradient(90deg,rgba(5,10,24,.62) 0%,rgba(5,10,24,.38) 46%,rgba(5,10,24,.18) 100%),
+    linear-gradient(0deg,rgba(3,7,18,.30),transparent 55%),
+    url("vertex-masterpiece-bg.png");
+  background-position:center,center,center center;
+  background-size:cover,cover,cover;
+  background-repeat:no-repeat;
+  transform:translateZ(0);
+  will-change:transform;
+}
+html[data-vertex-theme="amoled"]::before {
+  background-image:
+    linear-gradient(90deg,rgba(0,0,0,.82) 0%,rgba(0,0,0,.58) 48%,rgba(0,0,0,.30) 100%),
+    linear-gradient(0deg,rgba(0,0,0,.45),transparent 55%),
+    url("vertex-masterpiece-bg.png");
+}
+html[data-vertex-theme="light"]::before {
+  background-image:
+    linear-gradient(90deg,rgba(245,248,252,.56) 0%,rgba(245,248,252,.34) 48%,rgba(245,248,252,.18) 100%),
+    linear-gradient(0deg,rgba(255,255,255,.14),transparent 58%),
+    url("vertex-masterpiece-bg.png");
+}
+@media (max-width:850px) {
+  html::before {
+    background-image:
+      linear-gradient(90deg,rgba(5,10,24,.48),rgba(5,10,24,.20)),
+      linear-gradient(0deg,rgba(3,7,18,.30),transparent 58%),
+      url("vertex-masterpiece-bg-mobile.png");
+    background-position:center,center,center center;
+    /* Keep the complete phone artwork visible in one stable viewport layer. */
+    background-size:100% 100%,100% 100%,100% 100%;
+  }
+  html[data-vertex-theme="light"]::before {
+    background-image:
+      linear-gradient(90deg,rgba(245,248,252,.62),rgba(245,248,252,.34)),
+      linear-gradient(0deg,rgba(255,255,255,.16),transparent 58%),
+      url("vertex-masterpiece-bg-mobile.png");
+  }
+}
